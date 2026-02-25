@@ -6,7 +6,7 @@ import {
 } from "../../hooks/useTransactions";
 import { useCurrencies } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
-import { CategoryIcon } from "../../utils/categoryIcons";
+import CategoryIcon from "../../components/CategoryIcon";
 import useUIStore from "../../store/useUIStore";
 import TransactionList from "./TransactionList";
 import TransactionForm from "./TransactionForm";
