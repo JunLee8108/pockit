@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import supabase from "../lib/supabase";
-import { fromSupabase } from "../lib/supabaseQuery";
+import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
 
 const TX_SELECT =
@@ -85,10 +85,7 @@ export const useAddTransaction = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      const user = await getAuthUser();
 
       const tx = await fromSupabase(
         supabase
@@ -169,20 +166,30 @@ export const useDeleteTransaction = () => {
   });
 };
 
-// ── 잔액 헬퍼 ──
+// ── 잔액 헬퍼 (에러 처리 추가) ──
 
 async function adjustBalance(accountId, delta) {
   if (!accountId || delta === 0) return;
-  const { data } = await supabase
+
+  const { data, error: selectErr } = await supabase
     .from("accounts")
     .select("balance")
     .eq("id", accountId)
     .single();
-  if (!data) return;
-  await supabase
+
+  if (selectErr || !data) {
+    console.error("adjustBalance select failed:", selectErr);
+    return;
+  }
+
+  const { error: updateErr } = await supabase
     .from("accounts")
     .update({ balance: data.balance + delta })
     .eq("id", accountId);
+
+  if (updateErr) {
+    console.error("adjustBalance update failed:", updateErr);
+  }
 }
 
 async function updateBalances(type, amount, accountId, toAccountId) {

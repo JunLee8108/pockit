@@ -101,7 +101,7 @@ const Accounts = () => {
       </div>
 
       {/* 2-Column Layout (desktop) / 1-Column (mobile, tablet) */}
-      <div className="flex flex-col lg:flex-row gap-10">
+      <div className="flex flex-col lg:flex-row gap-8">
         {/* ── 좌측: 요약 패널 ── */}
         <div className="w-full lg:w-[340px] shrink-0">
           <div className="lg:sticky lg:top-6 flex flex-col gap-4">

@@ -1,9 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import supabase from "../lib/supabase";
-import { fromSupabase } from "../lib/supabaseQuery";
+import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
 
-// 조회
 export const useAccounts = () => {
   return useQuery({
     queryKey: queryKeys.accounts.all,
@@ -17,15 +16,11 @@ export const useAccounts = () => {
   });
 };
 
-// 추가
 export const useAddAccount = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      const user = await getAuthUser();
       return fromSupabase(
         supabase
           .from("accounts")
@@ -38,7 +33,6 @@ export const useAddAccount = () => {
   });
 };
 
-// 수정
 export const useUpdateAccount = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -56,7 +50,6 @@ export const useUpdateAccount = () => {
   });
 };
 
-// 삭제
 export const useDeleteAccount = () => {
   const qc = useQueryClient();
   return useMutation({

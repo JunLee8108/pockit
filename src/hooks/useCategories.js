@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import supabase from "../lib/supabase";
-import { fromSupabase } from "../lib/supabaseQuery";
+import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
 
 const DEFAULT_CATEGORIES = [
@@ -122,12 +122,8 @@ export const useSeedDefaultCategories = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      const user = await getAuthUser();
 
-      // 이미 카테고리가 있으면 skip
       const { count } = await supabase
         .from("categories")
         .select("*", { count: "exact", head: true })
@@ -150,10 +146,7 @@ export const useAddCategory = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not authenticated");
+      const user = await getAuthUser();
       return fromSupabase(
         supabase
           .from("categories")
