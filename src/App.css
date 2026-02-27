@@ -121,6 +121,13 @@ body {
   animation: slideDown 0.25s ease-out both;
 }
 
+/* ── Recharts focus outline 제거 ── */
+
+.recharts-wrapper:focus,
+.recharts-surface:focus {
+  outline: none;
+}
+
 /* ── Touch / Hover 분기 ── */
 
 @media (hover: none) {
