@@ -13,7 +13,6 @@ const CategorySelect = ({
 
   const selected = categories.find((c) => c.id === value) || null;
 
-  // 외부 클릭 닫기
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -23,7 +22,6 @@ const CategorySelect = ({
     return () => document.removeEventListener("mousedown", handler);
   }, [open]);
 
-  // ESC 닫기
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -35,10 +33,17 @@ const CategorySelect = ({
 
   return (
     <div ref={ref} className="relative">
-      {/* Trigger */}
-      <button
-        type="button"
+      {/* Trigger — div로 변경 (내부 button 중첩 방지) */}
+      <div
+        role="button"
+        tabIndex={0}
         onClick={() => setOpen((p) => !p)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((p) => !p);
+          }
+        }}
         className="w-full px-4 py-2.5 bg-bg border border-border rounded-lg text-sm text-left outline-none transition-colors duration-150 focus:border-mint flex items-center gap-2.5 cursor-pointer"
       >
         {selected ? (
@@ -71,7 +76,7 @@ const CategorySelect = ({
             <ChevronDown size={16} className="text-sub shrink-0" />
           </>
         )}
-      </button>
+      </div>
 
       {/* Dropdown */}
       {open && (
