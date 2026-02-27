@@ -11,6 +11,7 @@ import Login from "./pages/Auth/Login";
 import SignUp from "./pages/Auth/SignUp";
 import Accounts from "./pages/Accounts/Accounts";
 import Transactions from "./pages/Transactions/Transactions";
+import Statistics from "./pages/Statistics/Statistics";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import "./App.css";
 
@@ -44,7 +45,7 @@ const App = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/accounts" element={<Accounts />} />
             <Route path="/transactions" element={<Transactions />} />
-            <Route path="/statistics" element={<Placeholder title="통계" />} />
+            <Route path="/statistics" element={<Statistics />} />
             <Route path="/budget" element={<Placeholder title="예산" />} />
             <Route
               path="/categories"

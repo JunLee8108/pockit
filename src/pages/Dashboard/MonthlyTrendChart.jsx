@@ -1,40 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import useContainerWidth from "../../hooks/useContainerWidth";
 
 const CHART_HEIGHT = 280;
-
-const useContainerWidth = () => {
-  const [width, setWidth] = useState(0);
-  const elRef = useRef(null);
-  const roRef = useRef(null);
-
-  const ref = useCallback((node) => {
-    if (roRef.current) {
-      roRef.current.disconnect();
-      roRef.current = null;
-    }
-
-    elRef.current = node;
-
-    if (node) {
-      // DOM 부착 즉시 측정
-      setWidth(node.offsetWidth);
-
-      // 이후 리사이즈 대응
-      roRef.current = new ResizeObserver((entries) => {
-        const w = entries[0]?.contentRect?.width;
-        if (w && w > 0) setWidth(Math.floor(w));
-      });
-      roRef.current.observe(node);
-    }
-  }, []);
-
-  useEffect(() => {
-    return () => roRef.current?.disconnect();
-  }, []);
-
-  return { ref, width };
-};
 
 const formatAxis = (v) => {
   if (v >= 100000000) return `${(v / 100000000).toFixed(0)}억`;
