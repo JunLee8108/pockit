@@ -120,3 +120,18 @@ body {
 .animate-slideDown {
   animation: slideDown 0.25s ease-out both;
 }
+
+/* ── Touch / Hover 분기 ── */
+
+@media (hover: none) {
+  .hover-actions {
+    display: none !important;
+    pointer-events: none;
+  }
+}
+
+@media (hover: hover) {
+  .swipe-actions {
+    display: none !important;
+  }
+}

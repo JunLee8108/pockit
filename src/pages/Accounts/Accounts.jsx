@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Plus } from "lucide-react";
 import { useAccounts, useDeleteAccount } from "../../hooks/useAccounts";
 import { useCurrencies } from "../../hooks/useCurrencies";
@@ -8,11 +8,13 @@ import useUIStore from "../../store/useUIStore";
 import AccountCard from "./AccountCard";
 import AccountForm from "./AccountForm";
 import AccountsSkeleton from "./AccountSkeleton";
+import SwipeableCard from "./SwipeableCard";
 
 const Accounts = () => {
   const { data: accounts = [], isLoading } = useAccounts();
   const { data: currencies = [] } = useCurrencies();
   const deleteAccount = useDeleteAccount();
+  const [openCardId, setOpenCardId] = useState(null);
 
   const {
     accountFormOpen,
@@ -87,7 +89,7 @@ const Accounts = () => {
   if (isLoading) return <AccountsSkeleton />;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6" onClick={() => setOpenCardId(null)}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">계좌 관리</h2>
@@ -198,12 +200,20 @@ const Accounts = () => {
                   </h3>
                   <div className="flex flex-col gap-2">
                     {items.map((account) => (
-                      <AccountCard
+                      <SwipeableCard
                         key={account.id}
-                        account={account}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                      />
+                        cardId={account.id}
+                        openCardId={openCardId}
+                        onOpenChange={setOpenCardId}
+                        onEdit={() => handleEdit(account)}
+                        onDelete={() => handleDelete(account)}
+                      >
+                        <AccountCard
+                          account={account}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                        />
+                      </SwipeableCard>
                     ))}
                   </div>
                 </div>

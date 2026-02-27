@@ -43,7 +43,7 @@ const AccountCard = ({ account, onEdit, onDelete }) => {
         <div className="text-[11px] text-sub">{account.currency}</div>
       </div>
 
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
+      <div className="hover-actions flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
         <button
           onClick={() => onEdit(account)}
           className="p-1.5 rounded-md text-sub hover:bg-light cursor-pointer bg-transparent border-none"
