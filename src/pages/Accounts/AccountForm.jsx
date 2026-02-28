@@ -305,7 +305,7 @@ const AccountForm = ({ open, onClose, editAccount = null }) => {
 
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`relative bg-surface border border-border rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto ${
+        className={`relative overscroll-contain bg-surface border border-border rounded-t-2xl sm:rounded-2xl p-6 w-full sm:max-w-[500px] max-h-[90vh] overflow-y-auto ${
           animating ? "animate-slideDown" : "animate-slideUp"
         }`}
       >
