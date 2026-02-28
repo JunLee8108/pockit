@@ -141,7 +141,10 @@ const TransactionFormInner = ({ onClose, editTx = null }) => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col gap-4 overflow-hidden"
+      >
         {/* Type */}
         <div className="flex gap-2">
           {TYPE_OPTIONS.map((opt) => (
