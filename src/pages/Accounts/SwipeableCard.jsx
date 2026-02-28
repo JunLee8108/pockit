@@ -34,6 +34,7 @@ const SwipeableCard = ({
     const t = e.touches[0];
     startRef.current = { x: t.clientX, y: t.clientY };
     dirLocked.current = null;
+    setOffsetX(isOpenRef.current ? -actionWidthRef.current : 0);
     setDragging(true);
   }, []);
 
