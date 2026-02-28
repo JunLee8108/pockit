@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "./Sidebar";
-import BottomNav from "./BottomNav";
+import MobileHeader from "./MobileHeader";
+import MobileDrawer from "./MobileDrawer";
 import useUIStore from "../store/useUIStore";
 
 const useViewport = () => {
@@ -18,7 +19,6 @@ const useViewport = () => {
   return "desktop";
 };
 
-// Layout.jsx
 const Layout = () => {
   const viewport = useViewport();
   const { sidebarCollapsed } = useUIStore();
@@ -29,21 +29,22 @@ const Layout = () => {
 
   return (
     <div className="min-h-screen bg-bg">
-      {!isMobile && <Sidebar collapsed={collapsed} />}
+      {!isMobile && <Sidebar collapsed={collapsed} canToggle={!isTablet} />}
+
+      {isMobile && <MobileHeader />}
+      {isMobile && <MobileDrawer />}
 
       <main
         className="min-h-screen transition-[margin] duration-200 ease-in-out"
         style={{
           marginLeft: isMobile ? 0 : collapsed ? "4.5rem" : "15rem",
-          paddingBottom: isMobile ? "4.5rem" : 0,
+          paddingTop: isMobile ? "3.5rem" : 0,
         }}
       >
         <div className="max-w-[1200px] mx-auto p-6">
           <Outlet />
         </div>
       </main>
-
-      {isMobile && <BottomNav />}
     </div>
   );
 };

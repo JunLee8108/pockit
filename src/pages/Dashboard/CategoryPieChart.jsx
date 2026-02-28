@@ -38,7 +38,6 @@ const CategoryPieChart = ({ transactions, fmt }) => {
       pct: tot > 0 ? Math.round((c.value / tot) * 100) : 0,
     }));
 
-    // 나머지를 "기타"로 합침
     if (sorted.length > 5) {
       const rest = sorted.slice(5).reduce((s, c) => s + c.value, 0);
       top5.push({
@@ -96,13 +95,13 @@ const CategoryPieChart = ({ transactions, fmt }) => {
                     textAnchor="middle"
                     dominantBaseline="central"
                   >
-                    <tspan x={cx} dy="-8" fill="#6b7280" fontSize="11">
+                    <tspan x={cx} dy="-8" fill="var(--color-sub)" fontSize="11">
                       총 지출
                     </tspan>
                     <tspan
                       x={cx}
                       dy="20"
-                      fill="#1a1a1a"
+                      fill="var(--color-text)"
                       fontSize="16"
                       fontWeight="700"
                     >

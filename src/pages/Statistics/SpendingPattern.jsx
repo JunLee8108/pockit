@@ -43,10 +43,11 @@ const SpendingPattern = ({ transactions, year, month, divisor, fmt }) => {
   }, [transactions, year, month, divisor]);
 
   const getColor = (amount) => {
-    if (!amount || amount === 0) return "var(--color-light)";
+    if (!amount || amount === 0)
+      return { bg: "var(--color-light)", intensity: 0 };
     const intensity = Math.min(amount / maxAmount, 1);
     const alpha = 0.15 + intensity * 0.7;
-    return `rgba(244, 132, 95, ${alpha})`;
+    return { bg: `rgba(244, 132, 95, ${alpha})`, intensity };
   };
 
   const handleDayClick = (day) => {
@@ -86,13 +87,25 @@ const SpendingPattern = ({ transactions, year, month, divisor, fmt }) => {
                       ? "ring-2 ring-mint ring-offset-1"
                       : ""
                   }`}
-                  style={{ backgroundColor: getColor(cell.amount) }}
+                  style={{ backgroundColor: getColor(cell.amount).bg }}
                 >
-                  <span className="text-[12px] text-text font-medium">
+                  <span
+                    className={`text-[12px] font-medium ${
+                      getColor(cell.amount).intensity > 0.5
+                        ? "text-white"
+                        : "text-text"
+                    }`}
+                  >
                     {cell.day}
                   </span>
                   {cell.amount > 0 && (
-                    <span className="text-[9px] text-sub leading-tight">
+                    <span
+                      className={`text-[9px] leading-tight ${
+                        getColor(cell.amount).intensity > 0.5
+                          ? "text-white/80"
+                          : "text-sub"
+                      }`}
+                    >
                       {cell.amount >= 1000
                         ? `${(cell.amount / 1000).toFixed(0)}k`
                         : cell.amount.toFixed(0)}

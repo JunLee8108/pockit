@@ -99,20 +99,20 @@ const DailyFlowChart = ({ transactions, year, month, divisor }) => {
             />
             <XAxis
               dataKey="date"
-              tick={{ fill: "#6b7280", fontSize: 11 }}
+              tick={{ fill: "var(--color-sub)", fontSize: 11 }}
               axisLine={{ stroke: "var(--color-border)" }}
               tickLine={false}
               interval="preserveStartEnd"
             />
             <YAxis
-              tick={{ fill: "#6b7280", fontSize: 11 }}
+              tick={{ fill: "var(--color-sub)", fontSize: 11 }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
             <ReferenceLine
               y={avgDaily}
-              stroke="#6b7280"
+              stroke="var(--color-sub)"
               strokeDasharray="4 4"
               strokeWidth={1}
             />

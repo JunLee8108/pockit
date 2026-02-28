@@ -64,13 +64,13 @@ const MonthlyTrendChart = ({ data }) => {
             />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: "var(--color-sub)", fontSize: 12 }}
               axisLine={{ stroke: "var(--color-border)" }}
               tickLine={false}
             />
             <YAxis
               tickFormatter={formatAxis}
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: "var(--color-sub)", fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />

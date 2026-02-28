@@ -23,6 +23,20 @@
   --color-error-bg: #fef2f2;
 }
 
+/* ── Dark Theme ── */
+
+[data-theme="dark"] {
+  --color-bg: #0c0c0c;
+  --color-surface: #161616;
+  --color-text: #ececec;
+  --color-sub: #8b8b8b;
+  --color-border: #282828;
+  --color-light: #1e1e1e;
+
+  --color-mint-bg: rgba(109, 212, 180, 0.1);
+  --color-error-bg: rgba(239, 68, 68, 0.1);
+}
+
 /* ── Base ── */
 
 html {
@@ -31,6 +45,8 @@ html {
 
 body {
   font-family: var(--font-family-pretendard);
+  background-color: var(--color-bg);
+  color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

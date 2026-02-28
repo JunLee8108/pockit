@@ -13,6 +13,7 @@ import {
 import { NAV_ITEMS } from "../utils/constants";
 import useAuthStore from "../store/useAuthStore";
 import useUIStore from "../store/useUIStore";
+import ThemeToggle from "../components/ThemeToggle";
 
 const iconMap = { LayoutDashboard, Receipt, BarChart3, Wallet, Tag, Landmark };
 
@@ -27,7 +28,7 @@ const Label = ({ collapsed, children }) => (
   </span>
 );
 
-const Sidebar = ({ collapsed: collapsedProp }) => {
+const Sidebar = ({ collapsed: collapsedProp, canToggle = true }) => {
   const { profile, signOut } = useAuthStore();
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
   const c = collapsedProp ?? sidebarCollapsed;
@@ -48,12 +49,20 @@ const Sidebar = ({ collapsed: collapsedProp }) => {
         `}
       >
         {c ? (
-          <button
-            onClick={toggleSidebar}
-            className="w-8 h-8 rounded-lg bg-mint-bg flex items-center justify-center cursor-pointer border-none"
-          >
-            <ChevronRight size={16} className="text-mint" />
-          </button>
+          canToggle ? (
+            /* 데스크탑: 사용자가 접음 → 펼치기 버튼 */
+            <button
+              onClick={toggleSidebar}
+              className="w-8 h-8 rounded-lg bg-mint-bg flex items-center justify-center cursor-pointer border-none"
+            >
+              <ChevronRight size={16} className="text-mint" />
+            </button>
+          ) : (
+            /* 태블릿: 자동 접힘 → 로고 아이콘 */
+            <div className="w-8 h-8 rounded-lg bg-mint-bg flex items-center justify-center">
+              <Wallet size={18} className="text-mint" />
+            </div>
+          )
         ) : (
           <>
             <div className="flex items-center gap-2.5">
@@ -102,8 +111,10 @@ const Sidebar = ({ collapsed: collapsedProp }) => {
         })}
       </nav>
 
-      {/* Profile + Logout */}
-      <div className="p-3 border-t border-border shrink-0">
+      {/* Theme + Profile + Logout */}
+      <div className="p-3 border-t border-border shrink-0 flex flex-col gap-2">
+        <ThemeToggle collapsed={c} />
+
         {profile && (
           <div
             className={`

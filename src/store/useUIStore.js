@@ -4,6 +4,11 @@ const useUIStore = create((set) => ({
   sidebarCollapsed: false,
   toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
+  // Mobile Drawer
+  mobileDrawerOpen: false,
+  openMobileDrawer: () => set({ mobileDrawerOpen: true }),
+  closeMobileDrawer: () => set({ mobileDrawerOpen: false }),
+
   // Account Form
   accountFormOpen: false,
   accountEditTarget: null,

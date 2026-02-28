@@ -35,7 +35,6 @@ const CategoryTrend = ({ trendData, categories, divisor }) => {
   );
   const [selectedId, setSelectedId] = useState("");
 
-  // 선택된 카테고리가 없으면 첫 번째로
   const activeId = selectedId || expenseCategories[0]?.id || "";
   const activeCat = expenseCategories.find((c) => c.id === activeId);
 
@@ -104,12 +103,12 @@ const CategoryTrend = ({ trendData, categories, divisor }) => {
             />
             <XAxis
               dataKey="label"
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: "var(--color-sub)", fontSize: 12 }}
               axisLine={{ stroke: "var(--color-border)" }}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: "#6b7280", fontSize: 12 }}
+              tick={{ fill: "var(--color-sub)", fontSize: 12 }}
               axisLine={false}
               tickLine={false}
             />
@@ -117,9 +116,9 @@ const CategoryTrend = ({ trendData, categories, divisor }) => {
             <Line
               type="monotone"
               dataKey="amount"
-              stroke={activeCat?.color || "#6b7280"}
+              stroke={activeCat?.color || "var(--color-sub)"}
               strokeWidth={2.5}
-              dot={{ r: 4, fill: activeCat?.color || "#6b7280" }}
+              dot={{ r: 4, fill: activeCat?.color || "var(--color-sub)" }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
