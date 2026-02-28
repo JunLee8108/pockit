@@ -91,7 +91,10 @@ const SwipeableCard = ({
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div className="swipe-card relative overflow-hidden rounded-xl">
+    <div
+      className="swipe-card relative overflow-hidden rounded-xl"
+      style={{ isolation: "isolate", WebkitTransform: "translateZ(0)" }}
+    >
       {/* 뒷면: 액션 버튼 */}
       <div className="swipe-actions absolute right-0 top-0 bottom-0 flex">
         {actions.map((action) => (
