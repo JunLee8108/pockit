@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useAccounts, useDeleteAccount } from "../../hooks/useAccounts";
 import { useCurrencies } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
@@ -205,8 +205,22 @@ const Accounts = () => {
                         cardId={account.id}
                         openCardId={openCardId}
                         onOpenChange={setOpenCardId}
-                        onEdit={() => handleEdit(account)}
-                        onDelete={() => handleDelete(account)}
+                        actions={[
+                          {
+                            key: "edit",
+                            label: "수정",
+                            icon: <Pencil size={18} />,
+                            className: "bg-mint",
+                            onClick: () => handleEdit(account),
+                          },
+                          {
+                            key: "delete",
+                            label: "삭제",
+                            icon: <Trash2 size={18} />,
+                            className: "bg-coral",
+                            onClick: () => handleDelete(account),
+                          },
+                        ]}
                       >
                         <AccountCard
                           account={account}

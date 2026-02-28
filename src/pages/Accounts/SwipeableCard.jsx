@@ -1,17 +1,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Pencil, Trash2 } from "lucide-react";
 
-const ACTION_WIDTH = 120;
-const THRESHOLD = 60;
+const BTN_WIDTH = 60;
+const THRESHOLD = 50;
 
 const SwipeableCard = ({
   children,
   cardId,
   openCardId,
   onOpenChange,
-  onEdit,
-  onDelete,
+  actions = [],
 }) => {
+  const actionWidth = actions.length * BTN_WIDTH;
   const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const startRef = useRef({ x: 0, y: 0 });
@@ -24,7 +23,12 @@ const SwipeableCard = ({
     isOpenRef.current = isOpen;
   }, [isOpen]);
 
-  const displayOffset = dragging ? offsetX : isOpen ? -ACTION_WIDTH : 0;
+  const actionWidthRef = useRef(actionWidth);
+  useEffect(() => {
+    actionWidthRef.current = actionWidth;
+  }, [actionWidth]);
+
+  const displayOffset = dragging ? offsetX : isOpen ? -actionWidth : 0;
 
   const handleTouchStart = useCallback((e) => {
     const t = e.touches[0];
@@ -47,11 +51,11 @@ const SwipeableCard = ({
 
     if (dirLocked.current === "v") return;
 
-    // passive: false로 등록했으므로 실제로 스크롤 차단됨
     e.preventDefault();
 
-    const base = isOpenRef.current ? -ACTION_WIDTH : 0;
-    const next = Math.min(0, Math.max(-ACTION_WIDTH, base + dx));
+    const w = actionWidthRef.current;
+    const base = isOpenRef.current ? -w : 0;
+    const next = Math.min(0, Math.max(-w, base + dx));
     setOffsetX(next);
   }, []);
 
@@ -60,9 +64,10 @@ const SwipeableCard = ({
     dirLocked.current = null;
 
     setOffsetX((prev) => {
+      const w = actionWidthRef.current;
       if (prev < -THRESHOLD) {
         onOpenChange(cardId);
-        return -ACTION_WIDTH;
+        return -w;
       } else {
         if (isOpenRef.current) onOpenChange(null);
         return 0;
@@ -70,7 +75,6 @@ const SwipeableCard = ({
     });
   }, [cardId, onOpenChange]);
 
-  // passive: false로 직접 등록
   useEffect(() => {
     const el = contentRef.current;
     if (!el) return;
@@ -88,31 +92,26 @@ const SwipeableCard = ({
 
   return (
     <div className="swipe-card relative overflow-hidden rounded-xl">
+      {/* 뒷면: 액션 버튼 */}
       <div className="swipe-actions absolute right-0 top-0 bottom-0 flex">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-            onOpenChange(null);
-          }}
-          className="w-[60px] flex items-center justify-center bg-mint text-white border-none cursor-pointer"
-          aria-label="수정"
-        >
-          <Pencil size={18} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-            onOpenChange(null);
-          }}
-          className="w-[60px] flex items-center justify-center bg-coral text-white border-none cursor-pointer"
-          aria-label="삭제"
-        >
-          <Trash2 size={18} />
-        </button>
+        {actions.map((action) => (
+          <button
+            key={action.key}
+            onClick={(e) => {
+              e.stopPropagation();
+              action.onClick();
+              onOpenChange(null);
+            }}
+            className={`w-[60px] flex items-center justify-center text-white border-none cursor-pointer ${action.className || ""}`}
+            style={action.style}
+            aria-label={action.label}
+          >
+            {action.icon}
+          </button>
+        ))}
       </div>
 
+      {/* 앞면: 카드 콘텐츠 */}
       <div
         ref={contentRef}
         style={{
