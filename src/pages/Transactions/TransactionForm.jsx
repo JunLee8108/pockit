@@ -16,7 +16,7 @@ import CategorySelect from "../../components/CategorySelect";
 import DescriptionAutocomplete from "../../components/DescriptionAutocomplete";
 
 const inputCls =
-  "w-full px-4 py-2.5 bg-bg border border-border rounded-lg text-sm text-text outline-none transition-colors duration-150 focus:border-mint";
+  "w-full min-w-0 px-4 py-2.5 bg-bg border border-border rounded-lg text-sm text-text outline-none transition-colors duration-150 focus:border-mint";
 
 const TYPE_OPTIONS = [
   { value: "income", label: "수입", color: "bg-mint text-white" },
