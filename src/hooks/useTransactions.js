@@ -79,6 +79,15 @@ export const useTransactions = (filters = {}) => {
   };
 };
 
+// ── 공통 invalidation 헬퍼 ──
+
+const invalidateAll = (qc) => {
+  qc.invalidateQueries({ queryKey: queryKeys.transactions.all });
+  qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
+  qc.invalidateQueries({ queryKey: ["category-trend"] });
+  qc.invalidateQueries({ queryKey: ["monthly-summary"] });
+};
+
 // ── Mutations ──
 
 export const useAddTransaction = () => {
@@ -104,10 +113,7 @@ export const useAddTransaction = () => {
 
       return tx;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.transactions.all });
-      qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
-    },
+    onSuccess: () => invalidateAll(qc),
   });
 };
 
@@ -140,10 +146,7 @@ export const useUpdateTransaction = () => {
 
       return tx;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.transactions.all });
-      qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
-    },
+    onSuccess: () => invalidateAll(qc),
   });
 };
 
@@ -159,10 +162,7 @@ export const useDeleteTransaction = () => {
         .eq("id", tx.id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.transactions.all });
-      qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
-    },
+    onSuccess: () => invalidateAll(qc),
   });
 };
 

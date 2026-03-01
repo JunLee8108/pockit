@@ -107,8 +107,8 @@ const SpendingPattern = ({ transactions, year, month, divisor, fmt }) => {
                       }`}
                     >
                       {cell.amount >= 1000
-                        ? `${(cell.amount / 1000).toFixed(0)}k`
-                        : cell.amount.toFixed(0)}
+                        ? `${(cell.amount / 1000).toFixed(1)}k`
+                        : cell.amount.toFixed(2)}
                     </span>
                   )}
                 </div>

@@ -18,8 +18,8 @@ const useThemeStore = create((set, get) => ({
     const resolved = resolve(value);
     set({ theme: value, resolved });
     applyTheme(resolved);
+    localStorage.setItem("pockit-theme", value);
 
-    // Supabase에 저장
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -31,24 +31,28 @@ const useThemeStore = create((set, get) => ({
     }
   },
 
+  // 로그인 시 해당 유저의 테마를 DB에서 로드하여 즉시 적용
+  loadUserTheme: async (userId) => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("theme")
+      .eq("id", userId)
+      .single();
+    if (data?.theme) {
+      const resolved = resolve(data.theme);
+      set({ theme: data.theme, resolved });
+      applyTheme(resolved);
+      localStorage.setItem("pockit-theme", data.theme);
+    }
+  },
+
   initialize: async () => {
     // 1. Supabase에서 로드
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (user) {
-      const { data } = await supabase
-        .from("profiles")
-        .select("theme")
-        .eq("id", user.id)
-        .single();
-      if (data?.theme) {
-        const resolved = resolve(data.theme);
-        set({ theme: data.theme, resolved });
-        applyTheme(resolved);
-      } else {
-        applyTheme(resolve("system"));
-      }
+      await get().loadUserTheme(user.id);
     }
 
     // 2. 시스템 테마 변경 감지

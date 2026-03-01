@@ -1,7 +1,3 @@
-/* ============================================================
-   📁 src/App.jsx
-   ============================================================ */
-
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route } from "react-router";
 import useAuthStore from "./store/useAuthStore";
@@ -28,6 +24,7 @@ const Placeholder = ({ title }) => (
 
 const App = () => {
   const initialize = useAuthStore((s) => s.initialize);
+  const user = useAuthStore((s) => s.user);
   const initializeTheme = useThemeStore((s) => s.initialize);
 
   useEffect(() => {
@@ -43,6 +40,13 @@ const App = () => {
       cleanup?.then?.((unsub) => unsub?.());
     };
   }, [initializeTheme]);
+
+  // 로그인 시 해당 유저의 테마 즉시 적용
+  useEffect(() => {
+    if (user) {
+      useThemeStore.getState().loadUserTheme(user.id);
+    }
+  }, [user]);
 
   return (
     <BrowserRouter>

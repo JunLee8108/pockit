@@ -16,6 +16,14 @@ export const useAccounts = () => {
   });
 };
 
+// 공통 invalidation 헬퍼
+const invalidateAll = (qc) => {
+  qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
+  qc.invalidateQueries({ queryKey: queryKeys.transactions.all });
+  qc.invalidateQueries({ queryKey: ["category-trend"] });
+  qc.invalidateQueries({ queryKey: ["monthly-summary"] });
+};
+
 export const useAddAccount = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -46,7 +54,7 @@ export const useUpdateAccount = () => {
           .single(),
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.accounts.all }),
+    onSuccess: () => invalidateAll(qc),
   });
 };
 
@@ -57,6 +65,6 @@ export const useDeleteAccount = () => {
       const { error } = await supabase.from("accounts").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.accounts.all }),
+    onSuccess: () => invalidateAll(qc),
   });
 };
