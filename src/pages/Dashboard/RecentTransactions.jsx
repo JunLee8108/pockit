@@ -1,5 +1,10 @@
+// RecentTransactions.jsx
+
+import { useState } from "react";
 import { Link } from "react-router";
+import { Pencil, Trash2, Copy } from "lucide-react";
 import TransactionCard from "../Transactions/TransactionCard";
+import SwipeableCard from "../Accounts/SwipeableCard";
 
 const RecentTransactions = ({
   transactions,
@@ -7,6 +12,7 @@ const RecentTransactions = ({
   onDelete,
   onDuplicate,
 }) => {
+  const [openCardId, setOpenCardId] = useState(null);
   const recent = transactions.slice(0, 5);
 
   if (recent.length === 0) {
@@ -29,15 +35,44 @@ const RecentTransactions = ({
           전체 보기 →
         </Link>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2" onClick={() => setOpenCardId(null)}>
         {recent.map((tx) => (
-          <TransactionCard
+          <SwipeableCard
             key={tx.id}
-            tx={tx}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
-          />
+            cardId={tx.id}
+            openCardId={openCardId}
+            onOpenChange={setOpenCardId}
+            actions={[
+              {
+                key: "duplicate",
+                label: "복제",
+                icon: <Copy size={18} />,
+                className: "bg-sub",
+                onClick: () => onDuplicate(tx),
+              },
+              {
+                key: "edit",
+                label: "수정",
+                icon: <Pencil size={18} />,
+                className: "bg-mint",
+                onClick: () => onEdit(tx),
+              },
+              {
+                key: "delete",
+                label: "삭제",
+                icon: <Trash2 size={18} />,
+                className: "bg-coral",
+                onClick: () => onDelete(tx),
+              },
+            ]}
+          >
+            <TransactionCard
+              tx={tx}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onDuplicate={onDuplicate}
+            />
+          </SwipeableCard>
         ))}
       </div>
     </div>

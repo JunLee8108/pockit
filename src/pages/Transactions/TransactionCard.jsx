@@ -58,7 +58,7 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
+      <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
         <button
           onClick={() => onDuplicate(tx)}
           className="p-1.5 rounded-md text-sub hover:bg-light cursor-pointer bg-transparent border-none"
