@@ -15,6 +15,7 @@ const SwipeableCard = ({
   const [dragging, setDragging] = useState(false);
   const startRef = useRef({ x: 0, y: 0 });
   const dirLocked = useRef(null);
+  const didSwipeRef = useRef(false);
   const contentRef = useRef(null);
   const isOpen = openCardId === cardId;
 
@@ -34,6 +35,7 @@ const SwipeableCard = ({
     const t = e.touches[0];
     startRef.current = { x: t.clientX, y: t.clientY };
     dirLocked.current = null;
+    didSwipeRef.current = false;
     setOffsetX(isOpenRef.current ? -actionWidthRef.current : 0);
     setDragging(true);
   }, []);
@@ -53,6 +55,7 @@ const SwipeableCard = ({
     if (dirLocked.current === "v") return;
 
     e.preventDefault();
+    didSwipeRef.current = true;
 
     const w = actionWidthRef.current;
     const base = isOpenRef.current ? -w : 0;
@@ -75,6 +78,24 @@ const SwipeableCard = ({
       }
     });
   }, [cardId, onOpenChange]);
+
+  // 스와이프 직후 또는 열린 상태에서의 클릭 처리
+  const handleContentClick = useCallback(
+    (e) => {
+      // 스와이프 직후 → 클릭 무시
+      if (didSwipeRef.current) {
+        e.stopPropagation();
+        didSwipeRef.current = false;
+        return;
+      }
+      // 열린 상태 → 닫기만 하고 클릭 전파 차단
+      if (isOpenRef.current) {
+        e.stopPropagation();
+        onOpenChange(null);
+      }
+    },
+    [onOpenChange],
+  );
 
   useEffect(() => {
     const el = contentRef.current;
@@ -118,6 +139,7 @@ const SwipeableCard = ({
       {/* 앞면: 카드 콘텐츠 */}
       <div
         ref={contentRef}
+        onClick={handleContentClick}
         style={{
           transform: `translateX(${displayOffset}px)`,
           transition: dragging ? "none" : "transform 0.25s ease",

@@ -9,12 +9,14 @@ import AccountCard from "./AccountCard";
 import AccountForm from "./AccountForm";
 import AccountsSkeleton from "./AccountSkeleton";
 import SwipeableCard from "./SwipeableCard";
+import AccountTransactions from "./AccountTransactions";
 
 const Accounts = () => {
   const { data: accounts = [], isLoading } = useAccounts();
   const { data: currencies = [] } = useCurrencies();
   const deleteAccount = useDeleteAccount();
   const [openCardId, setOpenCardId] = useState(null);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
 
   const {
     accountFormOpen,
@@ -23,10 +25,24 @@ const Accounts = () => {
     closeAccountForm,
   } = useUIStore();
 
+  // 선택된 계좌 (항상 최신 데이터 참조)
+  const selectedAccount =
+    accounts.find((a) => a.id === selectedAccountId) || null;
+
+  // 계좌가 삭제되면 선택 해제
+  if (selectedAccountId && !selectedAccount) {
+    // state 업데이트를 렌더 중 직접 하지 않고 다음 틱에서 처리
+    setTimeout(() => setSelectedAccountId(null), 0);
+  }
+
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
     [currencies],
   );
+
+  const handleSelect = useCallback((account) => {
+    setSelectedAccountId(account.id);
+  }, []);
 
   const handleEdit = useCallback(
     (account) => openAccountForm(account),
@@ -102,140 +118,149 @@ const Accounts = () => {
         </button>
       </div>
 
-      {/* 2-Column Layout (desktop) / 1-Column (mobile, tablet) */}
-      <div className="flex flex-col lg:flex-row gap-8">
-        {/* ── 좌측: 요약 패널 ── */}
-        <div className="w-full lg:w-[340px] shrink-0">
-          <div className="lg:sticky lg:top-6 flex flex-col gap-4">
-            {/* 순자산 요약 */}
-            {Object.keys(totalsByCurrency).length > 0 && (
-              <div className="bg-surface border border-border rounded-xl p-5">
-                <h3 className="text-[13px] text-sub font-medium mb-4">
-                  총 자산 요약
-                </h3>
-                <div className="flex flex-col gap-4">
-                  {Object.entries(totalsByCurrency).map(([code, totals]) => {
-                    const cur = getCurrencyByCode(code);
-                    const net = totals.assets + totals.liabilities;
-                    return (
-                      <div key={code}>
-                        <div className="text-[12px] text-sub mb-1">
-                          순자산 ({code})
-                        </div>
-                        <div
-                          className={`text-[22px] font-bold ${net < 0 ? "text-coral" : "text-text"}`}
-                        >
-                          {formatMoney(net, cur)}
-                        </div>
-                        {totals.liabilities < 0 && (
-                          <div className="text-[12px] text-coral mt-1">
-                            부채: {formatMoney(totals.liabilities, cur)}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 빠른 통계 */}
-            {accounts.length > 0 && (
-              <div className="bg-surface border border-border rounded-xl p-5">
-                <h3 className="text-[13px] text-sub font-medium mb-3">
-                  빠른 통계
-                </h3>
-                <div className="flex flex-col gap-2.5">
-                  <div className="flex justify-between text-[13px]">
-                    <span className="text-sub">총 계좌</span>
-                    <span className="text-text font-medium">
-                      {stats.count}개
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[13px]">
-                    <span className="text-sub">통화</span>
-                    <span className="text-text font-medium">
-                      {stats.currencyCount}종 ({stats.currencyCodes.join(", ")})
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-[13px]">
-                    <span className="text-sub">부채</span>
-                    <span
-                      className={`font-medium ${stats.hasLiabilities ? "text-coral" : "text-text"}`}
-                    >
-                      {stats.hasLiabilities ? "있음" : "없음"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── 우측: 계좌 목록 ── */}
-        <div className="flex-1 min-w-0">
-          {/* Empty */}
-          {accounts.length === 0 && (
-            <div className="bg-surface border border-border rounded-xl p-10 text-center">
-              <p className="text-sub text-sm mb-3">등록된 계좌가 없습니다</p>
-              <button
-                onClick={() => openAccountForm()}
-                className="text-mint text-sm font-medium cursor-pointer bg-transparent border-none"
-              >
-                첫 계좌를 추가해보세요 →
-              </button>
-            </div>
-          )}
-
-          {/* 타입별 그룹 */}
-          <div className="flex flex-col gap-5">
-            {ACCOUNT_TYPE_ORDER.map((type) => {
-              const items = grouped[type];
-              if (!items || items.length === 0) return null;
-
-              return (
-                <div key={type}>
-                  <h3 className="text-[13px] text-sub font-medium mb-3">
-                    {ACCOUNT_TYPE_LABELS[type]}
+      {/* ★ 계좌 선택 시 거래내역, 아닐 때 기존 2-Column */}
+      {selectedAccount ? (
+        <AccountTransactions
+          account={selectedAccount}
+          onBack={() => setSelectedAccountId(null)}
+        />
+      ) : (
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* ── 좌측: 요약 패널 ── */}
+          <div className="w-full lg:w-[340px] shrink-0">
+            <div className="lg:sticky lg:top-6 flex flex-col gap-4">
+              {/* 순자산 요약 */}
+              {Object.keys(totalsByCurrency).length > 0 && (
+                <div className="bg-surface border border-border rounded-xl p-5">
+                  <h3 className="text-[13px] text-sub font-medium mb-4">
+                    총 자산 요약
                   </h3>
-                  <div className="flex flex-col gap-2">
-                    {items.map((account) => (
-                      <SwipeableCard
-                        key={account.id}
-                        cardId={account.id}
-                        openCardId={openCardId}
-                        onOpenChange={setOpenCardId}
-                        actions={[
-                          {
-                            key: "edit",
-                            label: "수정",
-                            icon: <Pencil size={18} />,
-                            className: "bg-mint",
-                            onClick: () => handleEdit(account),
-                          },
-                          {
-                            key: "delete",
-                            label: "삭제",
-                            icon: <Trash2 size={18} />,
-                            className: "bg-coral",
-                            onClick: () => handleDelete(account),
-                          },
-                        ]}
-                      >
-                        <AccountCard
-                          account={account}
-                          onEdit={handleEdit}
-                          onDelete={handleDelete}
-                        />
-                      </SwipeableCard>
-                    ))}
+                  <div className="flex flex-col gap-4">
+                    {Object.entries(totalsByCurrency).map(([code, totals]) => {
+                      const cur = getCurrencyByCode(code);
+                      const net = totals.assets + totals.liabilities;
+                      return (
+                        <div key={code}>
+                          <div className="text-[12px] text-sub mb-1">
+                            순자산 ({code})
+                          </div>
+                          <div
+                            className={`text-[22px] font-bold ${net < 0 ? "text-coral" : "text-text"}`}
+                          >
+                            {formatMoney(net, cur)}
+                          </div>
+                          {totals.liabilities < 0 && (
+                            <div className="text-[12px] text-coral mt-1">
+                              부채: {formatMoney(totals.liabilities, cur)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              );
-            })}
+              )}
+
+              {/* 빠른 통계 */}
+              {accounts.length > 0 && (
+                <div className="bg-surface border border-border rounded-xl p-5">
+                  <h3 className="text-[13px] text-sub font-medium mb-3">
+                    빠른 통계
+                  </h3>
+                  <div className="flex flex-col gap-2.5">
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-sub">총 계좌</span>
+                      <span className="text-text font-medium">
+                        {stats.count}개
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-sub">통화</span>
+                      <span className="text-text font-medium">
+                        {stats.currencyCount}종 (
+                        {stats.currencyCodes.join(", ")})
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-[13px]">
+                      <span className="text-sub">부채</span>
+                      <span
+                        className={`font-medium ${stats.hasLiabilities ? "text-coral" : "text-text"}`}
+                      >
+                        {stats.hasLiabilities ? "있음" : "없음"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── 우측: 계좌 목록 ── */}
+          <div className="flex-1 min-w-0">
+            {/* Empty */}
+            {accounts.length === 0 && (
+              <div className="bg-surface border border-border rounded-xl p-10 text-center">
+                <p className="text-sub text-sm mb-3">등록된 계좌가 없습니다</p>
+                <button
+                  onClick={() => openAccountForm()}
+                  className="text-mint text-sm font-medium cursor-pointer bg-transparent border-none"
+                >
+                  첫 계좌를 추가해보세요 →
+                </button>
+              </div>
+            )}
+
+            {/* 타입별 그룹 */}
+            <div className="flex flex-col gap-5">
+              {ACCOUNT_TYPE_ORDER.map((type) => {
+                const items = grouped[type];
+                if (!items || items.length === 0) return null;
+
+                return (
+                  <div key={type}>
+                    <h3 className="text-[13px] text-sub font-medium mb-3">
+                      {ACCOUNT_TYPE_LABELS[type]}
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      {items.map((account) => (
+                        <SwipeableCard
+                          key={account.id}
+                          cardId={account.id}
+                          openCardId={openCardId}
+                          onOpenChange={setOpenCardId}
+                          actions={[
+                            {
+                              key: "edit",
+                              label: "수정",
+                              icon: <Pencil size={18} />,
+                              className: "bg-mint",
+                              onClick: () => handleEdit(account),
+                            },
+                            {
+                              key: "delete",
+                              label: "삭제",
+                              icon: <Trash2 size={18} />,
+                              className: "bg-coral",
+                              onClick: () => handleDelete(account),
+                            },
+                          ]}
+                        >
+                          <AccountCard
+                            account={account}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onClick={handleSelect}
+                          />
+                        </SwipeableCard>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Form Modal */}
       <AccountForm

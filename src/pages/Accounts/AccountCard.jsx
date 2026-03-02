@@ -3,13 +3,16 @@ import { formatMoney } from "../../utils/format";
 import { ACCOUNT_ICON_MAP } from "../../utils/constants";
 import { useCurrencyByCode } from "../../hooks/useCurrencies";
 
-const AccountCard = ({ account, onEdit, onDelete }) => {
+const AccountCard = ({ account, onEdit, onDelete, onClick }) => {
   const currency = useCurrencyByCode(account.currency);
   const isNegative = account.balance < 0;
   const IconComponent = ACCOUNT_ICON_MAP[account.icon];
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4 group">
+    <div
+      className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4 group cursor-pointer hover:bg-light/50 transition-colors"
+      onClick={() => onClick?.(account)}
+    >
       <div
         className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
         style={{ backgroundColor: account.color + "20" }}
@@ -45,13 +48,19 @@ const AccountCard = ({ account, onEdit, onDelete }) => {
 
       <div className="hover-actions flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
         <button
-          onClick={() => onEdit(account)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(account);
+          }}
           className="p-1.5 rounded-md text-sub hover:bg-light cursor-pointer bg-transparent border-none"
         >
           <Pencil size={14} />
         </button>
         <button
-          onClick={() => onDelete(account)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(account);
+          }}
           className="p-1.5 rounded-md text-error hover:bg-error-bg cursor-pointer bg-transparent border-none"
         >
           <Trash2 size={14} />
