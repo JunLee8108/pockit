@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import CategoryIcon from "../../components/CategoryIcon";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "전체" },
@@ -7,7 +8,13 @@ const TYPE_OPTIONS = [
   { value: "transfer", label: "이체" },
 ];
 
-const TransactionFilter = ({ filters, onChange }) => {
+const TransactionFilter = ({
+  filters,
+  onChange,
+  categories = [],
+  categoryIds = [],
+  onCategoryToggle,
+}) => {
   const { year, month, type, search } = filters;
 
   const goMonth = (delta) => {
@@ -23,6 +30,9 @@ const TransactionFilter = ({ filters, onChange }) => {
     }
     onChange({ ...filters, year: y, month: m });
   };
+
+  const showCategories =
+    type !== "transfer" && categories.length > 0 && onCategoryToggle;
 
   return (
     <div className="flex flex-col gap-3">
@@ -63,6 +73,46 @@ const TransactionFilter = ({ filters, onChange }) => {
           ))}
         </div>
       </div>
+
+      {/* Category Chips — 모바일만 */}
+      {showCategories && (
+        <div className="lg:hidden flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          <button
+            onClick={() => onCategoryToggle(null)}
+            className={`px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors whitespace-nowrap shrink-0 ${
+              categoryIds.length === 0
+                ? "bg-text text-surface"
+                : "bg-light text-sub"
+            }`}
+          >
+            전체
+          </button>
+          {categories.map((cat) => {
+            const selected = categoryIds.includes(cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => onCategoryToggle(cat.id)}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors whitespace-nowrap shrink-0 ${
+                  selected ? "text-white" : "bg-light text-sub"
+                }`}
+                style={
+                  selected
+                    ? { backgroundColor: cat.color || "#94a3b8" }
+                    : undefined
+                }
+              >
+                <CategoryIcon
+                  name={cat.icon}
+                  size={12}
+                  style={{ color: selected ? "#fff" : cat.color || "#94a3b8" }}
+                />
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Search */}
       <div className="relative">

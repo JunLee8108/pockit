@@ -4,6 +4,7 @@ import {
   useTransactions,
   useDeleteTransaction,
 } from "../../hooks/useTransactions";
+import { useCategories } from "../../hooks/useCategories";
 import { useCurrencies } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
 import CategoryIcon from "../../components/CategoryIcon";
@@ -21,7 +22,32 @@ const Transactions = () => {
     month: now.getMonth() + 1,
     type: "all",
     search: "",
+    categoryIds: [],
   });
+
+  // type 변경 시 categoryIds 리셋
+  const handleFilterChange = useCallback((next) => {
+    setFilters((prev) => {
+      if (next.type !== prev.type) {
+        return { ...next, categoryIds: [] };
+      }
+      return next;
+    });
+  }, []);
+
+  const handleCategoryToggle = useCallback((id) => {
+    if (id === null) {
+      setFilters((prev) => ({ ...prev, categoryIds: [] }));
+      return;
+    }
+    setFilters((prev) => {
+      const ids = prev.categoryIds;
+      const next = ids.includes(id)
+        ? ids.filter((v) => v !== id)
+        : [...ids, id];
+      return { ...prev, categoryIds: next };
+    });
+  }, []);
 
   // 검색 debounce (300ms)
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -40,12 +66,34 @@ const Transactions = () => {
     [filters, debouncedSearch],
   );
 
-  const { data: transactions = [], isLoading } = useTransactions(queryFilters);
+  const {
+    data: transactions = [],
+    rawData = [],
+    isLoading,
+  } = useTransactions(queryFilters);
   const showSkeleton = isLoading && transactions.length === 0;
   const { data: currencies = [] } = useCurrencies();
+  const { data: categories = [] } = useCategories();
   const deleteTx = useDeleteTransaction();
 
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
+
+  // 현재 월 거래에 실제 사용된 카테고리만
+  const filteredCategories = useMemo(() => {
+    if (filters.type === "transfer") return [];
+
+    const usedIds = new Set();
+    rawData.forEach((tx) => {
+      if (
+        tx.category_id &&
+        (filters.type === "all" || tx.type === filters.type)
+      ) {
+        usedIds.add(tx.category_id);
+      }
+    });
+
+    return categories.filter((c) => usedIds.has(c.id));
+  }, [categories, rawData, filters.type]);
 
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
@@ -66,8 +114,7 @@ const Transactions = () => {
         description: tx.description,
         memo: tx.memo,
         date: new Date().toISOString().split("T")[0],
-        // id 없음 → 새 거래로 생성
-        duplicateKey: Date.now(), // 폼 리셋용 고유 키
+        duplicateKey: Date.now(),
       });
     },
     [openTxForm],
@@ -225,12 +272,65 @@ const Transactions = () => {
                 </div>
               </div>
             )}
+
+            {/* 카테고리 필터 — 데스크톱만 */}
+            {filters.type !== "transfer" && filteredCategories.length > 0 && (
+              <div className="hidden lg:block bg-surface border border-border rounded-xl p-5">
+                <h3 className="text-[13px] text-sub font-medium mb-3">
+                  카테고리 필터
+                </h3>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    onClick={() => handleCategoryToggle(null)}
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors ${
+                      filters.categoryIds.length === 0
+                        ? "bg-text text-surface"
+                        : "bg-light text-sub"
+                    }`}
+                  >
+                    전체
+                  </button>
+                  {filteredCategories.map((cat) => {
+                    const selected = filters.categoryIds.includes(cat.id);
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => handleCategoryToggle(cat.id)}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors ${
+                          selected ? "text-white" : "bg-light text-sub"
+                        }`}
+                        style={
+                          selected
+                            ? { backgroundColor: cat.color || "#94a3b8" }
+                            : undefined
+                        }
+                      >
+                        <CategoryIcon
+                          name={cat.icon}
+                          size={12}
+                          style={{
+                            color: selected ? "#fff" : cat.color || "#94a3b8",
+                          }}
+                        />
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
         {/* ── 우측: 필터 + 목록 ── */}
         <div className="flex-1 min-w-0 flex flex-col gap-4">
-          <TransactionFilter filters={filters} onChange={setFilters} />
+          <TransactionFilter
+            filters={filters}
+            onChange={handleFilterChange}
+            categories={filteredCategories}
+            categoryIds={filters.categoryIds}
+            onCategoryToggle={handleCategoryToggle}
+          />
           <TransactionList
             transactions={transactions}
             onEdit={handleEdit}

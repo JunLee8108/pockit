@@ -35,7 +35,7 @@ const useMonthTransactions = (year, month) => {
 // ── 클라이언트 필터링 (네트워크 요청 없음) ──
 
 export const useTransactions = (filters = {}) => {
-  const { year, month, type, accountId, categoryId, search } = filters;
+  const { year, month, type, accountId, categoryIds, search } = filters;
 
   const query = useMonthTransactions(year, month);
 
@@ -54,8 +54,9 @@ export const useTransactions = (filters = {}) => {
       );
     }
 
-    if (categoryId) {
-      result = result.filter((tx) => tx.category_id === categoryId);
+    if (categoryIds && categoryIds.length > 0) {
+      const set = new Set(categoryIds);
+      result = result.filter((tx) => set.has(tx.category_id));
     }
 
     if (search && search.trim()) {
@@ -71,11 +72,12 @@ export const useTransactions = (filters = {}) => {
     }
 
     return result;
-  }, [query.data, type, accountId, categoryId, search]);
+  }, [query.data, type, accountId, categoryIds, search]);
 
   return {
     ...query,
     data: filtered,
+    rawData: query.data || [],
   };
 };
 
