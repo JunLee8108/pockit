@@ -10,9 +10,13 @@ const getSystemTheme = () =>
 
 const resolve = (theme) => (theme === "system" ? getSystemTheme() : theme);
 
+// ★ localStorage에서 즉시 테마 적용 (네트워크 대기 없음)
+const savedTheme = localStorage.getItem("pockit-theme") || "system";
+applyTheme(resolve(savedTheme));
+
 const useThemeStore = create((set, get) => ({
-  theme: "system",
-  resolved: getSystemTheme(),
+  theme: savedTheme,
+  resolved: resolve(savedTheme),
 
   setTheme: async (value) => {
     const resolved = resolve(value);
@@ -31,7 +35,7 @@ const useThemeStore = create((set, get) => ({
     }
   },
 
-  // 로그인 시 해당 유저의 테마를 DB에서 로드하여 즉시 적용
+  // DB에서 테마 로드 (로그인 시 1회만 호출)
   loadUserTheme: async (userId) => {
     const { data } = await supabase
       .from("profiles")
@@ -46,16 +50,8 @@ const useThemeStore = create((set, get) => ({
     }
   },
 
-  initialize: async () => {
-    // 1. Supabase에서 로드
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await get().loadUserTheme(user.id);
-    }
-
-    // 2. 시스템 테마 변경 감지
+  // ★ 간소화: getUser() 제거, 시스템 테마 리스너만 등록
+  initialize: () => {
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
       const { theme } = get();
