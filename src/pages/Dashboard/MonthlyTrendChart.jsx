@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import useContainerWidth from "../../hooks/useContainerWidth";
 
@@ -28,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-const MonthlyTrendChart = ({ data }) => {
+const MonthlyTrendChart = memo(({ data }) => {
   const { ref, width } = useContainerWidth();
   const hasData = data.some((d) => d.income > 0 || d.expense > 0);
 
@@ -97,6 +98,8 @@ const MonthlyTrendChart = ({ data }) => {
       </div>
     </div>
   );
-};
+});
+
+MonthlyTrendChart.displayName = "MonthlyTrendChart";
 
 export default MonthlyTrendChart;

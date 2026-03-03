@@ -34,7 +34,7 @@ const Dashboard = () => {
     year: PREV_YEAR,
     month: PREV_MONTH,
   });
-  const { summary } = useMonthlySummary(6);
+  const { summary, isLoading: summaryLoading } = useMonthlySummary(6);
   const deleteTx = useDeleteTransaction();
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
 
@@ -43,7 +43,7 @@ const Dashboard = () => {
     [currencies],
   );
 
-  // 주요 통화 (가장 많은 계좌의 통화)
+  // 주요 통화
   const primaryCurrency = useMemo(() => {
     if (accounts.length === 0) return null;
     const freq = {};
@@ -59,13 +59,12 @@ const Dashboard = () => {
     [primaryCurrency],
   );
 
-  // 순자산 (전 계좌 합산)
+  // 순자산
   const netWorth = useMemo(
     () => accounts.reduce((s, a) => s + a.balance, 0),
     [accounts],
   );
 
-  // minor unit → display unit 변환용
   const dp = primaryCurrency?.decimal_places ?? 2;
   const divisor = 10 ** dp;
 
@@ -90,16 +89,15 @@ const Dashboard = () => {
     return { prevIncome: inc, prevExpense: exp };
   }, [prevTxs]);
 
-  // 차트용 display 단위로 변환
-  const displaySummary = useMemo(
-    () =>
-      summary.map((s) => ({
-        ...s,
-        income: s.income / divisor,
-        expense: s.expense / divisor,
-      })),
-    [summary, divisor],
-  );
+  // ★ 차트 데이터: summaryLoading 완료 후에만 계산 → 중간 상태 리렌더 방지
+  const displaySummary = useMemo(() => {
+    if (summaryLoading) return [];
+    return summary.map((s) => ({
+      ...s,
+      income: s.income / divisor,
+      expense: s.expense / divisor,
+    }));
+  }, [summary, divisor, summaryLoading]);
 
   // 핸들러
   const handleEdit = useCallback((tx) => openTxForm(tx), [openTxForm]);
@@ -135,10 +133,8 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <h2 className="text-xl font-semibold text-text">대시보드</h2>
 
-      {/* KPI */}
       <KpiCards
         netWorth={netWorth}
         income={income}
@@ -148,10 +144,9 @@ const Dashboard = () => {
         fmt={fmt}
       />
 
-      {/* 월별 추이 */}
+      {/* ★ summary 로딩 중이면 차트 스켈레톤, 완료 후 1회만 렌더 */}
       <MonthlyTrendChart data={displaySummary} />
 
-      {/* 2-Column: 카테고리 + 계좌 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CategoryPieChart transactions={currentTxs} fmt={fmt} />
         <AccountBalanceList
@@ -160,7 +155,6 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* 최근 거래 */}
       <RecentTransactions
         transactions={currentTxs}
         onEdit={handleEdit}
@@ -168,7 +162,6 @@ const Dashboard = () => {
         onDuplicate={handleDuplicate}
       />
 
-      {/* 거래 수정 모달 */}
       <TransactionForm
         open={txFormOpen}
         onClose={closeTxForm}

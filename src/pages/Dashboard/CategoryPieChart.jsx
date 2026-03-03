@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip, Label } from "recharts";
 import CategoryIcon from "../../components/CategoryIcon";
 
@@ -13,7 +13,7 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
-const CategoryPieChart = ({ transactions, fmt }) => {
+const CategoryPieChart = memo(({ transactions, fmt }) => {
   const { chartData, total } = useMemo(() => {
     const map = {};
     transactions
@@ -139,6 +139,8 @@ const CategoryPieChart = ({ transactions, fmt }) => {
       </div>
     </div>
   );
-};
+});
+
+CategoryPieChart.displayName = "CategoryPieChart";
 
 export default CategoryPieChart;
