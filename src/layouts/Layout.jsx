@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "./Sidebar";
 import MobileHeader from "./MobileHeader";
-import MobileDrawer from "./MobileDrawer";
+import BottomNav from "../components/BottomNav";
 import ConfirmModal from "../components/ConfirmModal";
 import useUIStore from "../store/useUIStore";
 
@@ -33,13 +33,16 @@ const Layout = () => {
       {!isMobile && <Sidebar collapsed={collapsed} canToggle={!isTablet} />}
 
       {isMobile && <MobileHeader />}
-      {isMobile && <MobileDrawer />}
+      {isMobile && <BottomNav />}
 
       <main
         className="min-h-screen transition-[margin] duration-200 ease-in-out"
         style={{
           marginLeft: isMobile ? 0 : collapsed ? "4.5rem" : "15rem",
           paddingTop: isMobile ? "3.5rem" : 0,
+          paddingBottom: isMobile
+            ? "calc(3.5rem + env(safe-area-inset-bottom))"
+            : 0,
         }}
       >
         <div className="max-w-[1200px] mx-auto p-6">
