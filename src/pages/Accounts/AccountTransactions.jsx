@@ -14,6 +14,7 @@ import { useCurrencyByCode } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
 import { ACCOUNT_ICON_MAP } from "../../utils/constants";
 import useUIStore from "../../store/useUIStore";
+import useConfirm from "../../hooks/useConfirm";
 import TransactionList from "../Transactions/TransactionList";
 import TransactionForm from "../Transactions/TransactionForm";
 
@@ -24,6 +25,7 @@ const AccountTransactions = ({ account, onBack }) => {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const currency = useCurrencyByCode(account.currency);
   const IconComponent = ACCOUNT_ICON_MAP[account.icon];
+  const confirm = useConfirm();
 
   const { data: transactions = [], isLoading } = useTransactions({
     year,
@@ -71,11 +73,15 @@ const AccountTransactions = ({ account, onBack }) => {
 
   const handleDelete = useCallback(
     async (tx) => {
-      if (window.confirm("이 거래를 삭제하시겠습니까?")) {
-        deleteTx.mutate(tx);
-      }
+      const ok = await confirm({
+        title: "거래 삭제",
+        message: "이 거래를 삭제하시겠습니까?",
+        confirmText: "삭제",
+        variant: "danger",
+      });
+      if (ok) deleteTx.mutate(tx);
     },
-    [deleteTx],
+    [deleteTx, confirm],
   );
 
   const handleAddTx = () => {
@@ -86,7 +92,6 @@ const AccountTransactions = ({ account, onBack }) => {
     });
   };
 
-  // 해당 계좌 + 해당 월 요약
   const summary = useMemo(() => {
     let income = 0,
       expense = 0,
@@ -105,7 +110,6 @@ const AccountTransactions = ({ account, onBack }) => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Account Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
@@ -141,7 +145,6 @@ const AccountTransactions = ({ account, onBack }) => {
         </div>
       </div>
 
-      {/* Month Navigation + Summary */}
       <div className="bg-surface border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <button
@@ -185,7 +188,6 @@ const AccountTransactions = ({ account, onBack }) => {
         </div>
       </div>
 
-      {/* Add Transaction */}
       <button
         onClick={handleAddTx}
         className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-lg text-sm font-medium cursor-pointer border border-dashed border-border text-sub hover:border-mint hover:text-mint bg-transparent transition-colors"
@@ -193,7 +195,6 @@ const AccountTransactions = ({ account, onBack }) => {
         <Plus size={16} />이 계좌에 거래 추가
       </button>
 
-      {/* Transaction List */}
       {isLoading ? (
         <div className="text-center py-10 text-sub text-sm">불러오는 중...</div>
       ) : (
@@ -205,7 +206,6 @@ const AccountTransactions = ({ account, onBack }) => {
         />
       )}
 
-      {/* Transaction Form Modal */}
       <TransactionForm
         open={txFormOpen}
         onClose={closeTxForm}

@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useCategories, useDeleteCategory } from "../../hooks/useCategories";
 import supabase from "../../lib/supabase";
+import useConfirm from "../../hooks/useConfirm";
 import CategoryCard from "./CategoryCard";
 import CategoryForm from "./CategoryForm";
 import CategoriesSkeleton from "./CategoriesSkeleton";
@@ -19,6 +20,7 @@ const Categories = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openCardId, setOpenCardId] = useState(null);
+  const confirm = useConfirm();
 
   const filtered = useMemo(
     () => categories.filter((c) => c.type === activeTab),
@@ -44,20 +46,30 @@ const Categories = () => {
         .eq("category_id", cat.id);
 
       if (error) {
-        alert("확인 중 오류가 발생했습니다");
+        await confirm({
+          title: "오류",
+          message: "확인 중 오류가 발생했습니다",
+          confirmText: "확인",
+          cancelText: "",
+          variant: "danger",
+        });
         return;
       }
 
-      const msg =
+      const message =
         count > 0
           ? `"${cat.name}" 카테고리를 삭제하시겠습니까?\n연결된 ${count}건의 거래가 미분류로 변경됩니다.`
           : `"${cat.name}" 카테고리를 삭제하시겠습니까?`;
 
-      if (window.confirm(msg)) {
-        deleteCategory.mutate(cat.id);
-      }
+      const ok = await confirm({
+        title: "카테고리 삭제",
+        message,
+        confirmText: "삭제",
+        variant: count > 0 ? "warning" : "danger",
+      });
+      if (ok) deleteCategory.mutate(cat.id);
     },
-    [deleteCategory],
+    [deleteCategory, confirm],
   );
 
   if (isLoading && categories.length === 0) return <CategoriesSkeleton />;

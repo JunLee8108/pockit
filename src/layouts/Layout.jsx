@@ -3,6 +3,7 @@ import { Outlet } from "react-router";
 import Sidebar from "./Sidebar";
 import MobileHeader from "./MobileHeader";
 import MobileDrawer from "./MobileDrawer";
+import ConfirmModal from "../components/ConfirmModal";
 import useUIStore from "../store/useUIStore";
 
 const useViewport = () => {
@@ -45,6 +46,8 @@ const Layout = () => {
           <Outlet />
         </div>
       </main>
+
+      <ConfirmModal />
     </div>
   );
 };

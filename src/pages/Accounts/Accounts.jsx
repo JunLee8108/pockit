@@ -5,6 +5,7 @@ import { useCurrencies } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
 import { ACCOUNT_TYPE_LABELS, ACCOUNT_TYPE_ORDER } from "../../utils/constants";
 import useUIStore from "../../store/useUIStore";
+import useConfirm from "../../hooks/useConfirm";
 import AccountCard from "./AccountCard";
 import AccountForm from "./AccountForm";
 import AccountsSkeleton from "./AccountSkeleton";
@@ -17,6 +18,7 @@ const Accounts = () => {
   const deleteAccount = useDeleteAccount();
   const [openCardId, setOpenCardId] = useState(null);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const confirm = useConfirm();
 
   const {
     accountFormOpen,
@@ -25,13 +27,10 @@ const Accounts = () => {
     closeAccountForm,
   } = useUIStore();
 
-  // 선택된 계좌 (항상 최신 데이터 참조)
   const selectedAccount =
     accounts.find((a) => a.id === selectedAccountId) || null;
 
-  // 계좌가 삭제되면 선택 해제
   if (selectedAccountId && !selectedAccount) {
-    // state 업데이트를 렌더 중 직접 하지 않고 다음 틱에서 처리
     setTimeout(() => setSelectedAccountId(null), 0);
   }
 
@@ -51,14 +50,17 @@ const Accounts = () => {
 
   const handleDelete = useCallback(
     async (account) => {
-      if (window.confirm(`"${account.name}" 계좌를 삭제하시겠습니까?`)) {
-        deleteAccount.mutate(account.id);
-      }
+      const ok = await confirm({
+        title: "계좌 삭제",
+        message: `"${account.name}" 계좌를 삭제하시겠습니까?\n연결된 거래도 함께 삭제됩니다.`,
+        confirmText: "삭제",
+        variant: "danger",
+      });
+      if (ok) deleteAccount.mutate(account.id);
     },
-    [deleteAccount],
+    [deleteAccount, confirm],
   );
 
-  // 통화별 총 자산 계산
   const totalsByCurrency = useMemo(() => {
     const result = {};
     accounts.forEach((a) => {
@@ -70,7 +72,6 @@ const Accounts = () => {
     return result;
   }, [accounts]);
 
-  // account_type별 그룹핑
   const grouped = useMemo(() => {
     const result = {};
     accounts.forEach((a) => {
@@ -81,7 +82,6 @@ const Accounts = () => {
     return result;
   }, [accounts]);
 
-  // 빠른 통계
   const stats = useMemo(() => {
     const currencyCodes = [...new Set(accounts.map((a) => a.currency))];
     const totalAssets = Object.values(totalsByCurrency).reduce(
@@ -106,7 +106,6 @@ const Accounts = () => {
 
   return (
     <div className="flex flex-col gap-6" onClick={() => setOpenCardId(null)}>
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">계좌 관리</h2>
         <button
@@ -118,7 +117,6 @@ const Accounts = () => {
         </button>
       </div>
 
-      {/* ★ 계좌 선택 시 거래내역, 아닐 때 기존 2-Column */}
       {selectedAccount ? (
         <AccountTransactions
           account={selectedAccount}
@@ -126,10 +124,8 @@ const Accounts = () => {
         />
       ) : (
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* ── 좌측: 요약 패널 ── */}
           <div className="w-full lg:w-[340px] shrink-0">
             <div className="lg:sticky lg:top-6 flex flex-col gap-4">
-              {/* 순자산 요약 */}
               {Object.keys(totalsByCurrency).length > 0 && (
                 <div className="bg-surface border border-border rounded-xl p-5">
                   <h3 className="text-[13px] text-sub font-medium mb-4">
@@ -161,7 +157,6 @@ const Accounts = () => {
                 </div>
               )}
 
-              {/* 빠른 통계 */}
               {accounts.length > 0 && (
                 <div className="bg-surface border border-border rounded-xl p-5">
                   <h3 className="text-[13px] text-sub font-medium mb-3">
@@ -195,9 +190,7 @@ const Accounts = () => {
             </div>
           </div>
 
-          {/* ── 우측: 계좌 목록 ── */}
           <div className="flex-1 min-w-0">
-            {/* Empty */}
             {accounts.length === 0 && (
               <div className="bg-surface border border-border rounded-xl p-10 text-center">
                 <p className="text-sub text-sm mb-3">등록된 계좌가 없습니다</p>
@@ -210,7 +203,6 @@ const Accounts = () => {
               </div>
             )}
 
-            {/* 타입별 그룹 */}
             <div className="flex flex-col gap-5">
               {ACCOUNT_TYPE_ORDER.map((type) => {
                 const items = grouped[type];
@@ -262,7 +254,6 @@ const Accounts = () => {
         </div>
       )}
 
-      {/* Form Modal */}
       <AccountForm
         open={accountFormOpen}
         onClose={closeAccountForm}

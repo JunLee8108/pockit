@@ -9,6 +9,7 @@ import { useCurrencies } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
 import CategoryIcon from "../../components/CategoryIcon";
 import useUIStore from "../../store/useUIStore";
+import useConfirm from "../../hooks/useConfirm";
 import TransactionList from "./TransactionList";
 import TransactionForm from "./TransactionForm";
 import TransactionFilter from "./TransactionFilter";
@@ -24,8 +25,8 @@ const Transactions = () => {
     search: "",
     categoryIds: [],
   });
+  const confirm = useConfirm();
 
-  // type 변경 시 categoryIds 리셋
   const handleFilterChange = useCallback((next) => {
     setFilters((prev) => {
       if (next.type !== prev.type) {
@@ -49,7 +50,6 @@ const Transactions = () => {
     });
   }, []);
 
-  // 검색 debounce (300ms)
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const debounceRef = useRef(null);
 
@@ -78,7 +78,6 @@ const Transactions = () => {
 
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
 
-  // 현재 월 거래에 실제 사용된 카테고리만
   const filteredCategories = useMemo(() => {
     if (filters.type === "transfer") return [];
 
@@ -122,14 +121,17 @@ const Transactions = () => {
 
   const handleDelete = useCallback(
     async (tx) => {
-      if (window.confirm("이 거래를 삭제하시겠습니까?")) {
-        deleteTx.mutate(tx);
-      }
+      const ok = await confirm({
+        title: "거래 삭제",
+        message: "이 거래를 삭제하시겠습니까?",
+        confirmText: "삭제",
+        variant: "danger",
+      });
+      if (ok) deleteTx.mutate(tx);
     },
-    [deleteTx],
+    [deleteTx, confirm],
   );
 
-  // 이번 달 요약
   const summary = useMemo(() => {
     const byCurrency = {};
     transactions.forEach((tx) => {
@@ -142,7 +144,6 @@ const Transactions = () => {
     return byCurrency;
   }, [transactions]);
 
-  // 카테고리별 지출 (상위 5개)
   const topExpenseCategories = useMemo(() => {
     const map = {};
     transactions
@@ -167,7 +168,6 @@ const Transactions = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">거래내역</h2>
         <button
@@ -179,12 +179,9 @@ const Transactions = () => {
         </button>
       </div>
 
-      {/* 2-Column Layout */}
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* ── 좌측: 요약 패널 ── */}
         <div className="w-full lg:w-[340px] shrink-0">
           <div className="lg:sticky lg:top-6 flex flex-col gap-4">
-            {/* 월간 요약 */}
             <div className="bg-surface border border-border rounded-xl p-5">
               <h3 className="text-[13px] text-sub font-medium mb-4">
                 {filters.month}월 요약
@@ -232,7 +229,6 @@ const Transactions = () => {
               )}
             </div>
 
-            {/* 카테고리별 지출 */}
             {topExpenseCategories.length > 0 && (
               <div className="bg-surface border border-border rounded-xl p-5">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
@@ -273,7 +269,6 @@ const Transactions = () => {
               </div>
             )}
 
-            {/* 카테고리 필터 — 데스크톱만 */}
             {filters.type !== "transfer" && filteredCategories.length > 0 && (
               <div className="hidden lg:block bg-surface border border-border rounded-xl p-5">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
@@ -322,7 +317,6 @@ const Transactions = () => {
           </div>
         </div>
 
-        {/* ── 우측: 필터 + 목록 ── */}
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           <TransactionFilter
             filters={filters}
@@ -340,7 +334,6 @@ const Transactions = () => {
         </div>
       </div>
 
-      {/* Form Modal */}
       <TransactionForm
         open={txFormOpen}
         onClose={closeTxForm}

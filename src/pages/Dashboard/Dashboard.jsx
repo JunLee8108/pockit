@@ -7,6 +7,7 @@ import {
 import { useCurrencies } from "../../hooks/useCurrencies";
 import useMonthlySummary from "../../hooks/useMonthlySummary";
 import useUIStore from "../../store/useUIStore";
+import useConfirm from "../../hooks/useConfirm";
 import { formatMoney } from "../../utils/format";
 import KpiCards from "./KpiCards";
 import MonthlyTrendChart from "./MonthlyTrendChart";
@@ -37,13 +38,13 @@ const Dashboard = () => {
   const { summary, isLoading: summaryLoading } = useMonthlySummary(6);
   const deleteTx = useDeleteTransaction();
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
+  const confirm = useConfirm();
 
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
     [currencies],
   );
 
-  // 주요 통화
   const primaryCurrency = useMemo(() => {
     if (accounts.length === 0) return null;
     const freq = {};
@@ -59,7 +60,6 @@ const Dashboard = () => {
     [primaryCurrency],
   );
 
-  // 순자산
   const netWorth = useMemo(
     () => accounts.reduce((s, a) => s + a.balance, 0),
     [accounts],
@@ -68,7 +68,6 @@ const Dashboard = () => {
   const dp = primaryCurrency?.decimal_places ?? 2;
   const divisor = 10 ** dp;
 
-  // 이번달 / 전월 수입·지출
   const { income, expense } = useMemo(() => {
     let inc = 0,
       exp = 0;
@@ -89,7 +88,6 @@ const Dashboard = () => {
     return { prevIncome: inc, prevExpense: exp };
   }, [prevTxs]);
 
-  // ★ 차트 데이터: summaryLoading 완료 후에만 계산 → 중간 상태 리렌더 방지
   const displaySummary = useMemo(() => {
     if (summaryLoading) return [];
     return summary.map((s) => ({
@@ -99,7 +97,6 @@ const Dashboard = () => {
     }));
   }, [summary, divisor, summaryLoading]);
 
-  // 핸들러
   const handleEdit = useCallback((tx) => openTxForm(tx), [openTxForm]);
 
   const handleDuplicate = useCallback(
@@ -122,11 +119,15 @@ const Dashboard = () => {
 
   const handleDelete = useCallback(
     async (tx) => {
-      if (window.confirm("이 거래를 삭제하시겠습니까?")) {
-        deleteTx.mutate(tx);
-      }
+      const ok = await confirm({
+        title: "거래 삭제",
+        message: "이 거래를 삭제하시겠습니까?",
+        confirmText: "삭제",
+        variant: "danger",
+      });
+      if (ok) deleteTx.mutate(tx);
     },
-    [deleteTx],
+    [deleteTx, confirm],
   );
 
   if (accLoading || txLoading) return <DashboardSkeleton />;
@@ -144,7 +145,6 @@ const Dashboard = () => {
         fmt={fmt}
       />
 
-      {/* ★ summary 로딩 중이면 차트 스켈레톤, 완료 후 1회만 렌더 */}
       <MonthlyTrendChart data={displaySummary} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

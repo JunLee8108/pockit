@@ -14,6 +14,7 @@ import BudgetCard from "./BudgetCard";
 import BudgetForm from "./BudgetForm";
 import BudgetSkeleton from "./BudgetSkeleton";
 import SwipeableCard from "../Accounts/SwipeableCard";
+import useConfirm from "../../hooks/useConfirm";
 
 const now = new Date();
 
@@ -23,6 +24,7 @@ const Budget = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openCardId, setOpenCardId] = useState(null);
+  const confirm = useConfirm();
 
   const { data: budgets = [], isLoading: budgetLoading } = useBudgets(
     year,
@@ -38,7 +40,6 @@ const Budget = () => {
     [currencies],
   );
 
-  // 주요 통화
   const primaryCurrency = useMemo(() => {
     if (budgets.length > 0) {
       const freq = {};
@@ -56,7 +57,6 @@ const Budget = () => {
     [primaryCurrency],
   );
 
-  // 카테고리별 지출 집계
   const spentByCategory = useMemo(() => {
     const map = {};
     transactions
@@ -68,7 +68,6 @@ const Budget = () => {
     return map;
   }, [transactions]);
 
-  // 예산 + 지출 머지 데이터
   const budgetData = useMemo(() => {
     return budgets.map((b) => ({
       ...b,
@@ -80,12 +79,10 @@ const Budget = () => {
     }));
   }, [budgets, spentByCategory]);
 
-  // 소진율 높은 순 정렬
   const sortedBudgetData = useMemo(() => {
     return [...budgetData].sort((a, b) => b.pct - a.pct);
   }, [budgetData]);
 
-  // 요약 통계
   const summary = useMemo(() => {
     const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
     const totalSpent = budgets.reduce(
@@ -98,7 +95,6 @@ const Budget = () => {
     return { totalBudget, totalSpent, remaining, pct };
   }, [budgets, spentByCategory]);
 
-  // 기존 예산 카테고리 ID 집합 (폼에서 중복 방지용)
   const existingCategoryIds = useMemo(
     () => new Set(budgets.map((b) => b.category_id)),
     [budgets],
@@ -121,22 +117,29 @@ const Budget = () => {
 
   const handleDelete = useCallback(
     async (budget) => {
-      if (
-        window.confirm(`"${budget.category?.name}" 예산을 삭제하시겠습니까?`)
-      ) {
-        deleteBudget.mutate(budget.id);
-      }
+      const ok = await confirm({
+        title: "예산 삭제",
+        message: `"${budget.category?.name}" 예산을 삭제하시겠습니까?`,
+        confirmText: "삭제",
+        variant: "danger",
+      });
+      if (ok) deleteBudget.mutate(budget.id);
     },
-    [deleteBudget],
+    [deleteBudget, confirm],
   );
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     const prevDate = new Date(year, month - 2, 1);
     const fromYear = prevDate.getFullYear();
     const fromMonth = prevDate.getMonth() + 1;
 
-    if (!window.confirm(`${fromMonth}월 예산을 ${month}월로 복사하시겠습니까?`))
-      return;
+    const ok = await confirm({
+      title: "전월 예산 복사",
+      message: `${fromMonth}월 예산을 ${month}월로 복사하시겠습니까?\n이미 설정된 카테고리는 건너뜁니다.`,
+      confirmText: "복사",
+      variant: "info",
+    });
+    if (!ok) return;
 
     try {
       await copyBudgets.mutateAsync({
@@ -146,9 +149,15 @@ const Budget = () => {
         toMonth: month,
       });
     } catch (err) {
-      alert(err.message || "복사 중 오류가 발생했습니다");
+      await confirm({
+        title: "오류",
+        message: err.message || "복사 중 오류가 발생했습니다",
+        confirmText: "확인",
+        cancelText: "",
+        variant: "danger",
+      });
     }
-  };
+  }, [year, month, copyBudgets, confirm]);
 
   if (budgetLoading && budgets.length === 0) return <BudgetSkeleton />;
 
@@ -161,7 +170,6 @@ const Budget = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">예산</h2>
         <div className="flex items-center gap-2">
@@ -183,15 +191,11 @@ const Budget = () => {
         </div>
       </div>
 
-      {/* Period */}
       <PeriodSelector year={year} month={month} onChange={handlePeriod} />
 
-      {/* 2-Column */}
       <div className="flex flex-col lg:flex-row gap-8">
-        {/* ── 좌측: 요약 패널 ── */}
         <div className="w-full lg:w-[340px] shrink-0">
           <div className="lg:sticky lg:top-6 flex flex-col gap-4">
-            {/* 월간 예산 요약 */}
             <div className="bg-surface border border-border rounded-xl p-5">
               <h3 className="text-[13px] text-sub font-medium mb-4">
                 {month}월 예산 요약
@@ -210,7 +214,6 @@ const Budget = () => {
                     </span>
                   </div>
 
-                  {/* Progress */}
                   <div className="h-2.5 bg-light rounded-full overflow-hidden mb-3">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${statusColor}`}
@@ -261,7 +264,6 @@ const Budget = () => {
               )}
             </div>
 
-            {/* 카테고리별 소진 순위 */}
             {sortedBudgetData.length > 0 && (
               <div className="bg-surface border border-border rounded-xl p-5">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
@@ -302,7 +304,6 @@ const Budget = () => {
           </div>
         </div>
 
-        {/* ── 우측: 예산 카드 목록 ── */}
         <div className="flex-1 min-w-0">
           {budgets.length === 0 ? (
             <div className="bg-surface border border-border rounded-xl p-10 text-center">
@@ -358,7 +359,6 @@ const Budget = () => {
         </div>
       </div>
 
-      {/* Form Modal */}
       <BudgetForm
         open={formOpen}
         onClose={() => {
