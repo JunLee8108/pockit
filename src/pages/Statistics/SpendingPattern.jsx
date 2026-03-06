@@ -1,10 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import CategoryIcon from "../../components/CategoryIcon";
 
 const DAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 const WEEKDAY_NAMES = ["일", "월", "화", "수", "목", "금", "토"];
 
-const SpendingPattern = ({ transactions, year, month, divisor, fmt }) => {
+const SpendingPattern = memo(({ transactions, year, month, divisor, fmt }) => {
   const [selectedDay, setSelectedDay] = useState(null);
 
   const { calendar, maxAmount, dailyTxMap } = useMemo(() => {
@@ -187,6 +187,8 @@ const SpendingPattern = ({ transactions, year, month, divisor, fmt }) => {
       )}
     </div>
   );
-};
+});
+
+SpendingPattern.displayName = "SpendingPattern";
 
 export default SpendingPattern;

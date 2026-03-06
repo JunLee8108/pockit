@@ -32,7 +32,7 @@ const Statistics = () => {
   });
   const { data: categories = [] } = useCategories();
   const { data: currencies = [] } = useCurrencies();
-  const { data: trendData } = useCategoryTrendData(6);
+  const { data: trendData, isLoading: trendLoading } = useCategoryTrendData(6);
 
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
@@ -76,6 +76,12 @@ const Statistics = () => {
     return { income, expense };
   }, [prevTxs]);
 
+  // ★ trendData 로딩 가드 — 로딩 완료 후 1회만 렌더
+  const displayTrendData = useMemo(() => {
+    if (trendLoading) return [];
+    return trendData;
+  }, [trendData, trendLoading]);
+
   const handlePeriod = useCallback((y, m) => {
     setYear(y);
     setMonth(m);
@@ -101,7 +107,7 @@ const Statistics = () => {
           fmt={fmt}
         />
         <CategoryTrend
-          trendData={trendData}
+          trendData={displayTrendData}
           categories={categories}
           divisor={divisor}
         />

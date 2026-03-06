@@ -11,5 +11,8 @@ export const queryKeys = {
   categories: {
     all: ["categories"],
   },
-  budgets: { all: ["budgets"] },
+  budgets: {
+    all: ["budgets"],
+    list: (params) => ["budgets", params],
+  },
 };

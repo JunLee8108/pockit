@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, memo } from "react";
 import {
   LineChart,
   Line,
@@ -27,7 +27,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-const CategoryTrend = ({ trendData, categories, divisor }) => {
+const CategoryTrend = memo(({ trendData, categories, divisor }) => {
   const { ref, width } = useContainerWidth();
   const expenseCategories = useMemo(
     () => categories.filter((c) => c.type === "expense"),
@@ -126,6 +126,8 @@ const CategoryTrend = ({ trendData, categories, divisor }) => {
       </div>
     </div>
   );
-};
+});
+
+CategoryTrend.displayName = "CategoryTrend";
 
 export default CategoryTrend;

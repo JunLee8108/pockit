@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import {
   AreaChart,
   Area,
@@ -27,7 +27,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
-const DailyFlowChart = ({ transactions, year, month, divisor }) => {
+const DailyFlowChart = memo(({ transactions, year, month, divisor }) => {
   const { ref, width } = useContainerWidth();
 
   const { chartData, avgDaily } = useMemo(() => {
@@ -128,6 +128,8 @@ const DailyFlowChart = ({ transactions, year, month, divisor }) => {
       </div>
     </div>
   );
-};
+});
+
+DailyFlowChart.displayName = "DailyFlowChart";
 
 export default DailyFlowChart;
