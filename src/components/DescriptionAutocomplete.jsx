@@ -86,7 +86,7 @@ const DescriptionAutocomplete = ({
       {showDropdown && (
         <div
           ref={listRef}
-          className="absolute z-50 mt-1 w-full bg-surface border border-border rounded-xl shadow-lg max-h-[200px] overflow-y-auto py-1"
+          className="absolute z-50 mt-1 w-full bg-surface border border-border rounded-xl shadow-lg max-h-[150px] overflow-y-auto py-1 overscroll-contain"
         >
           {filtered.map((s, idx) => (
             <button
