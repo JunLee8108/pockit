@@ -9,14 +9,30 @@ import Login from "./pages/Auth/Login";
 import SignUp from "./pages/Auth/SignUp";
 import "./App.css";
 
+// 청크 로드 실패 시 자동 새로고침 (배포 간 해시 불일치 대응)
+const lazyLoad = (importFn) =>
+  lazy(() =>
+    importFn().catch(() => {
+      const key = "chunk-reload";
+      const lastReload = sessionStorage.getItem(key);
+      const now = Date.now();
+      if (!lastReload || now - Number(lastReload) > 10000) {
+        sessionStorage.setItem(key, String(now));
+        window.location.reload();
+        return new Promise(() => {});
+      }
+      return Promise.reject(new Error("Failed to load chunk"));
+    })
+  );
+
 // ★ 페이지 lazy 로드 — 초기 번들 분리
-const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
-const Accounts = lazy(() => import("./pages/Accounts/Accounts"));
-const Transactions = lazy(() => import("./pages/Transactions/Transactions"));
-const Statistics = lazy(() => import("./pages/Statistics/Statistics"));
-const Budget = lazy(() => import("./pages/Budget/Budget"));
-const Categories = lazy(() => import("./pages/Categories/Categories"));
-const AnnualReport = lazy(() => import("./pages/AnnualReport/AnnualReport"));
+const Dashboard = lazyLoad(() => import("./pages/Dashboard/Dashboard"));
+const Accounts = lazyLoad(() => import("./pages/Accounts/Accounts"));
+const Transactions = lazyLoad(() => import("./pages/Transactions/Transactions"));
+const Statistics = lazyLoad(() => import("./pages/Statistics/Statistics"));
+const Budget = lazyLoad(() => import("./pages/Budget/Budget"));
+const Categories = lazyLoad(() => import("./pages/Categories/Categories"));
+const AnnualReport = lazyLoad(() => import("./pages/AnnualReport/AnnualReport"));
 
 const PageFallback = () => (
   <div className="flex items-center justify-center py-20">
