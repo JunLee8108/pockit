@@ -16,6 +16,7 @@ const Transactions = lazy(() => import("./pages/Transactions/Transactions"));
 const Statistics = lazy(() => import("./pages/Statistics/Statistics"));
 const Budget = lazy(() => import("./pages/Budget/Budget"));
 const Categories = lazy(() => import("./pages/Categories/Categories"));
+const AnnualReport = lazy(() => import("./pages/AnnualReport/AnnualReport"));
 
 const PageFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -102,6 +103,14 @@ const App = () => {
               element={
                 <Suspense fallback={<PageFallback />}>
                   <Categories />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/annual-report"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <AnnualReport />
                 </Suspense>
               }
             />

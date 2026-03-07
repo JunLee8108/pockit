@@ -88,6 +88,8 @@ const invalidateAll = (qc) => {
   qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
   qc.invalidateQueries({ queryKey: ["category-trend"] });
   qc.invalidateQueries({ queryKey: ["monthly-summary"] });
+  qc.invalidateQueries({ queryKey: ["annual-summary"] });
+  qc.invalidateQueries({ queryKey: ["annual-category"] });
 };
 
 // ── Mutations ──

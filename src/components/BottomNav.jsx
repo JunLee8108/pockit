@@ -8,6 +8,7 @@ import {
   MoreHorizontal,
   Landmark,
   Tag,
+  CalendarRange,
   Sun,
   Moon,
   Monitor,
@@ -158,6 +159,14 @@ const BottomNav = () => {
           >
             <Tag size={18} className="text-sub shrink-0" />
             <span>카테고리 관리</span>
+          </button>
+
+          <button
+            onClick={() => handleNavigate("/annual-report")}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left"
+          >
+            <CalendarRange size={18} className="text-sub shrink-0" />
+            <span>연간 리포트</span>
           </button>
 
           <div className="h-px bg-border my-1" />

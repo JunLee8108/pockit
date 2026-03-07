@@ -15,4 +15,6 @@ export const queryKeys = {
     all: ["budgets"],
     list: (params) => ["budgets", params],
   },
+  annualSummary: (year) => ["annual-summary", year],
+  annualCategory: (year) => ["annual-category", year],
 };
