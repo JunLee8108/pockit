@@ -142,7 +142,7 @@ const BottomNav = () => {
 
       {/* 더보기 시트 */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
-        <div className="px-4 pt-2 pb-6 flex flex-col gap-1">
+        <div className="px-4 pt-2 pb-10 flex flex-col gap-1">
           {/* 메뉴 항목 */}
           <button
             onClick={() => handleNavigate("/accounts")}
