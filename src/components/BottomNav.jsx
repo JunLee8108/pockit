@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router";
 import {
   LayoutDashboard,
@@ -83,10 +83,37 @@ const BottomNav = () => {
 
   const ThemeIcon = themeIcons[theme] || Monitor;
 
-  const handleNavigate = (path) => {
-    setSheetOpen(false);
-    navigate(path);
-  };
+  const sheetTouchedRef = useRef(false);
+
+  const handleNavigate = useCallback(
+    (path) => {
+      setSheetOpen(false);
+      navigate(path);
+    },
+    [navigate],
+  );
+
+  const makeSheetHandler = useCallback(
+    (action) => ({
+      onTouchEnd: (e) => {
+        e.preventDefault();
+        sheetTouchedRef.current = true;
+        action();
+      },
+      onClick: () => {
+        if (sheetTouchedRef.current) {
+          sheetTouchedRef.current = false;
+          return;
+        }
+        action();
+      },
+      style: {
+        touchAction: "manipulation",
+        WebkitTapHighlightColor: "transparent",
+      },
+    }),
+    [],
+  );
 
   const isTabActive = (tab) => {
     if (tab.path === "/") return location.pathname === "/";
@@ -146,53 +173,53 @@ const BottomNav = () => {
         <div className="px-4 pt-2 pb-10 flex flex-col gap-1">
           {/* 메뉴 항목 */}
           <button
-            onClick={() => handleNavigate("/accounts")}
-            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left"
+            {...makeSheetHandler(() => handleNavigate("/accounts"))}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
             <Landmark size={18} className="text-sub shrink-0" />
-            <span>계좌 관리</span>
+            <span className="pointer-events-none">계좌 관리</span>
           </button>
 
           <button
-            onClick={() => handleNavigate("/categories")}
-            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left"
+            {...makeSheetHandler(() => handleNavigate("/categories"))}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
             <Tag size={18} className="text-sub shrink-0" />
-            <span>카테고리 관리</span>
+            <span className="pointer-events-none">카테고리 관리</span>
           </button>
 
           <button
-            onClick={() => handleNavigate("/annual-report")}
-            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left"
+            {...makeSheetHandler(() => handleNavigate("/annual-report"))}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
             <CalendarRange size={18} className="text-sub shrink-0" />
-            <span>연간 리포트</span>
+            <span className="pointer-events-none">연간 리포트</span>
           </button>
 
           <div className="h-px bg-border my-1" />
 
           {/* 테마 */}
           <button
-            onClick={cycleTheme}
-            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left"
+            {...makeSheetHandler(cycleTheme)}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
             <ThemeIcon size={18} className="text-sub shrink-0" />
-            <span>테마</span>
-            <span className="ml-auto text-[12px] text-sub">
+            <span className="pointer-events-none">테마</span>
+            <span className="ml-auto text-[12px] text-sub pointer-events-none">
               {themeLabels[theme]}
             </span>
           </button>
 
           {/* 로그아웃 */}
           <button
-            onClick={() => {
+            {...makeSheetHandler(() => {
               setSheetOpen(false);
               signOut();
-            }}
-            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-sub bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left"
+            })}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-sub bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
             <LogOut size={18} className="shrink-0" />
-            <span>로그아웃</span>
+            <span className="pointer-events-none">로그아웃</span>
           </button>
         </div>
       </BottomSheet>
