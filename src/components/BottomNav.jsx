@@ -50,8 +50,13 @@ const BottomNav = () => {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50"
-        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+        className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50 pointer-events-auto"
+        style={{
+          paddingBottom: "env(safe-area-inset-bottom)",
+          touchAction: "manipulation",
+          WebkitTapHighlightColor: "transparent",
+          transform: "translateZ(0)",
+        }}
       >
         <div className="h-16 flex items-stretch justify-around">
           {TABS.map((tab) => (
@@ -60,7 +65,7 @@ const BottomNav = () => {
               to={tab.path}
               end={tab.path === "/"}
               className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] no-underline transition-colors ${
+                `flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] no-underline active:opacity-60 ${
                   isActive ? "text-mint font-semibold" : "text-sub font-normal"
                 }`
               }
@@ -73,7 +78,7 @@ const BottomNav = () => {
           {/* 더보기 */}
           <button
             onClick={() => setSheetOpen(true)}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer transition-colors ${
+            className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer active:opacity-60 ${
               sheetOpen ? "text-mint font-semibold" : "text-sub font-normal"
             }`}
           >

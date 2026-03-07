@@ -171,3 +171,9 @@ select {
   background-position: right 16px center;
   padding-right: 36px;
 }
+
+nav a,
+nav button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
