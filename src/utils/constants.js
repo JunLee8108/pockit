@@ -28,6 +28,12 @@ export const NAV_ITEMS = [
   { id: "statistics", label: "통계", path: "/statistics", icon: "BarChart3" },
   { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
   { id: "categories", label: "카테고리", path: "/categories", icon: "Tag" },
+  {
+    id: "annual-report",
+    label: "연간 리포트",
+    path: "/annual-report",
+    icon: "CalendarRange",
+  },
 ];
 
 export const ACCOUNT_TYPE_LABELS = {
