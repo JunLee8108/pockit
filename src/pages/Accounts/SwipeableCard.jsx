@@ -149,10 +149,7 @@ const SwipeableCard = ({
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div
-      className="swipe-card relative overflow-hidden rounded-xl"
-      style={{ overscrollBehavior: "none" }}
-    >
+    <div className="swipe-card relative overflow-hidden rounded-xl">
       <div
         className="swipe-actions absolute right-0 top-0 bottom-0 flex"
         style={{ opacity: isOpen || dragging ? 1 : 0 }}
