@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 
 const BTN_WIDTH = 60;
-const THRESHOLD = 50;
+const THRESHOLD = 25;
+const VELOCITY_THRESHOLD = 0.3;
+const DIR_LOCK_THRESHOLD = 6; // 방향 판정 구간 축소
 
 const SwipeableCard = ({
   children,
@@ -13,10 +15,11 @@ const SwipeableCard = ({
   const actionWidth = actions.length * BTN_WIDTH;
   const [offsetX, setOffsetX] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const startRef = useRef({ x: 0, y: 0 });
+  const startRef = useRef({ x: 0, y: 0, time: 0 });
   const dirLocked = useRef(null);
   const didSwipeRef = useRef(false);
   const contentRef = useRef(null);
+  const lastTouchRef = useRef({ x: 0, time: 0 });
   const isOpen = openCardId === cardId;
 
   const isOpenRef = useRef(isOpen);
@@ -33,7 +36,9 @@ const SwipeableCard = ({
 
   const handleTouchStart = useCallback((e) => {
     const t = e.touches[0];
-    startRef.current = { x: t.clientX, y: t.clientY };
+    const now = Date.now();
+    startRef.current = { x: t.clientX, y: t.clientY, time: now };
+    lastTouchRef.current = { x: t.clientX, time: now };
     dirLocked.current = null;
     didSwipeRef.current = false;
     setOffsetX(isOpenRef.current ? -actionWidthRef.current : 0);
@@ -46,8 +51,15 @@ const SwipeableCard = ({
     const dy = t.clientY - startRef.current.y;
 
     if (!dirLocked.current) {
-      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+      if (
+        Math.abs(dx) > DIR_LOCK_THRESHOLD ||
+        Math.abs(dy) > DIR_LOCK_THRESHOLD
+      ) {
         dirLocked.current = Math.abs(dy) > Math.abs(dx) ? "v" : "h";
+        // 수평 잠금 → touch-action none으로 브라우저 제스처 완전 차단
+        if (dirLocked.current === "h" && contentRef.current) {
+          contentRef.current.style.touchAction = "none";
+        }
       }
       return;
     }
@@ -56,6 +68,8 @@ const SwipeableCard = ({
 
     e.preventDefault();
     didSwipeRef.current = true;
+
+    lastTouchRef.current = { x: t.clientX, time: Date.now() };
 
     const w = actionWidthRef.current;
     const base = isOpenRef.current ? -w : 0;
@@ -67,28 +81,50 @@ const SwipeableCard = ({
     setDragging(false);
     dirLocked.current = null;
 
+    // touch-action 복원
+    if (contentRef.current) {
+      contentRef.current.style.touchAction = "pan-y";
+    }
+
+    // velocity 계산
+    const dt = Date.now() - lastTouchRef.current.time;
+    const dx = lastTouchRef.current.x - startRef.current.x;
+    const velocity = dt > 0 ? Math.abs(dx) / dt : 0; // px/ms
+
     setOffsetX((prev) => {
       const w = actionWidthRef.current;
+      const wasOpen = isOpenRef.current;
+
+      // 빠른 flick → 방향만 보고 판단
+      if (velocity > VELOCITY_THRESHOLD) {
+        if (dx < 0 && !wasOpen) {
+          onOpenChange(cardId);
+          return -w;
+        }
+        if (dx > 0 && wasOpen) {
+          onOpenChange(null);
+          return 0;
+        }
+      }
+
+      // 느린 드래그 → 거리 기준 판단
       if (prev < -THRESHOLD) {
         onOpenChange(cardId);
         return -w;
       } else {
-        if (isOpenRef.current) onOpenChange(null);
+        if (wasOpen) onOpenChange(null);
         return 0;
       }
     });
   }, [cardId, onOpenChange]);
 
-  // 스와이프 직후 또는 열린 상태에서의 클릭 처리
   const handleContentClick = useCallback(
     (e) => {
-      // 스와이프 직후 → 클릭 무시
       if (didSwipeRef.current) {
         e.stopPropagation();
         didSwipeRef.current = false;
         return;
       }
-      // 열린 상태 → 닫기만 하고 클릭 전파 차단
       if (isOpenRef.current) {
         e.stopPropagation();
         onOpenChange(null);
@@ -113,8 +149,10 @@ const SwipeableCard = ({
   }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
 
   return (
-    <div className="swipe-card relative overflow-hidden rounded-xl">
-      {/* 뒷면: 액션 버튼 */}
+    <div
+      className="swipe-card relative overflow-hidden rounded-xl"
+      style={{ overscrollBehavior: "none" }}
+    >
       <div
         className="swipe-actions absolute right-0 top-0 bottom-0 flex"
         style={{ opacity: isOpen || dragging ? 1 : 0 }}
@@ -136,7 +174,6 @@ const SwipeableCard = ({
         ))}
       </div>
 
-      {/* 앞면: 카드 콘텐츠 */}
       <div
         ref={contentRef}
         onClick={handleContentClick}
