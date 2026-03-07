@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { NavLink, useNavigate } from "react-router";
+import { useState, useRef, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router";
 import {
   LayoutDashboard,
   Receipt,
@@ -28,11 +28,48 @@ const themeLabels = { light: "라이트", system: "시스템", dark: "다크" };
 const themeIcons = { light: Sun, system: Monitor, dark: Moon };
 const themeOrder = ["light", "system", "dark"];
 
+const NavTab = ({ tab, isActive, onNavigate }) => {
+  const touchedRef = useRef(false);
+
+  const handleTouchEnd = useCallback(
+    (e) => {
+      e.preventDefault();
+      touchedRef.current = true;
+      onNavigate(tab.path);
+    },
+    [tab.path, onNavigate],
+  );
+
+  const handleClick = useCallback(() => {
+    if (touchedRef.current) {
+      touchedRef.current = false;
+      return;
+    }
+    onNavigate(tab.path);
+  }, [tab.path, onNavigate]);
+
+  return (
+    <button
+      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+      className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer active:opacity-60 select-none ${
+        isActive ? "text-mint font-semibold" : "text-sub font-normal"
+      }`}
+      style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+    >
+      <tab.icon size={22} />
+      <span className="pointer-events-none">{tab.label}</span>
+    </button>
+  );
+};
+
 const BottomNav = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const { signOut } = useAuthStore();
   const { theme, setTheme } = useThemeStore();
   const navigate = useNavigate();
+  const location = useLocation();
+  const moreTouchedRef = useRef(false);
 
   const cycleTheme = () => {
     const next =
@@ -47,10 +84,15 @@ const BottomNav = () => {
     navigate(path);
   };
 
+  const isTabActive = (tab) => {
+    if (tab.path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(tab.path);
+  };
+
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50 pointer-events-auto"
+        className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50 pointer-events-auto select-none"
         style={{
           paddingBottom: "env(safe-area-inset-bottom)",
           touchAction: "manipulation",
@@ -60,30 +102,35 @@ const BottomNav = () => {
       >
         <div className="h-16 flex items-stretch justify-around">
           {TABS.map((tab) => (
-            <NavLink
+            <NavTab
               key={tab.path}
-              to={tab.path}
-              end={tab.path === "/"}
-              className={({ isActive }) =>
-                `flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] no-underline active:opacity-60 ${
-                  isActive ? "text-mint font-semibold" : "text-sub font-normal"
-                }`
-              }
-            >
-              <tab.icon size={22} />
-              <span>{tab.label}</span>
-            </NavLink>
+              tab={tab}
+              isActive={isTabActive(tab)}
+              onNavigate={handleNavigate}
+            />
           ))}
 
           {/* 더보기 */}
           <button
-            onClick={() => setSheetOpen(true)}
-            className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer active:opacity-60 ${
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              moreTouchedRef.current = true;
+              setSheetOpen(true);
+            }}
+            onClick={() => {
+              if (moreTouchedRef.current) {
+                moreTouchedRef.current = false;
+                return;
+              }
+              setSheetOpen(true);
+            }}
+            className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer active:opacity-60 select-none ${
               sheetOpen ? "text-mint font-semibold" : "text-sub font-normal"
             }`}
+            style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           >
             <MoreHorizontal size={22} />
-            <span>더보기</span>
+            <span className="pointer-events-none">더보기</span>
           </button>
         </div>
       </nav>
