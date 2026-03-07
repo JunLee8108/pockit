@@ -55,7 +55,10 @@ const NavTab = ({ tab, isActive, onNavigate }) => {
       className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer active:opacity-60 select-none ${
         isActive ? "text-mint font-semibold" : "text-sub font-normal"
       }`}
-      style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+      style={{
+        touchAction: "manipulation",
+        WebkitTapHighlightColor: "transparent",
+      }}
     >
       <tab.icon size={22} />
       <span className="pointer-events-none">{tab.label}</span>
@@ -92,9 +95,8 @@ const BottomNav = () => {
   return (
     <>
       <nav
-        className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50 pointer-events-auto select-none"
+        className="fixed bottom-0 px-4 pb-4 left-0 right-0 bg-surface border-t border-border z-50 pointer-events-auto select-none"
         style={{
-          paddingBottom: "env(safe-area-inset-bottom)",
           touchAction: "manipulation",
           WebkitTapHighlightColor: "transparent",
           transform: "translateZ(0)",
@@ -127,7 +129,10 @@ const BottomNav = () => {
             className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer active:opacity-60 select-none ${
               sheetOpen ? "text-mint font-semibold" : "text-sub font-normal"
             }`}
-            style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+            style={{
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+            }}
           >
             <MoreHorizontal size={22} />
             <span className="pointer-events-none">더보기</span>
