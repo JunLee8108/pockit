@@ -41,7 +41,7 @@ const Layout = () => {
           marginLeft: isMobile ? 0 : collapsed ? "4.5rem" : "15rem",
           paddingTop: isMobile ? "3.5rem" : 0,
           paddingBottom: isMobile
-            ? "calc(3.5rem + env(safe-area-inset-bottom))"
+            ? "calc(5rem + env(safe-area-inset-bottom))"
             : 0,
         }}
       >

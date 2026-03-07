@@ -53,19 +53,19 @@ const BottomNav = () => {
         className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border z-50"
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
-        <div className="h-14 flex items-center justify-around">
+        <div className="h-16 flex items-stretch justify-around">
           {TABS.map((tab) => (
             <NavLink
               key={tab.path}
               to={tab.path}
               end={tab.path === "/"}
               className={({ isActive }) =>
-                `flex flex-col items-center gap-0.5 px-2 py-1 text-[11px] no-underline transition-colors ${
+                `flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] no-underline transition-colors ${
                   isActive ? "text-mint font-semibold" : "text-sub font-normal"
                 }`
               }
             >
-              <tab.icon size={20} />
+              <tab.icon size={22} />
               <span>{tab.label}</span>
             </NavLink>
           ))}
@@ -73,11 +73,11 @@ const BottomNav = () => {
           {/* 더보기 */}
           <button
             onClick={() => setSheetOpen(true)}
-            className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[11px] bg-transparent border-none cursor-pointer transition-colors ${
+            className={`flex flex-col items-center justify-center gap-1 flex-1 min-w-0 text-[11px] bg-transparent border-none cursor-pointer transition-colors ${
               sheetOpen ? "text-mint font-semibold" : "text-sub font-normal"
             }`}
           >
-            <MoreHorizontal size={20} />
+            <MoreHorizontal size={22} />
             <span>더보기</span>
           </button>
         </div>
