@@ -36,7 +36,7 @@ const Layout = () => {
       {isMobile && <BottomNav />}
 
       <main
-        className="min-h-screen transition-[margin] duration-200 ease-in-out"
+        className={`min-h-screen ${isMobile ? "" : "transition-[margin] duration-200 ease-in-out"}`}
         style={{
           marginLeft: isMobile ? 0 : collapsed ? "4.5rem" : "15rem",
           paddingTop: isMobile ? "3.5rem" : 0,

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route } from "react-router";
 import useAuthStore from "./store/useAuthStore";
 import useThemeStore from "./store/useThemeStore";
@@ -7,13 +7,21 @@ import ScrollToTop from "./utils/ScrollToTop";
 import Layout from "./layouts/Layout";
 import Login from "./pages/Auth/Login";
 import SignUp from "./pages/Auth/SignUp";
-import Accounts from "./pages/Accounts/Accounts";
-import Transactions from "./pages/Transactions/Transactions";
-import Dashboard from "./pages/Dashboard/Dashboard";
-import Statistics from "./pages/Statistics/Statistics";
-import Budget from "./pages/Budget/Budget";
-import Categories from "./pages/Categories/Categories";
 import "./App.css";
+
+// ★ 페이지 lazy 로드 — 초기 번들 분리
+const Dashboard = lazy(() => import("./pages/Dashboard/Dashboard"));
+const Accounts = lazy(() => import("./pages/Accounts/Accounts"));
+const Transactions = lazy(() => import("./pages/Transactions/Transactions"));
+const Statistics = lazy(() => import("./pages/Statistics/Statistics"));
+const Budget = lazy(() => import("./pages/Budget/Budget"));
+const Categories = lazy(() => import("./pages/Categories/Categories"));
+
+const PageFallback = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="skeleton" style={{ width: 200, height: 20 }} />
+  </div>
+);
 
 const App = () => {
   const initialize = useAuthStore((s) => s.initialize);
@@ -49,12 +57,54 @@ const App = () => {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/accounts" element={<Accounts />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/budget" element={<Budget />} />
-            <Route path="/categories" element={<Categories />} />
+            <Route
+              path="/"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Dashboard />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/accounts"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Accounts />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Transactions />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/statistics"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Statistics />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/budget"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Budget />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/categories"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Categories />
+                </Suspense>
+              }
+            />
           </Route>
         </Route>
       </Routes>

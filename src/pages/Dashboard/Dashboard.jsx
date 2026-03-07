@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { lazy, Suspense, useMemo, useCallback } from "react";
 import { useAccounts } from "../../hooks/useAccounts";
 import {
   useTransactions,
@@ -10,12 +10,20 @@ import useUIStore from "../../store/useUIStore";
 import useConfirm from "../../hooks/useConfirm";
 import { formatMoney } from "../../utils/format";
 import KpiCards from "./KpiCards";
-import MonthlyTrendChart from "./MonthlyTrendChart";
-import CategoryPieChart from "./CategoryPieChart";
-import AccountBalanceList from "./AccountBalanceList";
-import RecentTransactions from "./RecentTransactions";
 import TransactionForm from "../Transactions/TransactionForm";
 import DashboardSkeleton from "./DashboardSkeleton";
+
+// ★ 무거운 차트 컴포넌트 lazy 로드
+const MonthlyTrendChart = lazy(() => import("./MonthlyTrendChart"));
+const CategoryPieChart = lazy(() => import("./CategoryPieChart"));
+const AccountBalanceList = lazy(() => import("./AccountBalanceList"));
+const RecentTransactions = lazy(() => import("./RecentTransactions"));
+
+const ChartFallback = () => (
+  <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="skeleton" style={{ width: "100%", height: 200 }} />
+  </div>
+);
 
 const now = new Date();
 const YEAR = now.getFullYear();
@@ -145,22 +153,30 @@ const Dashboard = () => {
         fmt={fmt}
       />
 
-      <MonthlyTrendChart data={displaySummary} />
+      <Suspense fallback={<ChartFallback />}>
+        <MonthlyTrendChart data={displaySummary} />
+      </Suspense>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CategoryPieChart transactions={currentTxs} fmt={fmt} />
-        <AccountBalanceList
-          accounts={accounts}
-          getCurrencyByCode={getCurrencyByCode}
-        />
+        <Suspense fallback={<ChartFallback />}>
+          <CategoryPieChart transactions={currentTxs} fmt={fmt} />
+        </Suspense>
+        <Suspense fallback={<ChartFallback />}>
+          <AccountBalanceList
+            accounts={accounts}
+            getCurrencyByCode={getCurrencyByCode}
+          />
+        </Suspense>
       </div>
 
-      <RecentTransactions
-        transactions={currentTxs}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onDuplicate={handleDuplicate}
-      />
+      <Suspense fallback={<ChartFallback />}>
+        <RecentTransactions
+          transactions={currentTxs}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onDuplicate={handleDuplicate}
+        />
+      </Suspense>
 
       <TransactionForm
         open={txFormOpen}
