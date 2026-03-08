@@ -10,6 +10,13 @@ const BottomSheet = ({ open, onClose, children }) => {
     setVisible(true);
   }
 
+  // open prop이 false로 바뀌면 닫기 애니메이션 트리거
+  useEffect(() => {
+    if (!open && visible && !closing) {
+      handleClose();
+    }
+  }, [open]);
+
   // 열릴 때 body 스크롤 잠금
   useEffect(() => {
     if (visible && !closing) {
