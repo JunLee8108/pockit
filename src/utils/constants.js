@@ -29,9 +29,9 @@ export const NAV_ITEMS = [
   { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
   { id: "categories", label: "카테고리", path: "/categories", icon: "Tag" },
   {
-    id: "annual-report",
-    label: "연간 리포트",
-    path: "/annual-report",
+    id: "report",
+    label: "리포트",
+    path: "/report",
     icon: "CalendarRange",
   },
 ];

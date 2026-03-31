@@ -48,16 +48,18 @@ const AnnualSummaryCards = ({
   prevIncome,
   prevExpense,
   fmt,
+  mode = "annual",
 }) => {
+  const isMonthly = mode === "monthly";
+  const prefix = isMonthly ? "월간" : "연간";
   const net = income - expense;
   const prevNet = prevIncome - prevExpense;
-  const monthlyAvgExpense = expense / 12;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className={`grid grid-cols-2 ${isMonthly ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-4`}>
       <Card
         icon={ArrowUpRight}
-        label="연간 총 수입"
+        label={`${prefix} 총 수입`}
         value={`+${fmt(income)}`}
         color="text-mint"
         current={income}
@@ -66,7 +68,7 @@ const AnnualSummaryCards = ({
       />
       <Card
         icon={ArrowDownRight}
-        label="연간 총 지출"
+        label={`${prefix} 총 지출`}
         value={fmt(expense)}
         color="text-coral"
         current={expense}
@@ -75,20 +77,22 @@ const AnnualSummaryCards = ({
       />
       <Card
         icon={Scale}
-        label="연간 순수지"
+        label={`${prefix} 순수지`}
         value={`${net >= 0 ? "+" : "-"}${fmt(Math.abs(net))}`}
         color={net >= 0 ? "text-mint" : "text-coral"}
         current={net}
         previous={prevNet}
         showChange
       />
-      <Card
-        icon={CalendarDays}
-        label="월평균 지출"
-        value={fmt(Math.round(monthlyAvgExpense))}
-        color="text-text"
-        showChange={false}
-      />
+      {!isMonthly && (
+        <Card
+          icon={CalendarDays}
+          label="월평균 지출"
+          value={fmt(Math.round(expense / 12))}
+          color="text-text"
+          showChange={false}
+        />
+      )}
     </div>
   );
 };

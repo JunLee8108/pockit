@@ -189,11 +189,11 @@ const BottomNav = () => {
           </button>
 
           <button
-            {...makeSheetHandler(() => handleNavigate("/annual-report"))}
+            {...makeSheetHandler(() => handleNavigate("/report"))}
             className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
             <CalendarRange size={18} className="text-sub shrink-0" />
-            <span className="pointer-events-none">연간 리포트</span>
+            <span className="pointer-events-none">리포트</span>
           </button>
 
           <div className="h-px bg-border my-1" />

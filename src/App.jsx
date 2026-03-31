@@ -123,7 +123,7 @@ const App = () => {
               }
             />
             <Route
-              path="/annual-report"
+              path="/report"
               element={
                 <Suspense fallback={<PageFallback />}>
                   <AnnualReport />
