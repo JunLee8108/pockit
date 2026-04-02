@@ -41,7 +41,7 @@ const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
 
   return (
     <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <h3 className="text-[13px] text-sub font-medium tracking-wide">
           계좌 잔액
         </h3>
