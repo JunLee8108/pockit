@@ -1,10 +1,19 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router";
-import { Pencil, Trash2, Copy, ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft } from "lucide-react";
 import { formatMoney } from "../../utils/format";
 import { useCurrencyByCode } from "../../hooks/useCurrencies";
 import CategoryIcon from "../../components/CategoryIcon";
-import SwipeableCard from "../Accounts/SwipeableCard";
+
+const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+const formatDateHeader = (dateStr) => {
+  const d = new Date(dateStr + "T00:00:00");
+  const month = d.getMonth() + 1;
+  const date = d.getDate();
+  const day = DAYS[d.getDay()];
+  return `${month}월 ${date}일 ${day}요일`;
+};
 
 const TYPE_STYLES = {
   income: { sign: "+", color: "text-mint" },
@@ -12,14 +21,16 @@ const TYPE_STYLES = {
   transfer: { sign: "", color: "text-sub" },
 };
 
-const TxRow = ({ tx, onEdit, onDelete, onDuplicate }) => {
+const TxRow = ({ tx, isLast }) => {
   const currency = useCurrencyByCode(tx.currency);
   const style = TYPE_STYLES[tx.type];
 
   return (
-    <div className="flex items-center gap-3 py-3 group">
+    <div
+      className={`flex items-center gap-3 py-3 ${isLast ? "" : "border-b border-border"}`}
+    >
       <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
         style={{
           backgroundColor: tx.category?.color
             ? tx.category.color + "18"
@@ -27,23 +38,23 @@ const TxRow = ({ tx, onEdit, onDelete, onDuplicate }) => {
         }}
       >
         {tx.type === "transfer" ? (
-          <ArrowRightLeft size={16} className="text-sub" />
+          <ArrowRightLeft size={14} className="text-sub" />
         ) : (
           <CategoryIcon
             name={tx.category?.icon}
-            size={16}
+            size={14}
             style={{ color: tx.category?.color || "#94a3b8" }}
           />
         )}
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-medium text-text truncate">
+        <div className="text-[13px] font-medium text-text truncate">
           {tx.description ||
             tx.category?.name ||
             (tx.type === "transfer" ? "이체" : "거래")}
         </div>
-        <div className="text-[12px] text-sub truncate">
+        <div className="text-[11px] text-sub truncate">
           {tx.account?.name}
           {tx.type === "transfer" &&
             tx.to_account &&
@@ -52,45 +63,29 @@ const TxRow = ({ tx, onEdit, onDelete, onDuplicate }) => {
         </div>
       </div>
 
-      <div className={`text-[14px] font-semibold shrink-0 ${style.color}`}>
+      <div className={`text-[13px] font-semibold shrink-0 ${style.color}`}>
         {style.sign}
         {formatMoney(tx.amount, currency)}
-      </div>
-
-      <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
-        <button
-          onClick={() => onDuplicate(tx)}
-          className="p-1.5 rounded-md text-sub hover:bg-light cursor-pointer bg-transparent border-none"
-          title="복제"
-        >
-          <Copy size={14} />
-        </button>
-        <button
-          onClick={() => onEdit(tx)}
-          className="p-1.5 rounded-md text-sub hover:bg-light cursor-pointer bg-transparent border-none"
-          title="수정"
-        >
-          <Pencil size={14} />
-        </button>
-        <button
-          onClick={() => onDelete(tx)}
-          className="p-1.5 rounded-md text-error hover:bg-error-bg cursor-pointer bg-transparent border-none"
-          title="삭제"
-        >
-          <Trash2 size={14} />
-        </button>
       </div>
     </div>
   );
 };
 
-const RecentTransactions = ({ transactions, onEdit, onDelete, onDuplicate }) => {
-  const [openCardId, setOpenCardId] = useState(null);
-  const recent = transactions.slice(0, 5);
+const RecentTransactions = ({ transactions }) => {
+  const grouped = useMemo(() => {
+    const recent = transactions.slice(0, 7);
+    const map = new Map();
+    recent.forEach((tx) => {
+      const key = tx.date;
+      if (!map.has(key)) map.set(key, []);
+      map.get(key).push(tx);
+    });
+    return [...map.entries()];
+  }, [transactions]);
 
-  if (recent.length === 0) {
+  if (grouped.length === 0) {
     return (
-      <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <h3 className="text-[13px] text-sub font-medium tracking-wide mb-3">
           최근 거래
         </h3>
@@ -100,7 +95,7 @@ const RecentTransactions = ({ transactions, onEdit, onDelete, onDuplicate }) => 
   }
 
   return (
-    <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-[13px] text-sub font-medium tracking-wide">
           최근 거래
@@ -113,52 +108,16 @@ const RecentTransactions = ({ transactions, onEdit, onDelete, onDuplicate }) => 
         </Link>
       </div>
 
-      <div onClick={() => setOpenCardId(null)}>
-        {recent.map((tx, i) => (
-          <SwipeableCard
-            key={tx.id}
-            cardId={tx.id}
-            openCardId={openCardId}
-            onOpenChange={setOpenCardId}
-            actions={[
-              {
-                key: "duplicate",
-                label: "복제",
-                icon: <Copy size={18} />,
-                className: "bg-sub",
-                onClick: () => onDuplicate(tx),
-              },
-              {
-                key: "edit",
-                label: "수정",
-                icon: <Pencil size={18} />,
-                className: "bg-mint",
-                onClick: () => onEdit(tx),
-              },
-              {
-                key: "delete",
-                label: "삭제",
-                icon: <Trash2 size={18} />,
-                className: "bg-coral",
-                onClick: () => onDelete(tx),
-              },
-            ]}
-          >
-            <div
-              className={
-                i < recent.length - 1 ? "border-b border-border" : ""
-              }
-            >
-              <TxRow
-                tx={tx}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onDuplicate={onDuplicate}
-              />
-            </div>
-          </SwipeableCard>
-        ))}
-      </div>
+      {grouped.map(([date, txs], gi) => (
+        <div key={date} className={gi > 0 ? "mt-4" : "mt-1"}>
+          <div className="text-[11px] text-sub font-medium mb-1 tracking-wide">
+            {formatDateHeader(date)}
+          </div>
+          {txs.map((tx, ti) => (
+            <TxRow key={tx.id} tx={tx} isLast={ti === txs.length - 1} />
+          ))}
+        </div>
+      ))}
     </div>
   );
 };
