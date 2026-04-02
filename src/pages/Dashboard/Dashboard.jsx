@@ -1,15 +1,9 @@
 import { lazy, Suspense, useMemo, useCallback } from "react";
 import { useAccounts } from "../../hooks/useAccounts";
-import {
-  useTransactions,
-  useDeleteTransaction,
-} from "../../hooks/useTransactions";
+import { useTransactions } from "../../hooks/useTransactions";
 import { useCurrencies } from "../../hooks/useCurrencies";
-import useUIStore from "../../store/useUIStore";
-import useConfirm from "../../hooks/useConfirm";
 import { formatMoney } from "../../utils/format";
 import KpiCards from "./KpiCards";
-import TransactionForm from "../Transactions/TransactionForm";
 import DashboardSkeleton from "./DashboardSkeleton";
 import LiveClock from "./LiveClock";
 
@@ -42,9 +36,6 @@ const Dashboard = () => {
     year: PREV_YEAR,
     month: PREV_MONTH,
   });
-  const deleteTx = useDeleteTransaction();
-  const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
-  const confirm = useConfirm();
 
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
@@ -91,39 +82,6 @@ const Dashboard = () => {
     return { prevIncome: inc, prevExpense: exp };
   }, [prevTxs]);
 
-  const handleEdit = useCallback((tx) => openTxForm(tx), [openTxForm]);
-
-  const handleDuplicate = useCallback(
-    (tx) => {
-      openTxForm({
-        type: tx.type,
-        amount: tx.amount,
-        currency: tx.currency,
-        account_id: tx.account_id,
-        to_account_id: tx.to_account_id,
-        category_id: tx.category_id,
-        description: tx.description,
-        memo: tx.memo,
-        date: new Date().toISOString().split("T")[0],
-        duplicateKey: Date.now(),
-      });
-    },
-    [openTxForm],
-  );
-
-  const handleDelete = useCallback(
-    async (tx) => {
-      const ok = await confirm({
-        title: "거래 삭제",
-        message: "이 거래를 삭제하시겠습니까?",
-        confirmText: "삭제",
-        variant: "danger",
-      });
-      if (ok) deleteTx.mutate(tx);
-    },
-    [deleteTx, confirm],
-  );
-
   if (accLoading || txLoading) return <DashboardSkeleton />;
 
   return (
@@ -151,12 +109,7 @@ const Dashboard = () => {
           />
         </Suspense>
         <Suspense fallback={<ChartFallback />}>
-          <RecentTransactions
-            transactions={currentTxs}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onDuplicate={handleDuplicate}
-          />
+          <RecentTransactions transactions={currentTxs} />
         </Suspense>
       </div>
 
@@ -169,12 +122,6 @@ const Dashboard = () => {
           <FixedExpenseOverview fmt={fmt} />
         </Suspense>
       </div>
-
-      <TransactionForm
-        open={txFormOpen}
-        onClose={closeTxForm}
-        editTx={txEditTarget}
-      />
     </div>
   );
 };
