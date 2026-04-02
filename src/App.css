@@ -42,6 +42,14 @@
 [data-theme="dark"] .dash-card {
   box-shadow: 0 0 0 1px var(--color-border);
 }
+.kpi-icon-primary {
+  background-color: #1a1a1a;
+  color: #ffffff;
+}
+[data-theme="dark"] .kpi-icon-primary {
+  background-color: #ececec;
+  color: #1a1a1a;
+}
 
 /* ── Base ── */
 

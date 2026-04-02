@@ -32,7 +32,7 @@ const Card = ({
   label,
   value,
   color,
-  iconBg,
+  iconClass,
   current,
   previous,
   showChange = true,
@@ -40,10 +40,9 @@ const Card = ({
   <div className="dash-card bg-surface rounded-2xl p-5 shadow-sm flex flex-col gap-2.5">
     <div className="flex items-center gap-2">
       <span
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ backgroundColor: iconBg }}
+        className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${iconClass}`}
       >
-        <Icon size={14} className="text-white" />
+        <Icon size={14} />
       </span>
       <span className="text-[12px] text-sub font-medium tracking-wide">
         {label}
@@ -72,7 +71,7 @@ const KpiCards = ({
         label="총 순자산"
         value={fmt(netWorth)}
         color={netWorth < 0 ? "text-coral" : "text-text"}
-        iconBg="#1a1a1a"
+        iconClass="kpi-icon-primary"
         showChange={false}
       />
       <Card
@@ -80,7 +79,7 @@ const KpiCards = ({
         label="이번달 수입"
         value={`+${fmt(income)}`}
         color="text-mint"
-        iconBg="var(--color-mint)"
+        iconClass="bg-mint text-white"
         current={income}
         previous={prevIncome}
       />
@@ -89,7 +88,7 @@ const KpiCards = ({
         label="이번달 지출"
         value={fmt(expense)}
         color="text-coral"
-        iconBg="var(--color-coral)"
+        iconClass="bg-coral text-white"
         current={expense}
         previous={prevExpense}
       />
@@ -98,7 +97,7 @@ const KpiCards = ({
         label="순수지"
         value={`${net >= 0 ? "+" : "-"}${fmt(Math.abs(net))}`}
         color={net >= 0 ? "text-mint" : "text-coral"}
-        iconBg="var(--color-sub)"
+        iconClass="bg-sub text-white"
         current={net}
         previous={prevIncome - prevExpense}
       />
