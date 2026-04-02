@@ -12,7 +12,7 @@ const formatDateHeader = (dateStr) => {
   const month = d.getMonth() + 1;
   const date = d.getDate();
   const day = DAYS[d.getDay()];
-  return `${month}월 ${date}일 ${day}요일`;
+  return `${month}월 ${date}일 (${day})`;
 };
 
 const TYPE_STYLES = {
