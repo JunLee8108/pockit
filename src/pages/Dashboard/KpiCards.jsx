@@ -72,7 +72,7 @@ const KpiCards = ({
         label="총 순자산"
         value={fmt(netWorth)}
         color={netWorth < 0 ? "text-coral" : "text-text"}
-        iconBg="var(--color-text)"
+        iconBg="#1a1a1a"
         showChange={false}
       />
       <Card
