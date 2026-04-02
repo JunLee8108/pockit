@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Link } from "react-router";
-import { Wallet } from "lucide-react";
 import { useBudgets } from "../../hooks/useBudgets";
 import { useTransactions } from "../../hooks/useTransactions";
 import CategoryIcon from "../../components/CategoryIcon";
@@ -58,9 +57,6 @@ const BudgetOverview = ({ fmt }) => {
       <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <span className="w-7 h-7 rounded-lg bg-mint-bg flex items-center justify-center">
-              <Wallet size={14} className="text-mint" />
-            </span>
             <h3 className="text-[13px] text-sub font-medium tracking-wide">
               {MONTH}월 예산 현황
             </h3>
@@ -80,14 +76,9 @@ const BudgetOverview = ({ fmt }) => {
   return (
     <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg bg-mint-bg flex items-center justify-center">
-            <Wallet size={14} className="text-mint" />
-          </span>
-          <h3 className="text-[13px] text-sub font-medium tracking-wide">
-            {MONTH}월 예산 현황
-          </h3>
-        </div>
+        <h3 className="text-[13px] text-sub font-medium tracking-wide">
+          {MONTH}월 예산 현황
+        </h3>
         <Link
           to="/budget"
           className="text-mint text-[12px] font-medium no-underline"

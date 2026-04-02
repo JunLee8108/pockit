@@ -27,8 +27,17 @@ const Change = ({ current, previous }) => {
   );
 };
 
-const SubCard = ({ icon: Icon, label, value, color, iconBg, current, previous }) => (
-  <div className="dash-card bg-surface rounded-xl p-4 shadow-sm flex flex-col gap-2">
+const Card = ({
+  icon: Icon,
+  label,
+  value,
+  color,
+  iconBg,
+  current,
+  previous,
+  showChange = true,
+}) => (
+  <div className="dash-card bg-surface rounded-2xl p-5 shadow-sm flex flex-col gap-2.5">
     <div className="flex items-center gap-2">
       <span
         className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
@@ -40,8 +49,8 @@ const SubCard = ({ icon: Icon, label, value, color, iconBg, current, previous })
         {label}
       </span>
     </div>
-    <div className={`text-[20px] font-bold truncate ${color}`}>{value}</div>
-    {previous !== undefined && (
+    <div className={`text-[22px] font-bold truncate ${color}`}>{value}</div>
+    {showChange && previous !== undefined && (
       <Change current={current} previous={previous} />
     )}
   </div>
@@ -56,58 +65,43 @@ const KpiCards = ({
   fmt,
 }) => {
   const net = income - expense;
-
   return (
-    <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
-      {/* Hero: Net Worth */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="w-8 h-8 rounded-lg bg-text flex items-center justify-center">
-            <Wallet size={16} className="text-surface" />
-          </span>
-          <span className="text-[13px] text-sub font-medium tracking-wide">
-            총 순자산
-          </span>
-        </div>
-        <div
-          className={`text-[32px] font-extrabold tracking-tight ${
-            netWorth < 0 ? "text-coral" : "text-text"
-          }`}
-        >
-          {fmt(netWorth)}
-        </div>
-      </div>
-
-      {/* Sub Metrics */}
-      <div className="grid grid-cols-3 gap-3">
-        <SubCard
-          icon={ArrowUpRight}
-          label="수입"
-          value={`+${fmt(income)}`}
-          color="text-mint"
-          iconBg="var(--color-mint)"
-          current={income}
-          previous={prevIncome}
-        />
-        <SubCard
-          icon={ArrowDownRight}
-          label="지출"
-          value={fmt(expense)}
-          color="text-coral"
-          iconBg="var(--color-coral)"
-          current={expense}
-          previous={prevExpense}
-        />
-        <SubCard
-          icon={Scale}
-          label="순수지"
-          value={`${net >= 0 ? "+" : "-"}${fmt(Math.abs(net))}`}
-          color={net >= 0 ? "text-mint" : "text-coral"}
-          iconBg="var(--color-sub)"
-          current={net}
-          previous={prevIncome - prevExpense}
-        />
-      </div>
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card
+        icon={Wallet}
+        label="총 순자산"
+        value={fmt(netWorth)}
+        color={netWorth < 0 ? "text-coral" : "text-text"}
+        iconBg="var(--color-text)"
+        showChange={false}
+      />
+      <Card
+        icon={ArrowUpRight}
+        label="이번달 수입"
+        value={`+${fmt(income)}`}
+        color="text-mint"
+        iconBg="var(--color-mint)"
+        current={income}
+        previous={prevIncome}
+      />
+      <Card
+        icon={ArrowDownRight}
+        label="이번달 지출"
+        value={fmt(expense)}
+        color="text-coral"
+        iconBg="var(--color-coral)"
+        current={expense}
+        previous={prevExpense}
+      />
+      <Card
+        icon={Scale}
+        label="순수지"
+        value={`${net >= 0 ? "+" : "-"}${fmt(Math.abs(net))}`}
+        color={net >= 0 ? "text-mint" : "text-coral"}
+        iconBg="var(--color-sub)"
+        current={net}
+        previous={prevIncome - prevExpense}
+      />
     </div>
   );
 };
