@@ -6,7 +6,6 @@ import TopTransactions from "./TopTransactions";
 import PeriodComparison from "./PeriodComparison";
 import CategoryBreakdown from "./CategoryBreakdown";
 import SpendingPattern from "./SpendingPattern";
-import DailyFlowChart from "./DailyFlowChart";
 import StatisticsSkeleton from "./StatisticsSkeleton";
 import { formatMoney } from "../../utils/format";
 
@@ -79,14 +78,13 @@ const Statistics = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-xl font-semibold text-text">통계</h2>
+      {/* Header — 제목 + 기간 선택 한 줄 */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-text">통계</h2>
+        <PeriodSelector year={year} month={month} onChange={handlePeriod} />
+      </div>
 
-      <PeriodSelector year={year} month={month} onChange={handlePeriod} />
-
-      {/* 상위 지출 Top 5 — 최상단 */}
-      <TopTransactions transactions={currentTxs} currency={primaryCurrency} />
-
-      {/* 월간 비교 + 카테고리별 지출 */}
+      {/* 월간 비교 + 상위 지출 Top 5 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <PeriodComparison
           current={currentSummary}
@@ -95,28 +93,26 @@ const Statistics = () => {
           prevMonth={prevMonth}
           fmt={fmt}
         />
+        <TopTransactions
+          transactions={currentTxs}
+          currency={primaryCurrency}
+        />
+      </div>
+
+      {/* 카테고리별 지출 + 일별 지출 패턴 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CategoryBreakdown
           transactions={currentTxs}
           fmt={fmt}
           year={year}
           month={month}
         />
-      </div>
-
-      {/* 지출 패턴 + 일별 흐름 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <SpendingPattern
           transactions={currentTxs}
           year={year}
           month={month}
           divisor={divisor}
           fmt={fmt}
-        />
-        <DailyFlowChart
-          transactions={currentTxs}
-          year={year}
-          month={month}
-          divisor={divisor}
         />
       </div>
     </div>
