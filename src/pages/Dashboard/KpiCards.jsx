@@ -79,11 +79,11 @@ const KpiCards = ({
         showChange={false}
       >
         {totalDebt > 0 && (
-          <div className="text-[11px] flex items-center gap-1 flex-wrap">
+          <div className="text-[11px] flex items-center gap-1">
             <span className="text-coral">부채 -{fmt(totalDebt)}</span>
             <span className="text-sub">=</span>
             <span className={netWorth >= 0 ? "text-mint" : "text-coral"}>
-              순자산 {netWorth < 0 && "-"}{fmt(Math.abs(netWorth))}
+              {netWorth < 0 && "-"}{fmt(Math.abs(netWorth))}
             </span>
           </div>
         )}
