@@ -156,7 +156,7 @@ const Accounts = () => {
                             <div>
                               <div className="text-[12px] text-sub mb-1">부채</div>
                               <div className="text-[20px] font-bold text-coral">
-                                -{formatMoney(Math.abs(totals.liabilities), cur)}
+                                {formatMoney(Math.abs(totals.liabilities), cur)}
                               </div>
                             </div>
                           )}
