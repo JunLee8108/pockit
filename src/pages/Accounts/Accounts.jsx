@@ -138,21 +138,37 @@ const Accounts = () => {
                     {Object.entries(totalsByCurrency).map(([code, totals]) => {
                       const cur = getCurrencyByCode(code);
                       const net = totals.assets + totals.liabilities;
+                      const hasDebt = totals.liabilities < 0;
                       return (
-                        <div key={code}>
-                          <div className="text-[12px] text-sub mb-1">
-                            순자산 ({code})
-                          </div>
-                          <div
-                            className={`text-[22px] font-bold ${net < 0 ? "text-coral" : "text-text"}`}
-                          >
-                            {formatMoney(net, cur)}
-                          </div>
-                          {totals.liabilities < 0 && (
-                            <div className="text-[12px] text-coral mt-1">
-                              부채: {formatMoney(totals.liabilities, cur)}
+                        <div key={code} className="flex flex-col gap-3">
+                          {Object.keys(totalsByCurrency).length > 1 && (
+                            <div className="text-[11px] text-sub font-medium tracking-wide">
+                              {code}
                             </div>
                           )}
+                          <div>
+                            <div className="text-[12px] text-sub mb-1">총 자산</div>
+                            <div className="text-[20px] font-bold text-text">
+                              {formatMoney(totals.assets, cur)}
+                            </div>
+                          </div>
+                          {hasDebt && (
+                            <div>
+                              <div className="text-[12px] text-sub mb-1">부채</div>
+                              <div className="text-[20px] font-bold text-coral">
+                                -{formatMoney(Math.abs(totals.liabilities), cur)}
+                              </div>
+                            </div>
+                          )}
+                          {hasDebt && <div className="h-px bg-border" />}
+                          <div>
+                            <div className="text-[12px] text-sub mb-1">순자산</div>
+                            <div
+                              className={`text-[20px] font-bold ${net < 0 ? "text-coral" : "text-mint"}`}
+                            >
+                              {net < 0 && "-"}{formatMoney(Math.abs(net), cur)}
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
