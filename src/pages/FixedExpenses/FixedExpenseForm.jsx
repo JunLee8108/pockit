@@ -37,6 +37,7 @@ const FixedExpenseFormInner = ({ onClose, editTarget = null }) => {
   const [categoryId, setCategoryId] = useState(editTarget?.category_id || "");
   const [accountId, setAccountId] = useState(editTarget?.account_id || "");
   const [billingDay, setBillingDay] = useState(editTarget?.billing_day || 1);
+  const [isVariable, setIsVariable] = useState(editTarget?.is_variable || false);
   const [memo, setMemo] = useState(editTarget?.memo || "");
   const [error, setError] = useState("");
 
@@ -72,6 +73,7 @@ const FixedExpenseFormInner = ({ onClose, editTarget = null }) => {
       category_id: categoryId || null,
       account_id: accountId,
       billing_day: Number(billingDay),
+      is_variable: isVariable,
       memo: memo.trim() || null,
     };
 
@@ -188,6 +190,31 @@ const FixedExpenseFormInner = ({ onClose, editTarget = null }) => {
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Variable Amount Toggle */}
+        <div className="flex items-center justify-between px-1">
+          <div>
+            <label className="text-[13px] text-sub font-medium">
+              변동 금액
+            </label>
+            <p className="text-[11px] text-sub mt-0.5">
+              매월 금액이 다르면 켜세요 (자동 등록 안 됨)
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsVariable((v) => !v)}
+            className={`relative w-11 h-6 rounded-full border-none cursor-pointer transition-colors duration-200 ${
+              isVariable ? "bg-mint" : "bg-border"
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                isVariable ? "translate-x-5" : "translate-x-0"
+              }`}
+            />
+          </button>
         </div>
 
         {/* Memo */}

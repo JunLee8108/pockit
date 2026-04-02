@@ -80,15 +80,17 @@ async function syncFixedExpenses() {
 
   const existingIds = new Set((existing || []).map((t) => t.fixed_expense_id));
 
-  // 3) 결제일이 오늘이거나 지난 것 중 미생성 항목 필터
+  // 3) 결제일이 오늘이거나 지난 것 중 미생성 & 고정 금액 항목만 필터
   const toCreate = actives.filter(
-    (fe) => fe.billing_day <= today && !existingIds.has(fe.id),
+    (fe) =>
+      !fe.is_variable && fe.billing_day <= today && !existingIds.has(fe.id),
   );
 
   if (toCreate.length === 0) {
-    // 모든 결제일이 아직 안 됐으면 동기화 상태 저장 안 함 (다음 접속 시 재시도)
-    // 모든 항목의 결제일이 지났으면 동기화 완료로 표시
-    const allPassed = actives.every((fe) => fe.billing_day <= today);
+    // 고정 금액 항목 중 모든 결제일이 지났으면 동기화 완료로 표시
+    const fixedOnly = actives.filter((fe) => !fe.is_variable);
+    const allPassed =
+      fixedOnly.length === 0 || fixedOnly.every((fe) => fe.billing_day <= today);
     if (allPassed) setSyncState(year, month);
     return [];
   }
@@ -122,8 +124,10 @@ async function syncFixedExpenses() {
     await adjustBalance(fe.account_id, -fe.amount);
   }
 
-  // 모든 활성 항목의 결제일이 지났으면 동기화 완료
-  const allPassed = actives.every((fe) => fe.billing_day <= today);
+  // 고정 금액 항목 중 모든 결제일이 지났으면 동기화 완료
+  const fixedOnly = actives.filter((fe) => !fe.is_variable);
+  const allPassed =
+    fixedOnly.length === 0 || fixedOnly.every((fe) => fe.billing_day <= today);
   if (allPassed) setSyncState(year, month);
 
   return created || [];
@@ -180,7 +184,7 @@ export const useBulkCreateFixedExpenseTx = () => {
         (existing || []).map((t) => t.fixed_expense_id),
       );
       const toCreate = fixedExpenses.filter(
-        (fe) => fe.is_active && !existingIds.has(fe.id),
+        (fe) => fe.is_active && !fe.is_variable && !existingIds.has(fe.id),
       );
 
       if (toCreate.length === 0) return [];
@@ -223,6 +227,56 @@ export const useBulkCreateFixedExpenseTx = () => {
         qc.invalidateQueries({ queryKey: ["annual-summary"] });
         qc.invalidateQueries({ queryKey: ["annual-category"] });
       }
+    },
+  });
+};
+
+/**
+ * 변동 금액 고정지출 개별 등록 — 사용자가 실제 금액을 입력 후 등록
+ */
+export const useCreateSingleFixedExpenseTx = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ fixedExpense, actualAmount }) => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const lastDay = new Date(year, month, 0).getDate();
+      const user = await getAuthUser();
+      const fe = fixedExpense;
+
+      const billingDay = Math.min(fe.billing_day, lastDay);
+      const date = `${year}-${String(month).padStart(2, "0")}-${String(billingDay).padStart(2, "0")}`;
+
+      const { data: tx, error } = await supabase
+        .from("transactions")
+        .insert({
+          user_id: user.id,
+          account_id: fe.account_id,
+          category_id: fe.category_id,
+          type: "expense",
+          amount: actualAmount,
+          currency: fe.currency,
+          description: fe.name,
+          date,
+          fixed_expense_id: fe.id,
+          memo: fe.memo || null,
+        })
+        .select("*")
+        .single();
+      if (error) throw error;
+
+      await adjustBalance(fe.account_id, -actualAmount);
+
+      return tx;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.transactions.all });
+      qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
+      qc.invalidateQueries({ queryKey: queryKeys.fixedExpenses.all });
+      qc.invalidateQueries({ queryKey: ["monthly-summary"] });
+      qc.invalidateQueries({ queryKey: ["annual-summary"] });
+      qc.invalidateQueries({ queryKey: ["annual-category"] });
     },
   });
 };
