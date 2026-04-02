@@ -5,21 +5,18 @@ import {
   useDeleteTransaction,
 } from "../../hooks/useTransactions";
 import { useCurrencies } from "../../hooks/useCurrencies";
-import useMonthlySummary from "../../hooks/useMonthlySummary";
 import useUIStore from "../../store/useUIStore";
 import useConfirm from "../../hooks/useConfirm";
 import { formatMoney } from "../../utils/format";
 import KpiCards from "./KpiCards";
 import TransactionForm from "../Transactions/TransactionForm";
 import DashboardSkeleton from "./DashboardSkeleton";
-
 import LiveClock from "./LiveClock";
 
-// ★ 무거운 차트 컴포넌트 lazy 로드
-const MonthlyTrendChart = lazy(() => import("./MonthlyTrendChart"));
-const CategoryPieChart = lazy(() => import("./CategoryPieChart"));
 const AccountBalanceList = lazy(() => import("./AccountBalanceList"));
 const RecentTransactions = lazy(() => import("./RecentTransactions"));
+const BudgetOverview = lazy(() => import("./BudgetOverview"));
+const FixedExpenseOverview = lazy(() => import("./FixedExpenseOverview"));
 
 const ChartFallback = () => (
   <div className="bg-surface border border-border rounded-xl p-5">
@@ -45,7 +42,6 @@ const Dashboard = () => {
     year: PREV_YEAR,
     month: PREV_MONTH,
   });
-  const { summary, isLoading: summaryLoading } = useMonthlySummary(6);
   const deleteTx = useDeleteTransaction();
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
   const confirm = useConfirm();
@@ -75,9 +71,6 @@ const Dashboard = () => {
     [accounts],
   );
 
-  const dp = primaryCurrency?.decimal_places ?? 2;
-  const divisor = 10 ** dp;
-
   const { income, expense } = useMemo(() => {
     let inc = 0,
       exp = 0;
@@ -97,15 +90,6 @@ const Dashboard = () => {
     });
     return { prevIncome: inc, prevExpense: exp };
   }, [prevTxs]);
-
-  const displaySummary = useMemo(() => {
-    if (summaryLoading) return [];
-    return summary.map((s) => ({
-      ...s,
-      income: s.income / divisor,
-      expense: s.expense / divisor,
-    }));
-  }, [summary, divisor, summaryLoading]);
 
   const handleEdit = useCallback((tx) => openTxForm(tx), [openTxForm]);
 
@@ -158,30 +142,33 @@ const Dashboard = () => {
         fmt={fmt}
       />
 
-      <Suspense fallback={<ChartFallback />}>
-        <MonthlyTrendChart data={displaySummary} />
-      </Suspense>
-
+      {/* 계좌 잔액 + 최근 거래 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Suspense fallback={<ChartFallback />}>
-          <CategoryPieChart transactions={currentTxs} fmt={fmt} />
-        </Suspense>
         <Suspense fallback={<ChartFallback />}>
           <AccountBalanceList
             accounts={accounts}
             getCurrencyByCode={getCurrencyByCode}
           />
         </Suspense>
+        <Suspense fallback={<ChartFallback />}>
+          <RecentTransactions
+            transactions={currentTxs}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onDuplicate={handleDuplicate}
+          />
+        </Suspense>
       </div>
 
-      <Suspense fallback={<ChartFallback />}>
-        <RecentTransactions
-          transactions={currentTxs}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onDuplicate={handleDuplicate}
-        />
-      </Suspense>
+      {/* 예산 현황 + 고정지출 현황 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Suspense fallback={<ChartFallback />}>
+          <BudgetOverview fmt={fmt} />
+        </Suspense>
+        <Suspense fallback={<ChartFallback />}>
+          <FixedExpenseOverview fmt={fmt} />
+        </Suspense>
+      </div>
 
       <TransactionForm
         open={txFormOpen}
