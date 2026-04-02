@@ -62,6 +62,16 @@ const Dashboard = () => {
     [accounts],
   );
 
+  const totalAssets = useMemo(
+    () => accounts.reduce((s, a) => s + (a.balance > 0 ? a.balance : 0), 0),
+    [accounts],
+  );
+
+  const totalDebt = useMemo(
+    () => accounts.reduce((s, a) => s + (a.balance < 0 ? Math.abs(a.balance) : 0), 0),
+    [accounts],
+  );
+
   const { income, expense } = useMemo(() => {
     let inc = 0,
       exp = 0;
@@ -92,6 +102,8 @@ const Dashboard = () => {
       </div>
 
       <KpiCards
+        totalAssets={totalAssets}
+        totalDebt={totalDebt}
         netWorth={netWorth}
         income={income}
         expense={expense}

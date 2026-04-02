@@ -36,6 +36,7 @@ const Card = ({
   current,
   previous,
   showChange = true,
+  children,
 }) => (
   <div className="dash-card bg-surface rounded-2xl p-5 shadow-sm flex flex-col gap-2.5">
     <div className="flex items-center gap-2">
@@ -52,10 +53,13 @@ const Card = ({
     {showChange && previous !== undefined && (
       <Change current={current} previous={previous} />
     )}
+    {children}
   </div>
 );
 
 const KpiCards = ({
+  totalAssets,
+  totalDebt,
   netWorth,
   income,
   expense,
@@ -68,12 +72,22 @@ const KpiCards = ({
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       <Card
         icon={Wallet}
-        label="총 순자산"
-        value={fmt(netWorth)}
-        color={netWorth < 0 ? "text-coral" : "text-text"}
+        label="총 자산"
+        value={fmt(totalAssets)}
+        color="text-text"
         iconClass="kpi-icon-primary"
         showChange={false}
-      />
+      >
+        {totalDebt > 0 && (
+          <div className="text-[11px] flex items-center gap-1 flex-wrap">
+            <span className="text-coral">부채 -{fmt(totalDebt)}</span>
+            <span className="text-sub">=</span>
+            <span className={netWorth >= 0 ? "text-mint" : "text-coral"}>
+              순자산 {netWorth < 0 && "-"}{fmt(Math.abs(netWorth))}
+            </span>
+          </div>
+        )}
+      </Card>
       <Card
         icon={ArrowUpRight}
         label="이번달 수입"
