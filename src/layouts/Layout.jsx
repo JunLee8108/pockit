@@ -5,6 +5,7 @@ import MobileHeader from "./MobileHeader";
 import BottomNav from "../components/BottomNav";
 import ConfirmModal from "../components/ConfirmModal";
 import useUIStore from "../store/useUIStore";
+import { useFixedExpenseSync } from "../hooks/useFixedExpenseSync";
 
 const useViewport = () => {
   const [width, setWidth] = useState(window.innerWidth);
@@ -23,6 +24,9 @@ const useViewport = () => {
 const Layout = () => {
   const viewport = useViewport();
   const { sidebarCollapsed } = useUIStore();
+
+  // 앱 접속 시 고정지출 자동 동기화
+  useFixedExpenseSync();
 
   const isMobile = viewport === "mobile";
   const isTablet = viewport === "tablet";

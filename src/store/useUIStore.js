@@ -23,6 +23,13 @@ const useUIStore = create((set) => ({
   openTxForm: (target = null) =>
     set({ txFormOpen: true, txEditTarget: target }),
   closeTxForm: () => set({ txFormOpen: false, txEditTarget: null }),
+
+  // Fixed Expense Form
+  feFormOpen: false,
+  feEditTarget: null,
+  openFeForm: (target = null) =>
+    set({ feFormOpen: true, feEditTarget: target }),
+  closeFeForm: () => set({ feFormOpen: false, feEditTarget: null }),
 }));
 
 export default useUIStore;

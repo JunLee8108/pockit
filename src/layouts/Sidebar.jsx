@@ -10,13 +10,14 @@ import {
   ChevronRight,
   Landmark,
   CalendarRange,
+  CalendarClock,
 } from "lucide-react";
 import { NAV_ITEMS } from "../utils/constants";
 import useAuthStore from "../store/useAuthStore";
 import useUIStore from "../store/useUIStore";
 import ThemeToggle from "../components/ThemeToggle";
 
-const iconMap = { LayoutDashboard, Receipt, BarChart3, Wallet, Tag, Landmark, CalendarRange };
+const iconMap = { LayoutDashboard, Receipt, BarChart3, Wallet, Tag, Landmark, CalendarRange, CalendarClock };
 
 const Label = ({ collapsed, children }) => (
   <span
