@@ -146,14 +146,14 @@ const AccountTransactions = ({ account, onBack }) => {
       </div>
 
       <div className="dash-card bg-surface shadow-sm rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-center gap-2 mb-3">
           <button
             onClick={() => goMonth(-1)}
             className="p-1.5 rounded-lg text-sub hover:bg-light cursor-pointer bg-transparent border-none"
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="text-[15px] font-semibold text-text">
+          <span className="text-[15px] font-semibold text-text min-w-[100px] text-center">
             {year}년 {month}월
           </span>
           <button

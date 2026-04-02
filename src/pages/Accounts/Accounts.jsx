@@ -79,6 +79,9 @@ const Accounts = () => {
       if (!result[type]) result[type] = [];
       result[type].push(a);
     });
+    Object.values(result).forEach((items) =>
+      items.sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance)),
+    );
     return result;
   }, [accounts]);
 
