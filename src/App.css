@@ -39,6 +39,9 @@
 [data-theme="dark"] input[type="date"] {
   color-scheme: dark;
 }
+[data-theme="dark"] .dash-card {
+  box-shadow: 0 0 0 1px var(--color-border);
+}
 
 /* ── Base ── */
 
