@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { Pencil, Trash2, Copy, Receipt, ArrowRightLeft } from "lucide-react";
+import { Pencil, Trash2, Copy, ArrowRightLeft } from "lucide-react";
 import { formatMoney } from "../../utils/format";
 import { useCurrencyByCode } from "../../hooks/useCurrencies";
 import CategoryIcon from "../../components/CategoryIcon";
@@ -91,14 +91,9 @@ const RecentTransactions = ({ transactions, onEdit, onDelete, onDuplicate }) => 
   if (recent.length === 0) {
     return (
       <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="w-7 h-7 rounded-lg bg-lavender/15 flex items-center justify-center">
-            <Receipt size={14} className="text-lavender" />
-          </span>
-          <h3 className="text-[13px] text-sub font-medium tracking-wide">
-            최근 거래
-          </h3>
-        </div>
+        <h3 className="text-[13px] text-sub font-medium tracking-wide mb-3">
+          최근 거래
+        </h3>
         <p className="text-[13px] text-sub">이번달 거래가 없습니다</p>
       </div>
     );
@@ -107,14 +102,9 @@ const RecentTransactions = ({ transactions, onEdit, onDelete, onDuplicate }) => 
   return (
     <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="w-7 h-7 rounded-lg bg-lavender/15 flex items-center justify-center">
-            <Receipt size={14} className="text-lavender" />
-          </span>
-          <h3 className="text-[13px] text-sub font-medium tracking-wide">
-            최근 거래
-          </h3>
-        </div>
+        <h3 className="text-[13px] text-sub font-medium tracking-wide">
+          최근 거래
+        </h3>
         <Link
           to="/transactions"
           className="text-mint text-[12px] font-medium no-underline"
