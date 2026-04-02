@@ -13,6 +13,8 @@ import KpiCards from "./KpiCards";
 import TransactionForm from "../Transactions/TransactionForm";
 import DashboardSkeleton from "./DashboardSkeleton";
 
+import LiveClock from "./LiveClock";
+
 // ★ 무거운 차트 컴포넌트 lazy 로드
 const MonthlyTrendChart = lazy(() => import("./MonthlyTrendChart"));
 const CategoryPieChart = lazy(() => import("./CategoryPieChart"));
@@ -142,7 +144,10 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-xl font-semibold text-text">대시보드</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-semibold text-text">대시보드</h2>
+        <LiveClock />
+      </div>
 
       <KpiCards
         netWorth={netWorth}
