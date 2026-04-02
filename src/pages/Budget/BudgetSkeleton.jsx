@@ -1,7 +1,7 @@
 import Skeleton from "../../components/Skeleton";
 
 const CardSkeleton = () => (
-  <div className="bg-surface border border-border rounded-xl p-4">
+  <div className="dash-card bg-surface shadow-sm rounded-xl p-4">
     <div className="flex items-center gap-3 mb-3">
       <Skeleton className="w-9 h-9 rounded-lg shrink-0" />
       <div className="flex-1 flex flex-col gap-1.5">
@@ -36,7 +36,7 @@ const BudgetSkeleton = () => (
     <div className="flex flex-col lg:flex-row gap-8">
       {/* 좌측 패널 */}
       <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-4">
-        <div className="bg-surface border border-border rounded-xl p-5">
+        <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
           <Skeleton style={{ width: 100, height: 13 }} className="mb-4" />
           <Skeleton style={{ width: 160, height: 28 }} className="mb-3" />
           <Skeleton
@@ -52,7 +52,7 @@ const BudgetSkeleton = () => (
             ))}
           </div>
         </div>
-        <div className="bg-surface border border-border rounded-xl p-5">
+        <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
           <Skeleton style={{ width: 100, height: 13 }} className="mb-3" />
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-2 py-2">

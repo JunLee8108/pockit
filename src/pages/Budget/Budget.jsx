@@ -196,7 +196,7 @@ const Budget = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-[340px] shrink-0">
           <div className="lg:sticky lg:top-6 flex flex-col gap-4">
-            <div className="bg-surface border border-border rounded-xl p-5">
+            <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
               <h3 className="text-[13px] text-sub font-medium mb-4">
                 {month}월 예산 요약
               </h3>
@@ -265,7 +265,7 @@ const Budget = () => {
             </div>
 
             {sortedBudgetData.length > 0 && (
-              <div className="bg-surface border border-border rounded-xl p-5">
+              <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
                   소진율 순위
                 </h3>
@@ -306,7 +306,7 @@ const Budget = () => {
 
         <div className="flex-1 min-w-0">
           {budgets.length === 0 ? (
-            <div className="bg-surface border border-border rounded-xl p-10 text-center">
+            <div className="dash-card bg-surface shadow-sm rounded-2xl p-10 text-center">
               <p className="text-sub text-sm mb-3">
                 이번 달 예산이 설정되지 않았습니다
               </p>

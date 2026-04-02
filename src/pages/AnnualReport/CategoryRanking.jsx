@@ -31,7 +31,7 @@ const CategoryRanking = memo(({ transactions, categories, fmt }) => {
   }, [transactions, categories, tab]);
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-[13px] text-sub font-medium">카테고리별 순위</h3>
         <div className="flex gap-1">

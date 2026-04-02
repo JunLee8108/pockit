@@ -27,7 +27,7 @@ const MonthlyTable = memo(({ summary, fmt }) => {
 
   if (!hasData) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <h3 className="text-[13px] text-sub font-medium mb-4">월별 상세</h3>
         <p className="text-[13px] text-sub">거래 데이터가 없습니다</p>
       </div>
@@ -35,7 +35,7 @@ const MonthlyTable = memo(({ summary, fmt }) => {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <h3 className="text-[13px] text-sub font-medium mb-4">월별 상세</h3>
       <div className="overflow-x-auto -mx-5 px-5">
         <table className="w-full text-[13px] min-w-[400px]">

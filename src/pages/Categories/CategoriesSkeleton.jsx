@@ -1,7 +1,7 @@
 import Skeleton from "../../components/Skeleton";
 
 const CardSkeleton = () => (
-  <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3">
+  <div className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3">
     <Skeleton className="w-9 h-9 rounded-lg shrink-0" />
     <div className="flex-1 flex flex-col gap-1.5">
       <Skeleton style={{ width: "35%", height: 14 }} />

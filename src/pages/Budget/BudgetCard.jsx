@@ -16,7 +16,7 @@ const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete }) => {
   const status = getStatus(pct);
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 group">
+    <div className="dash-card bg-surface shadow-sm rounded-xl p-4 group">
       <div className="flex items-center gap-3 mb-3">
         {/* Icon */}
         <div

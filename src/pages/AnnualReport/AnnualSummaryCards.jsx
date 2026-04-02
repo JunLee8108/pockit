@@ -29,7 +29,7 @@ const Change = ({ current, previous }) => {
 const Card = ({ icon, label, value, color, current, previous, showChange }) => {
   const IconComp = icon;
   return (
-    <div className="bg-surface border border-border rounded-xl p-5 flex flex-col gap-2">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6 flex flex-col gap-2">
       <div className="flex items-center gap-2">
         <IconComp size={14} className="text-sub" />
         <span className="text-[13px] text-sub font-medium">{label}</span>

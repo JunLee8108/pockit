@@ -10,7 +10,7 @@ const AccountCard = ({ account, onEdit, onDelete, onClick }) => {
 
   return (
     <div
-      className="bg-surface border border-border rounded-xl p-4 flex items-center gap-4 group cursor-pointer hover:bg-light/50 transition-colors"
+      className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-4 group cursor-pointer hover:bg-light/50 transition-colors"
       onClick={() => onClick?.(account)}
     >
       <div

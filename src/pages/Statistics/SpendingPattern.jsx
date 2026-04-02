@@ -61,7 +61,7 @@ const SpendingPattern = memo(({ transactions, year, month, divisor, fmt }) => {
     : "";
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <h3 className="text-[13px] text-sub font-medium mb-4">일별 지출 패턴</h3>
 
       {/* 요일 헤더 */}

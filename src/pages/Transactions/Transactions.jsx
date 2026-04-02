@@ -182,7 +182,7 @@ const Transactions = () => {
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-[340px] shrink-0">
           <div className="lg:sticky lg:top-6 flex flex-col gap-4">
-            <div className="bg-surface border border-border rounded-xl p-5">
+            <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
               <h3 className="text-[13px] text-sub font-medium mb-4">
                 {filters.month}월 요약
               </h3>
@@ -230,7 +230,7 @@ const Transactions = () => {
             </div>
 
             {topExpenseCategories.length > 0 && (
-              <div className="bg-surface border border-border rounded-xl p-5">
+              <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
                   카테고리별 지출
                 </h3>
@@ -270,7 +270,7 @@ const Transactions = () => {
             )}
 
             {filters.type !== "transfer" && filteredCategories.length > 0 && (
-              <div className="hidden lg:block bg-surface border border-border rounded-xl p-5">
+              <div className="hidden lg:block dash-card bg-surface shadow-sm rounded-2xl p-6">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
                   카테고리 필터
                 </h3>

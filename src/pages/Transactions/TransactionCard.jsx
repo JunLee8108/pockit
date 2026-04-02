@@ -14,7 +14,7 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
   const style = TYPE_STYLES[tx.type];
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3 group">
+    <div className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
       {/* Category Icon */}
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"

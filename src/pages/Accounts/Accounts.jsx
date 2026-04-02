@@ -127,7 +127,7 @@ const Accounts = () => {
           <div className="w-full lg:w-[340px] shrink-0">
             <div className="lg:sticky lg:top-6 flex flex-col gap-4">
               {Object.keys(totalsByCurrency).length > 0 && (
-                <div className="bg-surface border border-border rounded-xl p-5">
+                <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
                   <h3 className="text-[13px] text-sub font-medium mb-4">
                     총 자산 요약
                   </h3>
@@ -158,7 +158,7 @@ const Accounts = () => {
               )}
 
               {accounts.length > 0 && (
-                <div className="bg-surface border border-border rounded-xl p-5">
+                <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
                   <h3 className="text-[13px] text-sub font-medium mb-3">
                     빠른 통계
                   </h3>
@@ -192,7 +192,7 @@ const Accounts = () => {
 
           <div className="flex-1 min-w-0">
             {accounts.length === 0 && (
-              <div className="bg-surface border border-border rounded-xl p-10 text-center">
+              <div className="dash-card bg-surface shadow-sm rounded-2xl p-10 text-center">
                 <p className="text-sub text-sm mb-3">등록된 계좌가 없습니다</p>
                 <button
                   onClick={() => openAccountForm()}

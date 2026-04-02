@@ -12,7 +12,7 @@ const TopTransactions = ({ transactions, currency }) => {
 
   if (top5.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <h3 className="text-[13px] text-sub font-medium mb-3">
           상위 지출 Top 5
         </h3>
@@ -22,7 +22,7 @@ const TopTransactions = ({ transactions, currency }) => {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <h3 className="text-[13px] text-sub font-medium mb-3">상위 지출 Top 5</h3>
       <div className="flex flex-col">
         {top5.map((tx, i) => (
