@@ -158,6 +158,7 @@ $$ language plpgsql;
 | `category_id` | uuid | — | `categories(id)` FK (on delete set null) |
 | `account_id` | uuid | — | `accounts(id)` FK (on delete set null) |
 | `billing_day` | int | 1 | 결제일 (1-31) |
+| `is_variable` | boolean | false | 변동 금액 여부 (true면 자동 생성 안 함, 수동 등록) |
 | `memo` | text | — | 메모 |
 | `is_active` | boolean | true | 활성 여부 |
 | `created_at` | timestamptz | now() | 생성일 |

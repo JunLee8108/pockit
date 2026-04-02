@@ -7,16 +7,21 @@ import {
   Check,
   Clock,
   PlayCircle,
+  Bell,
+  Send,
 } from "lucide-react";
 import {
   useFixedExpenses,
   useDeleteFixedExpense,
   useToggleFixedExpense,
 } from "../../hooks/useFixedExpenses";
-import { useBulkCreateFixedExpenseTx } from "../../hooks/useFixedExpenseSync";
+import {
+  useBulkCreateFixedExpenseTx,
+  useCreateSingleFixedExpenseTx,
+} from "../../hooks/useFixedExpenseSync";
 import { useTransactions } from "../../hooks/useTransactions";
 import { useCurrencies } from "../../hooks/useCurrencies";
-import { formatMoney } from "../../utils/format";
+import { formatMoney, toMinorUnit, toDisplayValue } from "../../utils/format";
 import CategoryIcon from "../../components/CategoryIcon";
 import SwipeableCard from "../Accounts/SwipeableCard";
 import FixedExpenseForm from "./FixedExpenseForm";
@@ -25,6 +30,50 @@ import useConfirm from "../../hooks/useConfirm";
 const now = new Date();
 const YEAR = now.getFullYear();
 const MONTH = now.getMonth() + 1;
+
+const VariableAmountInput = ({ fe, currency, onSubmit, isPending }) => {
+  const decimalPlaces = currency?.decimal_places ?? 2;
+  const [amount, setAmount] = useState(
+    toDisplayValue(fe.amount, decimalPlaces),
+  );
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const val = Number(amount);
+    if (!val || val <= 0) return;
+    const minor = toMinorUnit(amount, decimalPlaces);
+    onSubmit(fe, minor);
+  };
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      onClick={(e) => e.stopPropagation()}
+      className="flex items-center gap-2 mt-2 pt-2 border-t border-border"
+    >
+      <span className="text-[12px] text-sub shrink-0">
+        {currency?.symbol || "$"}
+      </span>
+      <input
+        type="number"
+        step="any"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        className="flex-1 min-w-0 px-2.5 py-1.5 bg-bg border border-border rounded-lg text-[13px] text-text outline-none focus:border-mint"
+        placeholder="실제 금액"
+      />
+      <button
+        type="submit"
+        disabled={isPending}
+        className="flex items-center gap-1 px-3 py-1.5 bg-mint text-white rounded-lg text-[12px] font-medium border-none cursor-pointer hover:bg-mint-hover transition-colors disabled:opacity-50 shrink-0"
+      >
+        <Send size={12} />
+        등록
+      </button>
+    </form>
+  );
+};
 
 const FixedExpenses = () => {
   const [formOpen, setFormOpen] = useState(false);
@@ -38,6 +87,7 @@ const FixedExpenses = () => {
   const deleteMutation = useDeleteFixedExpense();
   const toggleMutation = useToggleFixedExpense();
   const bulkCreate = useBulkCreateFixedExpenseTx();
+  const singleCreate = useCreateSingleFixedExpenseTx();
 
   // 이번 달 이미 생성된 고정지출 transaction ID 목록
   const registeredIds = useMemo(() => {
@@ -65,6 +115,11 @@ const FixedExpenses = () => {
     [primaryCurrency],
   );
 
+  const getCurrency = useCallback(
+    (code) => currencies.find((c) => c.code === code) || primaryCurrency,
+    [currencies, primaryCurrency],
+  );
+
   const activeExpenses = useMemo(
     () => fixedExpenses.filter((fe) => fe.is_active),
     [fixedExpenses],
@@ -75,15 +130,32 @@ const FixedExpenses = () => {
     [fixedExpenses],
   );
 
+  // 일괄 등록 대상: 고정 금액 + 활성 + 미등록
+  const bulkUnregisteredCount = useMemo(
+    () =>
+      activeExpenses.filter(
+        (fe) => !fe.is_variable && !registeredIds.has(fe.id),
+      ).length,
+    [activeExpenses, registeredIds],
+  );
+
   const summary = useMemo(() => {
     const total = activeExpenses.reduce((s, fe) => s + fe.amount, 0);
     const registeredCount = activeExpenses.filter((fe) =>
       registeredIds.has(fe.id),
     ).length;
-    return { total, count: activeExpenses.length, registeredCount };
+    const variableNeedAction = activeExpenses.filter(
+      (fe) => fe.is_variable && !registeredIds.has(fe.id),
+    ).length;
+    return {
+      total,
+      count: activeExpenses.length,
+      registeredCount,
+      variableNeedAction,
+    };
   }, [activeExpenses, registeredIds]);
 
-  const unregisteredCount = summary.count - summary.registeredCount;
+  const totalUnregistered = summary.count - summary.registeredCount;
 
   const handleAdd = () => {
     setEditTarget(null);
@@ -116,10 +188,11 @@ const FixedExpenses = () => {
   );
 
   const handleBulkCreate = useCallback(async () => {
-    if (unregisteredCount === 0) {
+    if (bulkUnregisteredCount === 0) {
       await confirm({
         title: "알림",
-        message: "이번 달 모든 고정지출이 이미 등록되었습니다.",
+        message:
+          "고정 금액 항목이 모두 등록되었습니다.\n변동 금액 항목은 개별 등록해주세요.",
         confirmText: "확인",
         cancelText: "",
         variant: "info",
@@ -129,7 +202,7 @@ const FixedExpenses = () => {
 
     const ok = await confirm({
       title: "이번 달 일괄 등록",
-      message: `미등록 고정지출 ${unregisteredCount}건을 거래내역에 등록하시겠습니까?\n계좌 잔액이 자동으로 차감됩니다.`,
+      message: `고정 금액 미등록 ${bulkUnregisteredCount}건을 거래내역에 등록하시겠습니까?\n계좌 잔액이 자동으로 차감됩니다.\n(변동 금액 항목은 개별 등록해주세요)`,
       confirmText: "등록",
       variant: "info",
     });
@@ -146,11 +219,19 @@ const FixedExpenses = () => {
         variant: "danger",
       });
     }
-  }, [unregisteredCount, fixedExpenses, bulkCreate, confirm]);
+  }, [bulkUnregisteredCount, fixedExpenses, bulkCreate, confirm]);
+
+  const handleSingleCreate = useCallback(
+    (fe, actualAmount) => {
+      singleCreate.mutate({ fixedExpense: fe, actualAmount });
+    },
+    [singleCreate],
+  );
 
   const renderCard = (fe) => {
     const cat = fe.category;
     const isRegistered = registeredIds.has(fe.id);
+    const feCurrency = getCurrency(fe.currency);
 
     return (
       <SwipeableCard
@@ -197,6 +278,11 @@ const FixedExpenses = () => {
                 <span className="text-[14px] font-medium text-text truncate">
                   {fe.name}
                 </span>
+                {fe.is_variable && (
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber/15 text-amber font-medium">
+                    변동
+                  </span>
+                )}
                 {!fe.is_active && (
                   <span className="text-[11px] px-1.5 py-0.5 rounded bg-light text-sub">
                     비활성
@@ -208,7 +294,9 @@ const FixedExpenses = () => {
                   {cat?.name || "미분류"}
                 </span>
                 <span className="text-[12px] text-sub">·</span>
-                <span className="text-[12px] text-sub">매월 {fe.billing_day}일</span>
+                <span className="text-[12px] text-sub">
+                  매월 {fe.billing_day}일
+                </span>
                 {fe.account && (
                   <>
                     <span className="text-[12px] text-sub">·</span>
@@ -223,20 +311,27 @@ const FixedExpenses = () => {
             {/* Amount + Status */}
             <div className="text-right shrink-0 flex flex-col items-end gap-1">
               <span className="text-[14px] font-semibold text-text">
-                {fmt(fe.amount)}
+                {fe.is_variable ? `~${fmt(fe.amount)}` : fmt(fe.amount)}
               </span>
               {fe.is_active && (
                 <span
                   className={`inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded ${
                     isRegistered
                       ? "bg-mint-bg text-mint"
-                      : "bg-light text-sub"
+                      : fe.is_variable
+                        ? "bg-amber/15 text-amber"
+                        : "bg-light text-sub"
                   }`}
                 >
                   {isRegistered ? (
                     <>
                       <Check size={10} />
                       등록됨
+                    </>
+                  ) : fe.is_variable ? (
+                    <>
+                      <Bell size={10} />
+                      확인 필요
                     </>
                   ) : (
                     <>
@@ -280,6 +375,16 @@ const FixedExpenses = () => {
               </button>
             </div>
           </div>
+
+          {/* Variable Amount Inline Input */}
+          {fe.is_active && fe.is_variable && !isRegistered && (
+            <VariableAmountInput
+              fe={fe}
+              currency={feCurrency}
+              onSubmit={handleSingleCreate}
+              isPending={singleCreate.isPending}
+            />
+          )}
         </div>
       </SwipeableCard>
     );
@@ -341,9 +446,7 @@ const FixedExpenses = () => {
                     <span className="text-[22px] font-bold text-text">
                       {fmt(summary.total)}
                     </span>
-                    <span className="text-[13px] text-sub mb-0.5">
-                      / 월
-                    </span>
+                    <span className="text-[13px] text-sub mb-0.5">/ 월</span>
                   </div>
 
                   <div className="flex flex-col gap-2.5">
@@ -362,11 +465,19 @@ const FixedExpenses = () => {
                     <div className="flex justify-between text-[13px]">
                       <span className="text-sub">미등록</span>
                       <span
-                        className={`font-medium ${unregisteredCount > 0 ? "text-amber" : "text-sub"}`}
+                        className={`font-medium ${totalUnregistered > 0 ? "text-amber" : "text-sub"}`}
                       >
-                        {unregisteredCount}건
+                        {totalUnregistered}건
                       </span>
                     </div>
+                    {summary.variableNeedAction > 0 && (
+                      <div className="flex justify-between text-[13px]">
+                        <span className="text-sub">확인 필요 (변동)</span>
+                        <span className="text-amber font-medium">
+                          {summary.variableNeedAction}건
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Bulk Create Button */}
@@ -374,7 +485,7 @@ const FixedExpenses = () => {
                     onClick={handleBulkCreate}
                     disabled={bulkCreate.isPending}
                     className={`w-full mt-4 py-2.5 rounded-lg text-[13px] font-medium border-none cursor-pointer transition-colors flex items-center justify-center gap-1.5 ${
-                      unregisteredCount > 0
+                      bulkUnregisteredCount > 0
                         ? "bg-mint text-white hover:bg-mint-hover"
                         : "bg-light text-sub cursor-default"
                     } ${bulkCreate.isPending ? "opacity-50 cursor-not-allowed" : ""}`}
@@ -382,9 +493,9 @@ const FixedExpenses = () => {
                     <PlayCircle size={14} />
                     {bulkCreate.isPending
                       ? "등록 중..."
-                      : unregisteredCount > 0
-                        ? `미등록 ${unregisteredCount}건 일괄 등록`
-                        : "모두 등록 완료"}
+                      : bulkUnregisteredCount > 0
+                        ? `고정 금액 ${bulkUnregisteredCount}건 일괄 등록`
+                        : "고정 금액 모두 등록 완료"}
                   </button>
                 </>
               )}
@@ -407,7 +518,10 @@ const FixedExpenses = () => {
               </button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3" onClick={() => setOpenCardId(null)}>
+            <div
+              className="flex flex-col gap-3"
+              onClick={() => setOpenCardId(null)}
+            >
               {/* Active */}
               {activeExpenses.map(renderCard)}
 
