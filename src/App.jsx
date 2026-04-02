@@ -33,6 +33,7 @@ const Statistics = lazyLoad(() => import("./pages/Statistics/Statistics"));
 const Budget = lazyLoad(() => import("./pages/Budget/Budget"));
 const Categories = lazyLoad(() => import("./pages/Categories/Categories"));
 const AnnualReport = lazyLoad(() => import("./pages/AnnualReport/AnnualReport"));
+const FixedExpenses = lazyLoad(() => import("./pages/FixedExpenses/FixedExpenses"));
 
 const PageFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -119,6 +120,14 @@ const App = () => {
               element={
                 <Suspense fallback={<PageFallback />}>
                   <Categories />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/fixed-expenses"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <FixedExpenses />
                 </Suspense>
               }
             />

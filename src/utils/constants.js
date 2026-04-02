@@ -27,6 +27,12 @@ export const NAV_ITEMS = [
   },
   { id: "statistics", label: "통계", path: "/statistics", icon: "BarChart3" },
   { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
+  {
+    id: "fixed-expenses",
+    label: "고정지출",
+    path: "/fixed-expenses",
+    icon: "CalendarClock",
+  },
   { id: "categories", label: "카테고리", path: "/categories", icon: "Tag" },
   {
     id: "annual-report",
