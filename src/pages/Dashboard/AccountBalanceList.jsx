@@ -6,8 +6,15 @@ import { ACCOUNT_ICON_MAP } from "../../utils/constants";
 const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
   if (accounts.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
-        <h3 className="text-[13px] text-sub font-medium mb-3">계좌 잔액</h3>
+      <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-3">
+          <span className="w-7 h-7 rounded-lg bg-sky/15 flex items-center justify-center">
+            <Landmark size={14} className="text-sky" />
+          </span>
+          <h3 className="text-[13px] text-sub font-medium tracking-wide">
+            계좌 잔액
+          </h3>
+        </div>
         <p className="text-[13px] text-sub mb-2">등록된 계좌가 없습니다</p>
         <Link
           to="/accounts"
@@ -20,9 +27,16 @@ const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[13px] text-sub font-medium">계좌 잔액</h3>
+    <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="w-7 h-7 rounded-lg bg-sky/15 flex items-center justify-center">
+            <Landmark size={14} className="text-sky" />
+          </span>
+          <h3 className="text-[13px] text-sub font-medium tracking-wide">
+            계좌 잔액
+          </h3>
+        </div>
         <Link
           to="/accounts"
           className="text-mint text-[12px] font-medium no-underline"
@@ -39,11 +53,11 @@ const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
           return (
             <div
               key={a.id}
-              className="flex items-center gap-3 py-2.5 border-b border-border last:border-b-0"
+              className="flex items-center gap-3 py-3 border-b border-border last:border-b-0"
             >
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: a.color + "20" }}
+                className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                style={{ backgroundColor: a.color + "18" }}
               >
                 {Icon ? (
                   <Icon size={16} style={{ color: a.color }} />

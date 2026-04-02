@@ -40,11 +40,13 @@ const FixedExpenseOverview = ({ fmt }) => {
 
   if (activeExpenses.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <CalendarClock size={14} className="text-sub" />
-            <h3 className="text-[13px] text-sub font-medium">
+            <span className="w-7 h-7 rounded-lg bg-rose/15 flex items-center justify-center">
+              <CalendarClock size={14} className="text-rose" />
+            </span>
+            <h3 className="text-[13px] text-sub font-medium tracking-wide">
               {MONTH}월 고정지출
             </h3>
           </div>
@@ -61,7 +63,7 @@ const FixedExpenseOverview = ({ fmt }) => {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <CalendarClock size={14} className="text-sub" />
