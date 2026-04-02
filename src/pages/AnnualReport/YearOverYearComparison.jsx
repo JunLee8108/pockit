@@ -37,7 +37,7 @@ const YearOverYearComparison = ({
   previous,
   fmt,
 }) => (
-  <div className="bg-surface border border-border rounded-xl p-5">
+  <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
     <div className={`${GRID} mb-2`}>
       <h3 className="text-[13px] text-sub font-medium">전년 대비</h3>
       <span className="text-[12px] text-sub text-right">{year - 1}년</span>

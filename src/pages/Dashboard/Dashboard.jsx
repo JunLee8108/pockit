@@ -19,7 +19,7 @@ const BudgetOverview = lazy(() => import("./BudgetOverview"));
 const FixedExpenseOverview = lazy(() => import("./FixedExpenseOverview"));
 
 const ChartFallback = () => (
-  <div className="bg-surface border border-border rounded-xl p-5">
+  <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
     <div className="skeleton" style={{ width: "100%", height: 200 }} />
   </div>
 );

@@ -110,7 +110,7 @@ const Categories = () => {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="bg-surface border border-border rounded-xl p-10 text-center">
+        <div className="dash-card bg-surface shadow-sm rounded-2xl p-10 text-center">
           <p className="text-sub text-sm mb-3">
             {activeTab === "expense" ? "지출" : "수입"} 카테고리가 없습니다
           </p>

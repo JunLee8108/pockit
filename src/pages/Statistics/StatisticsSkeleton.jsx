@@ -10,7 +10,7 @@ const StatisticsSkeleton = () => (
 
     {/* 월간 비교 + 카테고리 트렌드 */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <Skeleton style={{ width: 80, height: 13 }} className="mb-4" />
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex justify-between py-2.5">
@@ -19,7 +19,7 @@ const StatisticsSkeleton = () => (
           </div>
         ))}
       </div>
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <Skeleton style={{ width: 100, height: 13 }} className="mb-4" />
         <Skeleton
           style={{ width: "100%", height: 240 }}
@@ -30,14 +30,14 @@ const StatisticsSkeleton = () => (
 
     {/* 지출 패턴 + 일별 흐름 */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <Skeleton style={{ width: 100, height: 13 }} className="mb-4" />
         <Skeleton
           style={{ width: "100%", height: 200 }}
           className="rounded-lg"
         />
       </div>
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <Skeleton style={{ width: 100, height: 13 }} className="mb-4" />
         <Skeleton
           style={{ width: "100%", height: 240 }}
@@ -47,7 +47,7 @@ const StatisticsSkeleton = () => (
     </div>
 
     {/* 상위 지출 */}
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <Skeleton style={{ width: 100, height: 13 }} className="mb-3" />
       {[1, 2, 3, 4, 5].map((i) => (
         <div key={i} className="flex items-center gap-3 py-2.5">

@@ -35,7 +35,7 @@ const MonthlyBarChart = memo(({ data }) => {
 
   if (!hasData) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <h3 className="text-[13px] text-sub font-medium mb-4">
           월별 수입/지출
         </h3>
@@ -47,7 +47,7 @@ const MonthlyBarChart = memo(({ data }) => {
   }
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <h3 className="text-[13px] text-sub font-medium mb-4">월별 수입/지출</h3>
       <div ref={ref} className="w-full" style={{ height: CHART_HEIGHT }}>
         {width > 0 && (

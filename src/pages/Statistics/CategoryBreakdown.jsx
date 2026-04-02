@@ -61,7 +61,7 @@ const CategoryBreakdown = memo(({ transactions, fmt, year, month }) => {
 
   if (chartData.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <h3 className="text-[13px] text-sub font-medium mb-3">
           카테고리별 지출
         </h3>
@@ -91,7 +91,7 @@ const CategoryBreakdown = memo(({ transactions, fmt, year, month }) => {
   }, [chartData, total]);
 
   return (
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <h3 className="text-[13px] text-sub font-medium mb-3">카테고리별 지출</h3>
 
       {/* Donut Chart */}

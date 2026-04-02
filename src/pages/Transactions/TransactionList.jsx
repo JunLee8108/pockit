@@ -27,7 +27,7 @@ const TransactionList = ({ transactions, onEdit, onDelete, onDuplicate }) => {
 
   if (transactions.length === 0) {
     return (
-      <div className="bg-surface border border-border rounded-xl p-10 text-center">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-10 text-center">
         <p className="text-sub text-sm">거래내역이 없습니다</p>
       </div>
     );

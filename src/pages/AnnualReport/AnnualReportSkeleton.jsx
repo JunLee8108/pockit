@@ -13,7 +13,7 @@ const AnnualReportSkeleton = () => (
       {[1, 2, 3, 4].map((i) => (
         <div
           key={i}
-          className="bg-surface border border-border rounded-xl p-5"
+          className="dash-card bg-surface shadow-sm rounded-2xl p-6"
         >
           <Skeleton style={{ width: 80, height: 13 }} className="mb-3" />
           <Skeleton style={{ width: "70%", height: 22 }} className="mb-2" />
@@ -23,7 +23,7 @@ const AnnualReportSkeleton = () => (
     </div>
 
     {/* 월별 차트 */}
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <Skeleton style={{ width: 100, height: 13 }} className="mb-4" />
       <Skeleton
         style={{ width: "100%", height: 300 }}
@@ -33,7 +33,7 @@ const AnnualReportSkeleton = () => (
 
     {/* 카테고리 순위 + 전년 대비 */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <Skeleton style={{ width: 100, height: 13 }} className="mb-4" />
         {[1, 2, 3, 4, 5].map((i) => (
           <div key={i} className="flex items-center gap-3 py-2">
@@ -47,7 +47,7 @@ const AnnualReportSkeleton = () => (
           </div>
         ))}
       </div>
-      <div className="bg-surface border border-border rounded-xl p-5">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
         <Skeleton style={{ width: 80, height: 13 }} className="mb-4" />
         {[1, 2, 3].map((i) => (
           <div key={i} className="flex justify-between py-2.5">
@@ -59,7 +59,7 @@ const AnnualReportSkeleton = () => (
     </div>
 
     {/* 월별 테이블 */}
-    <div className="bg-surface border border-border rounded-xl p-5">
+    <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
       <Skeleton style={{ width: 80, height: 13 }} className="mb-4" />
       {[1, 2, 3, 4, 5, 6].map((i) => (
         <div key={i} className="flex justify-between py-2.5 border-b border-border">

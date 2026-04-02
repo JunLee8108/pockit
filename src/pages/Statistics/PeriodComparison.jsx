@@ -32,7 +32,7 @@ const Row = ({ label, current, previous, fmt, invert = false }) => {
 };
 
 const PeriodComparison = ({ current, previous, month, prevMonth, fmt }) => (
-  <div className="bg-surface border border-border rounded-xl p-5">
+  <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
     <div className={`${GRID} mb-2`}>
       <h3 className="text-[13px] text-sub font-medium">월간 비교</h3>
       <span className="text-[12px] text-sub text-right">{prevMonth}월</span>

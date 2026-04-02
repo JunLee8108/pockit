@@ -145,7 +145,7 @@ const AccountTransactions = ({ account, onBack }) => {
         </div>
       </div>
 
-      <div className="bg-surface border border-border rounded-xl p-4">
+      <div className="dash-card bg-surface shadow-sm rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <button
             onClick={() => goMonth(-1)}
