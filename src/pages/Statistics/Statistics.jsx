@@ -1,14 +1,12 @@
 import { useState, useMemo, useCallback } from "react";
 import { useTransactions } from "../../hooks/useTransactions";
-import { useCategories } from "../../hooks/useCategories";
 import { useCurrencies } from "../../hooks/useCurrencies";
-import useCategoryTrendData from "../../hooks/useCategoryTrendData";
 import PeriodSelector from "./PeriodSelector";
+import TopTransactions from "./TopTransactions";
 import PeriodComparison from "./PeriodComparison";
-import CategoryTrend from "./CategoryTrend";
+import CategoryBreakdown from "./CategoryBreakdown";
 import SpendingPattern from "./SpendingPattern";
 import DailyFlowChart from "./DailyFlowChart";
-import TopTransactions from "./TopTransactions";
 import StatisticsSkeleton from "./StatisticsSkeleton";
 import { formatMoney } from "../../utils/format";
 
@@ -30,16 +28,13 @@ const Statistics = () => {
     year: prevYear,
     month: prevMonth,
   });
-  const { data: categories = [] } = useCategories();
   const { data: currencies = [] } = useCurrencies();
-  const { data: trendData, isLoading: trendLoading } = useCategoryTrendData(6);
 
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
     [currencies],
   );
 
-  // 주요 통화
   const primaryCurrency = useMemo(() => {
     const codeSet = new Set(currentTxs.map((tx) => tx.currency));
     if (codeSet.size === 0) return getCurrencyByCode("USD");
@@ -55,7 +50,6 @@ const Statistics = () => {
     [primaryCurrency],
   );
 
-  // 이번달 / 전월 요약
   const currentSummary = useMemo(() => {
     let income = 0,
       expense = 0;
@@ -76,12 +70,6 @@ const Statistics = () => {
     return { income, expense };
   }, [prevTxs]);
 
-  // ★ trendData 로딩 가드 — 로딩 완료 후 1회만 렌더
-  const displayTrendData = useMemo(() => {
-    if (trendLoading) return [];
-    return trendData;
-  }, [trendData, trendLoading]);
-
   const handlePeriod = useCallback((y, m) => {
     setYear(y);
     setMonth(m);
@@ -91,13 +79,14 @@ const Statistics = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Header */}
       <h2 className="text-xl font-semibold text-text">통계</h2>
 
-      {/* 기간 선택 */}
       <PeriodSelector year={year} month={month} onChange={handlePeriod} />
 
-      {/* 월간 비교 + 카테고리 트렌드 */}
+      {/* 상위 지출 Top 5 — 최상단 */}
+      <TopTransactions transactions={currentTxs} currency={primaryCurrency} />
+
+      {/* 월간 비교 + 카테고리별 지출 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <PeriodComparison
           current={currentSummary}
@@ -106,10 +95,11 @@ const Statistics = () => {
           prevMonth={prevMonth}
           fmt={fmt}
         />
-        <CategoryTrend
-          trendData={displayTrendData}
-          categories={categories}
-          divisor={divisor}
+        <CategoryBreakdown
+          transactions={currentTxs}
+          fmt={fmt}
+          year={year}
+          month={month}
         />
       </div>
 
@@ -129,9 +119,6 @@ const Statistics = () => {
           divisor={divisor}
         />
       </div>
-
-      {/* 상위 지출 */}
-      <TopTransactions transactions={currentTxs} currency={primaryCurrency} />
     </div>
   );
 };
