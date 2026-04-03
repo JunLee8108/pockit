@@ -151,7 +151,7 @@ const TxRow = ({ tx, isLast }) => {
 
 const RecentTransactions = ({ transactions }) => {
   const grouped = useMemo(() => {
-    const recent = transactions.slice(0, 7);
+    const recent = transactions.slice(0, 5);
     const map = new Map();
     recent.forEach((tx) => {
       const key = tx.date;
