@@ -37,7 +37,7 @@ const ToastItem = ({ toast, onRemove }) => {
       className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg transition-all duration-300 bg-[#1a1a1a] text-white ${
         visible && !exiting
           ? "opacity-100 translate-y-0"
-          : "opacity-0 translate-y-2"
+          : "opacity-0 -translate-y-2"
       }`}
     >
       <Icon size={15} className={`shrink-0 ${style.iconColor}`} />
@@ -53,7 +53,7 @@ const Toast = () => {
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-24 sm:bottom-8 left-1/2 -translate-x-1/2 z-[2000] flex flex-col gap-2 items-center pointer-events-none">
+    <div className="fixed top-20 sm:top-6 right-4 sm:right-6 z-[2000] flex flex-col gap-2 items-end pointer-events-none">
       {toasts.map((t) => (
         <div key={t.id} className="pointer-events-auto">
           <ToastItem toast={t} onRemove={remove} />
