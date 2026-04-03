@@ -1,41 +1,68 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Bell } from "lucide-react";
 import { Link } from "react-router";
 import useDashboardAlerts from "../../hooks/useDashboardAlerts";
 import CategoryIcon from "../../components/CategoryIcon";
 
+const ANIM_DURATION = 200;
+
 const DashboardAlerts = ({ fmt }) => {
-  const [open, setOpen] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [animating, setAnimating] = useState(false);
   const ref = useRef(null);
   const alerts = useDashboardAlerts(fmt);
 
+  const openDropdown = useCallback(() => {
+    setVisible(true);
+    setAnimating(true);
+    requestAnimationFrame(() => setAnimating(false));
+  }, []);
+
+  const closeDropdown = useCallback(() => {
+    setAnimating(true);
+    setTimeout(() => {
+      setVisible(false);
+      setAnimating(false);
+    }, ANIM_DURATION);
+  }, []);
+
+  const toggle = useCallback(() => {
+    if (visible && !animating) closeDropdown();
+    else if (!visible) openDropdown();
+  }, [visible, animating, openDropdown, closeDropdown]);
+
   // 바깥 클릭 시 닫기
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
     const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) closeDropdown();
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [open]);
+  }, [visible, closeDropdown]);
 
   // ESC 닫기
   useEffect(() => {
-    if (!open) return;
+    if (!visible) return;
     const handler = (e) => {
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") closeDropdown();
     };
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
-  }, [open]);
+  }, [visible, closeDropdown]);
 
   const count = alerts.length;
+
+  // 열린 직후: animating=true → false (entering)
+  // 닫는 중: animating=true, visible=true (exiting)
+  const isEntering = visible && !animating;
+  const isExiting = visible && animating && !isEntering;
 
   return (
     <div ref={ref} className="relative">
       {/* Bell Button */}
       <button
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         className="relative p-1.5 rounded-lg text-sub hover:bg-light cursor-pointer bg-transparent border-none transition-colors"
       >
         <Bell size={18} />
@@ -47,8 +74,15 @@ const DashboardAlerts = ({ fmt }) => {
       </button>
 
       {/* Dropdown */}
-      {open && (
-        <div className="absolute right-0 top-10 w-[300px] sm:w-[340px] dash-card bg-surface shadow-lg rounded-2xl py-3 z-[100]">
+      {visible && (
+        <div
+          className={`absolute right-0 top-10 w-[300px] sm:w-[340px] dash-card bg-surface shadow-lg rounded-2xl py-3 z-[100] transition-all origin-top-right ${
+            isEntering
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95"
+          }`}
+          style={{ transitionDuration: `${ANIM_DURATION}ms` }}
+        >
           <div className="px-4 pb-2 mb-1 border-b border-border">
             <span className="text-[13px] text-text font-semibold">
               알림
@@ -64,11 +98,11 @@ const DashboardAlerts = ({ fmt }) => {
             </div>
           ) : (
             <div className="max-h-[280px] overflow-y-auto">
-              {alerts.map((alert, i) => (
+              {alerts.map((alert) => (
                 <Link
                   key={alert.id}
                   to={alert.link}
-                  onClick={() => setOpen(false)}
+                  onClick={closeDropdown}
                   className="flex items-center gap-2 px-4 py-2.5 hover:bg-light transition-colors no-underline"
                 >
                   <div
