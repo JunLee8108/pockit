@@ -9,6 +9,59 @@ const now = new Date();
 const YEAR = now.getFullYear();
 const MONTH = now.getMonth() + 1;
 
+const RING_SIZE = 80;
+const RING_STROKE = 7;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+const ProgressRing = ({ current, total, color }) => {
+  const pct = total > 0 ? (current / total) * 100 : 0;
+  const offset = RING_CIRCUMFERENCE - (Math.min(pct, 100) / 100) * RING_CIRCUMFERENCE;
+  return (
+    <svg width={RING_SIZE} height={RING_SIZE} className="shrink-0">
+      <circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        fill="none"
+        stroke="var(--color-light)"
+        strokeWidth={RING_STROKE}
+      />
+      <circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        fill="none"
+        stroke={color}
+        strokeWidth={RING_STROKE}
+        strokeLinecap="round"
+        strokeDasharray={RING_CIRCUMFERENCE}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+        className="transition-all duration-500"
+      />
+      <text
+        x={RING_SIZE / 2}
+        y={RING_SIZE / 2 - 6}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-text text-[16px] font-bold"
+      >
+        {current}/{total}
+      </text>
+      <text
+        x={RING_SIZE / 2}
+        y={RING_SIZE / 2 + 10}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-sub text-[10px]"
+      >
+        등록
+      </text>
+    </svg>
+  );
+};
+
 const FixedExpenseOverview = ({ fmt }) => {
   const { data: fixedExpenses = [] } = useFixedExpenses();
   const { data: monthTxs = [] } = useTransactions({
@@ -42,11 +95,9 @@ const FixedExpenseOverview = ({ fmt }) => {
     return (
       <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[13px] text-sub font-medium tracking-wide">
-              {MONTH}월 고정지출
-            </h3>
-          </div>
+          <h3 className="text-[13px] text-sub font-medium tracking-wide">
+            {MONTH}월 고정지출
+          </h3>
           <Link
             to="/fixed-expenses"
             className="text-mint text-[12px] font-medium no-underline"
@@ -59,9 +110,16 @@ const FixedExpenseOverview = ({ fmt }) => {
     );
   }
 
+  const allRegistered = registeredCount === activeExpenses.length;
+  const ringColor = allRegistered
+    ? "var(--color-mint)"
+    : variableNeedAction > 0
+      ? "var(--color-amber)"
+      : "var(--color-sub)";
+
   return (
     <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <h3 className="text-[13px] text-sub font-medium tracking-wide">
           {MONTH}월 고정지출
         </h3>
@@ -73,21 +131,26 @@ const FixedExpenseOverview = ({ fmt }) => {
         </Link>
       </div>
 
-      {/* Summary */}
-      <div className="flex items-end gap-2 mb-3">
-        <span className="text-[18px] font-bold text-text">{fmt(total)}</span>
-        <span className="text-[13px] text-sub mb-0.5">/ 월</span>
-      </div>
-
-      <div className="flex items-center gap-3 mb-4 text-[12px]">
-        <span className="text-mint font-medium">
-          등록 {registeredCount}/{activeExpenses.length}건
-        </span>
-        {variableNeedAction > 0 && (
-          <span className="text-amber font-medium">
-            확인필요 {variableNeedAction}건
-          </span>
-        )}
+      {/* Ring + Summary */}
+      <div className="flex items-center gap-5 mb-5">
+        <ProgressRing
+          current={registeredCount}
+          total={activeExpenses.length}
+          color={ringColor}
+        />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-end gap-1.5">
+            <span className="text-[17px] font-bold text-text">
+              {fmt(total)}
+            </span>
+            <span className="text-[12px] text-sub mb-0.5">/ 월</span>
+          </div>
+          {variableNeedAction > 0 && (
+            <div className="text-[12px] text-amber font-medium">
+              확인필요 {variableNeedAction}건
+            </div>
+          )}
+        </div>
       </div>
 
       {/* List */}
