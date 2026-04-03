@@ -482,7 +482,7 @@ const FixedExpenses = () => {
                 onClick={() => handleCategoryToggle(cat.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors ${
                   selected
-                    ? "text-white"
+                    ? ""
                     : "bg-light text-sub hover:bg-border"
                 }`}
                 style={selected ? { backgroundColor: cat.color } : undefined}
@@ -490,9 +490,11 @@ const FixedExpenses = () => {
                 <CategoryIcon
                   name={cat.icon}
                   size={12}
-                  style={{ color: selected ? "#ffffff" : cat.color }}
+                  style={{ color: selected ? "rgba(0,0,0,0.7)" : cat.color }}
                 />
-                {cat.name}
+                <span style={selected ? { color: "rgba(0,0,0,0.75)" } : undefined}>
+                  {cat.name}
+                </span>
               </button>
             );
           })}
