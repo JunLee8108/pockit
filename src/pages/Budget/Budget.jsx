@@ -24,6 +24,7 @@ const Budget = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openCardId, setOpenCardId] = useState(null);
+  const [categoryIds, setCategoryIds] = useState([]);
   const confirm = useConfirm();
 
   const { data: budgets = [], isLoading: budgetLoading } = useBudgets(
@@ -68,8 +69,36 @@ const Budget = () => {
     return map;
   }, [transactions]);
 
+  // 카테고리 필터용 — 예산에 사용된 카테고리만
+  const usedCategories = useMemo(() => {
+    const map = {};
+    budgets.forEach((b) => {
+      const cat = b.category;
+      if (cat && !map[cat.id]) map[cat.id] = cat;
+    });
+    return Object.values(map).sort((a, b) =>
+      (a.name || "").localeCompare(b.name || ""),
+    );
+  }, [budgets]);
+
+  const handleCategoryToggle = useCallback((id) => {
+    if (id === null) {
+      setCategoryIds([]);
+      return;
+    }
+    setCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id],
+    );
+  }, []);
+
+  const filteredBudgets = useMemo(() => {
+    if (categoryIds.length === 0) return budgets;
+    const set = new Set(categoryIds);
+    return budgets.filter((b) => set.has(b.category_id));
+  }, [budgets, categoryIds]);
+
   const budgetData = useMemo(() => {
-    return budgets.map((b) => ({
+    return filteredBudgets.map((b) => ({
       ...b,
       spent: spentByCategory[b.category_id] || 0,
       pct:
@@ -77,15 +106,15 @@ const Budget = () => {
           ? Math.round(((spentByCategory[b.category_id] || 0) / b.amount) * 100)
           : 0,
     }));
-  }, [budgets, spentByCategory]);
+  }, [filteredBudgets, spentByCategory]);
 
   const sortedBudgetData = useMemo(() => {
     return [...budgetData].sort((a, b) => b.pct - a.pct);
   }, [budgetData]);
 
   const summary = useMemo(() => {
-    const totalBudget = budgets.reduce((s, b) => s + b.amount, 0);
-    const totalSpent = budgets.reduce(
+    const totalBudget = filteredBudgets.reduce((s, b) => s + b.amount, 0);
+    const totalSpent = filteredBudgets.reduce(
       (s, b) => s + (spentByCategory[b.category_id] || 0),
       0,
     );
@@ -93,7 +122,7 @@ const Budget = () => {
     const pct =
       totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0;
     return { totalBudget, totalSpent, remaining, pct };
-  }, [budgets, spentByCategory]);
+  }, [filteredBudgets, spentByCategory]);
 
   const existingCategoryIds = useMemo(
     () => new Set(budgets.map((b) => b.category_id)),
@@ -191,7 +220,48 @@ const Budget = () => {
         </div>
       </div>
 
-      <PeriodSelector year={year} month={month} onChange={handlePeriod} />
+      {/* Period + Category Filter */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex justify-center sm:justify-start">
+          <PeriodSelector year={year} month={month} onChange={handlePeriod} />
+        </div>
+        {usedCategories.length > 1 && (
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap overflow-x-auto">
+            <button
+              onClick={() => handleCategoryToggle(null)}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors shrink-0 ${
+                categoryIds.length === 0
+                  ? "bg-text text-surface"
+                  : "bg-light text-sub hover:bg-border"
+              }`}
+            >
+              전체
+            </button>
+            {usedCategories.map((cat) => {
+              const selected = categoryIds.includes(cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => handleCategoryToggle(cat.id)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors shrink-0 ${
+                    selected ? "" : "bg-light text-sub hover:bg-border"
+                  }`}
+                  style={selected ? { backgroundColor: cat.color } : undefined}
+                >
+                  <CategoryIcon
+                    name={cat.icon}
+                    size={12}
+                    style={{ color: selected ? "rgba(0,0,0,0.7)" : cat.color }}
+                  />
+                  <span style={selected ? { color: "rgba(0,0,0,0.75)" } : undefined}>
+                    {cat.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="w-full lg:w-[340px] shrink-0">
