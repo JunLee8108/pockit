@@ -41,60 +41,39 @@ const CategoryDistribution = ({ transactions }) => {
 
     const sorted = Object.values(map).sort((a, b) => b.amount - a.amount);
     const total = sorted.reduce((s, c) => s + c.amount, 0);
-    return {
-      items: sorted.map((c) => ({
-        ...c,
-        pct: total > 0 ? (c.amount / total) * 100 : 0,
-      })),
-      total,
-    };
+    return sorted.slice(0, 5).map((c) => ({
+      ...c,
+      pct: total > 0 ? Math.round((c.amount / total) * 100) : 0,
+    }));
   }, [transactions]);
 
-  if (categories.items.length === 0) return null;
-
-  const top3 = categories.items.slice(0, 3);
+  if (categories.length === 0) return null;
 
   return (
-    <div className="mb-5">
-      <div className="h-2.5 bg-light rounded-full overflow-hidden flex">
-        {categories.items.map((cat, i) => {
-          const isFirst = i === 0;
-          const isLast = i === categories.items.length - 1;
-          const radius = isFirst && isLast
-            ? "rounded-full"
-            : isFirst
-              ? "rounded-l-full"
-              : isLast
-                ? "rounded-r-full"
-                : "";
-          return (
-            <div
-              key={cat.name + i}
-              className={`h-full ${radius}`}
-              style={{
-                width: `${cat.pct}%`,
-                backgroundColor: cat.color,
-                minWidth: cat.pct > 0 ? 2 : 0,
-              }}
-            />
-          );
-        })}
-      </div>
-      <div className="flex items-center gap-3 mt-1.5">
-        {top3.map((cat) => (
-          <span
-            key={cat.name}
-            className="flex items-center gap-1 text-[11px] text-sub"
-          >
-            <CategoryIcon
-              name={cat.icon}
-              size={10}
-              style={{ color: cat.color }}
-            />
-            {cat.name} {Math.round(cat.pct)}%
+    <div className="flex flex-wrap gap-2 mb-5">
+      {categories.map((cat) => (
+        <div
+          key={cat.name}
+          className="flex flex-col items-center justify-center rounded-[10px] px-3 py-2.5 min-w-[64px]"
+          style={{
+            backgroundColor: cat.color,
+            boxShadow:
+              "0 3px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
+          }}
+        >
+          <CategoryIcon
+            name={cat.icon}
+            size={14}
+            style={{ color: "rgba(255,255,255,0.9)" }}
+          />
+          <span className="text-[10px] text-white/80 mt-1 font-medium">
+            {cat.name}
           </span>
-        ))}
-      </div>
+          <span className="text-[13px] text-white font-bold leading-tight">
+            {cat.pct}%
+          </span>
+        </div>
+      ))}
     </div>
   );
 };
