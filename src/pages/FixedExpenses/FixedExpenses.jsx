@@ -79,6 +79,7 @@ const FixedExpenses = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openCardId, setOpenCardId] = useState(null);
+  const [categoryIds, setCategoryIds] = useState([]);
   const confirm = useConfirm();
 
   const { data: fixedExpenses = [], isLoading } = useFixedExpenses();
@@ -129,6 +130,43 @@ const FixedExpenses = () => {
     () => fixedExpenses.filter((fe) => !fe.is_active),
     [fixedExpenses],
   );
+
+  // 카테고리 필터용 — 고정지출에 사용된 카테고리만
+  const usedCategories = useMemo(() => {
+    const map = {};
+    fixedExpenses.forEach((fe) => {
+      const cat = fe.category;
+      if (cat && !map[cat.id]) {
+        map[cat.id] = cat;
+      }
+    });
+    return Object.values(map).sort((a, b) =>
+      (a.name || "").localeCompare(b.name || ""),
+    );
+  }, [fixedExpenses]);
+
+  const handleCategoryToggle = useCallback((id) => {
+    if (id === null) {
+      setCategoryIds([]);
+      return;
+    }
+    setCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id],
+    );
+  }, []);
+
+  // 필터 적용된 리스트
+  const filteredActive = useMemo(() => {
+    if (categoryIds.length === 0) return activeExpenses;
+    const set = new Set(categoryIds);
+    return activeExpenses.filter((fe) => set.has(fe.category_id));
+  }, [activeExpenses, categoryIds]);
+
+  const filteredInactive = useMemo(() => {
+    if (categoryIds.length === 0) return inactiveExpenses;
+    const set = new Set(categoryIds);
+    return inactiveExpenses.filter((fe) => set.has(fe.category_id));
+  }, [inactiveExpenses, categoryIds]);
 
   // 일괄 등록 대상: 고정 금액 + 활성 + 미등록
   const bulkUnregisteredCount = useMemo(
@@ -423,6 +461,43 @@ const FixedExpenses = () => {
         </button>
       </div>
 
+      {/* Category Filter Chips */}
+      {usedCategories.length > 1 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => handleCategoryToggle(null)}
+            className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors ${
+              categoryIds.length === 0
+                ? "bg-text text-surface"
+                : "bg-light text-sub hover:bg-border"
+            }`}
+          >
+            전체
+          </button>
+          {usedCategories.map((cat) => {
+            const selected = categoryIds.includes(cat.id);
+            return (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryToggle(cat.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors ${
+                  selected
+                    ? "bg-text text-surface"
+                    : "bg-light text-sub hover:bg-border"
+                }`}
+              >
+                <CategoryIcon
+                  name={cat.icon}
+                  size={12}
+                  style={{ color: selected ? "var(--color-surface)" : cat.color }}
+                />
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Summary Sidebar */}
         <div className="w-full lg:w-[340px] shrink-0">
@@ -523,10 +598,10 @@ const FixedExpenses = () => {
               onClick={() => setOpenCardId(null)}
             >
               {/* Active */}
-              {activeExpenses.map(renderCard)}
+              {filteredActive.map(renderCard)}
 
               {/* Inactive */}
-              {inactiveExpenses.length > 0 && (
+              {filteredInactive.length > 0 && (
                 <>
                   <div className="flex items-center gap-2 mt-4 mb-1">
                     <span className="text-[13px] text-sub font-medium">
@@ -534,7 +609,7 @@ const FixedExpenses = () => {
                     </span>
                     <div className="flex-1 h-px bg-border" />
                   </div>
-                  {inactiveExpenses.map(renderCard)}
+                  {filteredInactive.map(renderCard)}
                 </>
               )}
             </div>
