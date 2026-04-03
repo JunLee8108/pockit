@@ -17,12 +17,12 @@ const DistributionBar = ({ assets, debt, fmtAssets, fmtDebt }) => {
     <div className="mb-5">
       <div className="h-2.5 bg-light rounded-full overflow-hidden flex">
         <div
-          className="h-full bg-mint rounded-full"
+          className={`h-full bg-mint ${debt > 0 ? "rounded-l-full" : "rounded-full"}`}
           style={{ width: `${assetPct}%` }}
         />
         {debt > 0 && (
           <div
-            className="h-full bg-coral rounded-full"
+            className="h-full bg-coral rounded-r-full"
             style={{ width: `${100 - assetPct}%` }}
           />
         )}
