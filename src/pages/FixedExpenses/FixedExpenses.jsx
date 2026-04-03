@@ -178,20 +178,20 @@ const FixedExpenses = () => {
   );
 
   const summary = useMemo(() => {
-    const total = activeExpenses.reduce((s, fe) => s + fe.amount, 0);
-    const registeredCount = activeExpenses.filter((fe) =>
+    const total = filteredActive.reduce((s, fe) => s + fe.amount, 0);
+    const registeredCount = filteredActive.filter((fe) =>
       registeredIds.has(fe.id),
     ).length;
-    const variableNeedAction = activeExpenses.filter(
+    const variableNeedAction = filteredActive.filter(
       (fe) => fe.is_variable && !registeredIds.has(fe.id),
     ).length;
     return {
       total,
-      count: activeExpenses.length,
+      count: filteredActive.length,
       registeredCount,
       variableNeedAction,
     };
-  }, [activeExpenses, registeredIds]);
+  }, [filteredActive, registeredIds]);
 
   const totalUnregistered = summary.count - summary.registeredCount;
 
@@ -482,14 +482,15 @@ const FixedExpenses = () => {
                 onClick={() => handleCategoryToggle(cat.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors ${
                   selected
-                    ? "bg-text text-surface"
+                    ? "text-white"
                     : "bg-light text-sub hover:bg-border"
                 }`}
+                style={selected ? { backgroundColor: cat.color } : undefined}
               >
                 <CategoryIcon
                   name={cat.icon}
                   size={12}
-                  style={{ color: selected ? "var(--color-surface)" : cat.color }}
+                  style={{ color: selected ? "#ffffff" : cat.color }}
                 />
                 {cat.name}
               </button>
