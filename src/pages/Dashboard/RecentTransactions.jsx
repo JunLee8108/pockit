@@ -21,6 +21,14 @@ const TYPE_STYLES = {
   transfer: { sign: "", color: "text-sub" },
 };
 
+const isLightColor = (hex) => {
+  if (!hex || hex[0] !== "#") return false;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+};
+
 const CategoryDistribution = ({ transactions }) => {
   const categories = useMemo(() => {
     const map = {};
@@ -51,29 +59,36 @@ const CategoryDistribution = ({ transactions }) => {
 
   return (
     <div className="flex flex-wrap gap-2 mb-5">
-      {categories.map((cat) => (
-        <div
-          key={cat.name}
-          className="flex flex-col items-center justify-center rounded-[10px] px-3 py-2.5 min-w-[64px]"
-          style={{
-            backgroundColor: cat.color,
-            boxShadow:
-              "0 3px 0 rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
-          }}
-        >
-          <CategoryIcon
-            name={cat.icon}
-            size={14}
-            style={{ color: "rgba(255,255,255,0.9)" }}
-          />
-          <span className="text-[10px] text-white/80 mt-1 font-medium">
-            {cat.name}
-          </span>
-          <span className="text-[13px] text-white font-bold leading-tight">
-            {cat.pct}%
-          </span>
-        </div>
-      ))}
+      {categories.map((cat) => {
+        const light = isLightColor(cat.color);
+        const textColor = light ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.9)";
+        const subTextColor = light ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.7)";
+        return (
+          <div
+            key={cat.name}
+            className="gamepad-btn flex flex-col items-center justify-center rounded-[10px] px-3 py-2.5 min-w-[64px]"
+            style={{ backgroundColor: cat.color }}
+          >
+            <CategoryIcon
+              name={cat.icon}
+              size={14}
+              style={{ color: textColor }}
+            />
+            <span
+              className="text-[10px] mt-1 font-medium"
+              style={{ color: subTextColor }}
+            >
+              {cat.name}
+            </span>
+            <span
+              className="text-[13px] font-bold leading-tight"
+              style={{ color: textColor }}
+            >
+              {cat.pct}%
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
