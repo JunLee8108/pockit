@@ -11,7 +11,7 @@ const AccountBalanceList = lazy(() => import("./AccountBalanceList"));
 const RecentTransactions = lazy(() => import("./RecentTransactions"));
 const BudgetOverview = lazy(() => import("./BudgetOverview"));
 const FixedExpenseOverview = lazy(() => import("./FixedExpenseOverview"));
-const UpcomingExpenses = lazy(() => import("./UpcomingExpenses"));
+const DashboardAlerts = lazy(() => import("./DashboardAlerts"));
 
 const ChartFallback = () => (
   <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
@@ -113,9 +113,9 @@ const Dashboard = () => {
         fmt={fmt}
       />
 
-      {/* 다가오는 고정지출 알림 */}
+      {/* 알림 배너 (고정지출 + 예산초과) */}
       <Suspense fallback={null}>
-        <UpcomingExpenses fmt={fmt} />
+        <DashboardAlerts fmt={fmt} />
       </Suspense>
 
       {/* 계좌 잔액 + 최근 거래 */}
