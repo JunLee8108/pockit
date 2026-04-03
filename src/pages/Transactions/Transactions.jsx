@@ -292,7 +292,7 @@ const Transactions = () => {
                         key={cat.id}
                         onClick={() => handleCategoryToggle(cat.id)}
                         className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors ${
-                          selected ? "text-white" : "bg-light text-sub"
+                          selected ? "" : "bg-light text-sub"
                         }`}
                         style={
                           selected
@@ -304,10 +304,12 @@ const Transactions = () => {
                           name={cat.icon}
                           size={12}
                           style={{
-                            color: selected ? "#fff" : cat.color || "#94a3b8",
+                            color: selected ? "rgba(0,0,0,0.7)" : cat.color || "#94a3b8",
                           }}
                         />
-                        {cat.name}
+                        <span style={selected ? { color: "rgba(0,0,0,0.75)" } : undefined}>
+                          {cat.name}
+                        </span>
                       </button>
                     );
                   })}
