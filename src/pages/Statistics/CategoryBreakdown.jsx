@@ -59,17 +59,6 @@ const CategoryBreakdown = memo(({ transactions, fmt, year, month }) => {
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [transactions, selectedCategory]);
 
-  if (chartData.length === 0) {
-    return (
-      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
-        <h3 className="text-[13px] text-sub font-medium mb-3">
-          카테고리별 지출
-        </h3>
-        <p className="text-[13px] text-sub">지출 내역이 없습니다</p>
-      </div>
-    );
-  }
-
   // 도넛 차트용: Top 5 + 기타
   const pieData = useMemo(() => {
     const top5 = chartData.slice(0, 5);
@@ -89,6 +78,17 @@ const CategoryBreakdown = memo(({ transactions, fmt, year, month }) => {
     }
     return top5;
   }, [chartData, total]);
+
+  if (chartData.length === 0) {
+    return (
+      <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
+        <h3 className="text-[13px] text-sub font-medium mb-3">
+          카테고리별 지출
+        </h3>
+        <p className="text-[13px] text-sub">지출 내역이 없습니다</p>
+      </div>
+    );
+  }
 
   return (
     <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">
