@@ -8,6 +8,49 @@ const now = new Date();
 const YEAR = now.getFullYear();
 const MONTH = now.getMonth() + 1;
 
+const RING_SIZE = 80;
+const RING_STROKE = 7;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
+
+const ProgressRing = ({ pct, color }) => {
+  const offset = RING_CIRCUMFERENCE - (Math.min(pct, 100) / 100) * RING_CIRCUMFERENCE;
+  return (
+    <svg width={RING_SIZE} height={RING_SIZE} className="shrink-0">
+      <circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        fill="none"
+        stroke="var(--color-light)"
+        strokeWidth={RING_STROKE}
+      />
+      <circle
+        cx={RING_SIZE / 2}
+        cy={RING_SIZE / 2}
+        r={RING_RADIUS}
+        fill="none"
+        stroke={color}
+        strokeWidth={RING_STROKE}
+        strokeLinecap="round"
+        strokeDasharray={RING_CIRCUMFERENCE}
+        strokeDashoffset={offset}
+        transform={`rotate(-90 ${RING_SIZE / 2} ${RING_SIZE / 2})`}
+        className="transition-all duration-500"
+      />
+      <text
+        x={RING_SIZE / 2}
+        y={RING_SIZE / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        className="fill-text text-[15px] font-bold"
+      >
+        {pct}%
+      </text>
+    </svg>
+  );
+};
+
 const BudgetOverview = ({ fmt }) => {
   const { data: budgets = [] } = useBudgets(YEAR, MONTH);
   const { data: transactions = [] } = useTransactions({
@@ -49,18 +92,20 @@ const BudgetOverview = ({ fmt }) => {
     return { totalBudget: tb, totalSpent: ts, pct: p, topItems: items };
   }, [budgets, spentByCategory]);
 
-  const statusColor =
-    pct >= 100 ? "bg-coral" : pct >= 80 ? "bg-amber" : "bg-mint";
+  const ringColor =
+    pct >= 100
+      ? "var(--color-coral)"
+      : pct >= 80
+        ? "var(--color-amber)"
+        : "var(--color-mint)";
 
   if (budgets.length === 0) {
     return (
       <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="text-[13px] text-sub font-medium tracking-wide">
-              {MONTH}월 예산 현황
-            </h3>
-          </div>
+          <h3 className="text-[13px] text-sub font-medium tracking-wide">
+            {MONTH}월 예산 현황
+          </h3>
           <Link
             to="/budget"
             className="text-mint text-[12px] font-medium no-underline"
@@ -73,9 +118,11 @@ const BudgetOverview = ({ fmt }) => {
     );
   }
 
+  const remaining = totalBudget - totalSpent;
+
   return (
     <div className="dash-card bg-surface rounded-2xl p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-5">
         <h3 className="text-[13px] text-sub font-medium tracking-wide">
           {MONTH}월 예산 현황
         </h3>
@@ -87,31 +134,29 @@ const BudgetOverview = ({ fmt }) => {
         </Link>
       </div>
 
-      {/* Summary */}
-      <div className="flex items-end gap-2 mb-2">
-        <span className="text-[18px] font-bold text-text">
-          {fmt(totalSpent)}
-        </span>
-        <span className="text-[13px] text-sub mb-0.5">
-          / {fmt(totalBudget)}
-        </span>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="h-2.5 bg-light rounded-full overflow-hidden mb-1">
-        <div
-          className={`h-full rounded-full transition-all duration-300 ${statusColor}`}
-          style={{ width: `${Math.min(pct, 100)}%` }}
-        />
-      </div>
-      <div className="flex justify-between text-[11px] text-sub mb-4">
-        <span>소진율 {pct}%</span>
-        <span>
-          잔여{" "}
-          {totalBudget - totalSpent < 0
-            ? `-${fmt(Math.abs(totalBudget - totalSpent))}`
-            : fmt(totalBudget - totalSpent)}
-        </span>
+      {/* Ring + Summary */}
+      <div className="flex items-center gap-5 mb-5">
+        <ProgressRing pct={pct} color={ringColor} />
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-end gap-1.5">
+            <span className="text-[17px] font-bold text-text">
+              {fmt(totalSpent)}
+            </span>
+            <span className="text-[12px] text-sub mb-0.5">
+              / {fmt(totalBudget)}
+            </span>
+          </div>
+          <div className="text-[12px] text-sub">
+            잔여{" "}
+            <span
+              className={`font-medium ${remaining < 0 ? "text-coral" : "text-mint"}`}
+            >
+              {remaining < 0
+                ? `-${fmt(Math.abs(remaining))}`
+                : fmt(remaining)}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Top Categories */}

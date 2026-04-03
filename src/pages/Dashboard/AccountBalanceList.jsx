@@ -8,6 +8,39 @@ import {
   ACCOUNT_TYPE_ORDER,
 } from "../../utils/constants";
 
+const DistributionBar = ({ assets, debt, fmtAssets, fmtDebt }) => {
+  const total = assets + debt;
+  if (total === 0) return null;
+  const assetPct = (assets / total) * 100;
+
+  return (
+    <div className="mb-5">
+      <div className="h-2.5 bg-light rounded-full overflow-hidden flex">
+        <div
+          className="h-full bg-mint rounded-full"
+          style={{ width: `${assetPct}%` }}
+        />
+        {debt > 0 && (
+          <div
+            className="h-full bg-coral rounded-full"
+            style={{ width: `${100 - assetPct}%` }}
+          />
+        )}
+      </div>
+      <div className="flex justify-between mt-1.5 text-[11px]">
+        <span className="text-sub">
+          자산 <span className="text-text font-medium">{fmtAssets}</span>
+        </span>
+        {debt > 0 && (
+          <span className="text-sub">
+            부채 <span className="text-coral font-medium">{fmtDebt}</span>
+          </span>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
   const grouped = useMemo(() => {
     const groups = [];
@@ -21,6 +54,28 @@ const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
     });
     return groups;
   }, [accounts]);
+
+  const { totalAssets, totalDebt } = useMemo(() => {
+    let assets = 0;
+    let debt = 0;
+    accounts.forEach((a) => {
+      if (a.balance >= 0) assets += a.balance;
+      else debt += Math.abs(a.balance);
+    });
+    return { totalAssets: assets, totalDebt: debt };
+  }, [accounts]);
+
+  const primaryCurrency = useMemo(() => {
+    if (accounts.length === 0) return null;
+    const freq = {};
+    accounts.forEach((a) => {
+      freq[a.currency] = (freq[a.currency] || 0) + 1;
+    });
+    const code = Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0];
+    return getCurrencyByCode(code);
+  }, [accounts, getCurrencyByCode]);
+
+  const fmtAmount = (amount) => formatMoney(amount, primaryCurrency);
 
   if (accounts.length === 0) {
     return (
@@ -53,8 +108,16 @@ const AccountBalanceList = ({ accounts, getCurrencyByCode }) => {
         </Link>
       </div>
 
+      {/* Distribution Bar */}
+      <DistributionBar
+        assets={totalAssets}
+        debt={totalDebt}
+        fmtAssets={fmtAmount(totalAssets)}
+        fmtDebt={fmtAmount(totalDebt)}
+      />
+
       {grouped.map((group, gi) => (
-        <div key={group.type} className={gi > 0 ? "mt-4" : "mt-1"}>
+        <div key={group.type} className={gi > 0 ? "mt-4" : ""}>
           <div className="text-[11px] text-sub font-medium mb-1 tracking-wide">
             {group.label}
           </div>
