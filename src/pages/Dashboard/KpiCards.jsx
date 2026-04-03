@@ -49,7 +49,7 @@ const Card = ({
         {label}
       </span>
     </div>
-    <div className={`text-[22px] font-bold truncate ${color}`}>{value}</div>
+    <div className={`text-[20px] font-bold truncate ${color}`}>{value}</div>
     {showChange && previous !== undefined && (
       <Change current={current} previous={previous} />
     )}
