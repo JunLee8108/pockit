@@ -226,7 +226,7 @@ const Budget = () => {
           <PeriodSelector year={year} month={month} onChange={handlePeriod} />
         </div>
         {usedCategories.length > 1 && (
-          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap overflow-x-auto">
+          <div className="flex items-center justify-center sm:justify-end gap-2 flex-wrap sm:flex-nowrap overflow-x-auto">
             <button
               onClick={() => handleCategoryToggle(null)}
               className={`px-3 py-1.5 rounded-lg text-[12px] font-medium border-none cursor-pointer transition-colors shrink-0 ${
