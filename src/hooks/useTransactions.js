@@ -3,6 +3,7 @@ import { useMemo } from "react";
 import supabase from "../lib/supabase";
 import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
+import useToastStore from "../store/useToastStore";
 
 const TX_SELECT =
   "*, category:categories(*), account:accounts!account_id(*), to_account:accounts!to_account_id(*)";
@@ -92,6 +93,8 @@ const invalidateAll = (qc) => {
   qc.invalidateQueries({ queryKey: ["annual-category"] });
 };
 
+const toast = () => useToastStore.getState();
+
 // ── Mutations ──
 
 export const useAddTransaction = () => {
@@ -117,7 +120,11 @@ export const useAddTransaction = () => {
 
       return tx;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast().success("거래가 추가되었습니다");
+    },
+    onError: () => toast().error("거래 추가에 실패했습니다"),
   });
 };
 
@@ -150,7 +157,11 @@ export const useUpdateTransaction = () => {
 
       return tx;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast().success("거래가 수정되었습니다");
+    },
+    onError: () => toast().error("거래 수정에 실패했습니다"),
   });
 };
 
@@ -166,7 +177,11 @@ export const useDeleteTransaction = () => {
         .eq("id", tx.id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast().success("거래가 삭제되었습니다");
+    },
+    onError: () => toast().error("거래 삭제에 실패했습니다"),
   });
 };
 

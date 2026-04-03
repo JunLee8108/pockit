@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import supabase from "../lib/supabase";
 import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
+import useToastStore from "../store/useToastStore";
+
+const toast = () => useToastStore.getState();
 
 export const useBudgets = (year, month) => {
   return useQuery({
@@ -32,7 +35,11 @@ export const useAddBudget = () => {
           .single(),
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.budgets.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      toast().success("예산이 추가되었습니다");
+    },
+    onError: () => toast().error("예산 추가에 실패했습니다"),
   });
 };
 
@@ -48,7 +55,11 @@ export const useUpdateBudget = () => {
           .select("*, category:categories(*)")
           .single(),
       ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.budgets.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      toast().success("예산이 수정되었습니다");
+    },
+    onError: () => toast().error("예산 수정에 실패했습니다"),
   });
 };
 
@@ -59,7 +70,11 @@ export const useDeleteBudget = () => {
       const { error } = await supabase.from("budgets").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.budgets.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      toast().success("예산이 삭제되었습니다");
+    },
+    onError: () => toast().error("예산 삭제에 실패했습니다"),
   });
 };
 
@@ -69,7 +84,6 @@ export const useCopyBudgets = () => {
     mutationFn: async ({ fromYear, fromMonth, toYear, toMonth }) => {
       const user = await getAuthUser();
 
-      // 원본 예산 조회
       const source = await fromSupabase(
         supabase
           .from("budgets")
@@ -81,7 +95,6 @@ export const useCopyBudgets = () => {
 
       if (!source.length) throw new Error("복사할 예산이 없습니다");
 
-      // 대상 월 기존 예산 조회 (중복 방지)
       const existing = await fromSupabase(
         supabase
           .from("budgets")
@@ -112,6 +125,10 @@ export const useCopyBudgets = () => {
           .select("*, category:categories(*)"),
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.budgets.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.budgets.all });
+      toast().success("예산이 복사되었습니다");
+    },
+    onError: () => toast().error("예산 복사에 실패했습니다"),
   });
 };

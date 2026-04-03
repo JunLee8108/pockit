@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import MobileHeader from "./MobileHeader";
 import BottomNav from "../components/BottomNav";
 import ConfirmModal from "../components/ConfirmModal";
+import Toast from "../components/Toast";
 import useUIStore from "../store/useUIStore";
 import { useFixedExpenseSync } from "../hooks/useFixedExpenseSync";
 
@@ -55,6 +56,7 @@ const Layout = () => {
       </main>
 
       <ConfirmModal />
+      <Toast />
     </div>
   );
 };
