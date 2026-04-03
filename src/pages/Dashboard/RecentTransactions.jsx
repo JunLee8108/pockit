@@ -21,6 +21,84 @@ const TYPE_STYLES = {
   transfer: { sign: "", color: "text-sub" },
 };
 
+const CategoryDistribution = ({ transactions }) => {
+  const categories = useMemo(() => {
+    const map = {};
+    transactions
+      .filter((tx) => tx.type === "expense")
+      .forEach((tx) => {
+        const key = tx.category_id || "uncategorized";
+        if (!map[key]) {
+          map[key] = {
+            name: tx.category?.name || "미분류",
+            icon: tx.category?.icon || "Package",
+            color: tx.category?.color || "#94a3b8",
+            amount: 0,
+          };
+        }
+        map[key].amount += tx.amount;
+      });
+
+    const sorted = Object.values(map).sort((a, b) => b.amount - a.amount);
+    const total = sorted.reduce((s, c) => s + c.amount, 0);
+    return {
+      items: sorted.map((c) => ({
+        ...c,
+        pct: total > 0 ? (c.amount / total) * 100 : 0,
+      })),
+      total,
+    };
+  }, [transactions]);
+
+  if (categories.items.length === 0) return null;
+
+  const top3 = categories.items.slice(0, 3);
+
+  return (
+    <div className="mb-5">
+      <div className="h-2.5 bg-light rounded-full overflow-hidden flex">
+        {categories.items.map((cat, i) => {
+          const isFirst = i === 0;
+          const isLast = i === categories.items.length - 1;
+          const radius = isFirst && isLast
+            ? "rounded-full"
+            : isFirst
+              ? "rounded-l-full"
+              : isLast
+                ? "rounded-r-full"
+                : "";
+          return (
+            <div
+              key={cat.name + i}
+              className={`h-full ${radius}`}
+              style={{
+                width: `${cat.pct}%`,
+                backgroundColor: cat.color,
+                minWidth: cat.pct > 0 ? 2 : 0,
+              }}
+            />
+          );
+        })}
+      </div>
+      <div className="flex items-center gap-3 mt-1.5">
+        {top3.map((cat) => (
+          <span
+            key={cat.name}
+            className="flex items-center gap-1 text-[11px] text-sub"
+          >
+            <CategoryIcon
+              name={cat.icon}
+              size={10}
+              style={{ color: cat.color }}
+            />
+            {cat.name} {Math.round(cat.pct)}%
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const TxRow = ({ tx, isLast }) => {
   const currency = useCurrencyByCode(tx.currency);
   const style = TYPE_STYLES[tx.type];
@@ -108,8 +186,11 @@ const RecentTransactions = ({ transactions }) => {
         </Link>
       </div>
 
+      {/* Category Distribution Bar */}
+      <CategoryDistribution transactions={transactions} />
+
       {grouped.map(([date, txs], gi) => (
-        <div key={date} className={gi > 0 ? "mt-4" : "mt-1"}>
+        <div key={date} className={gi > 0 ? "mt-4" : ""}>
           <div className="text-[11px] text-sub font-medium mb-1 tracking-wide">
             {formatDateHeader(date)}
           </div>
