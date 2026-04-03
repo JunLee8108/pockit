@@ -4,11 +4,11 @@ import useToastStore from "../store/useToastStore";
 
 const STYLES = {
   success: {
-    bg: "bg-mint",
+    iconColor: "text-mint",
     icon: Check,
   },
   error: {
-    bg: "bg-coral",
+    iconColor: "text-coral",
     icon: X,
   },
 };
@@ -34,13 +34,13 @@ const ToastItem = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`flex items-center gap-2 px-4 py-3 rounded-xl text-white text-[13px] font-medium shadow-lg transition-all duration-300 ${style.bg} ${
+      className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg transition-all duration-300 bg-[#1a1a1a] text-white ${
         visible && !exiting
           ? "opacity-100 translate-y-0"
           : "opacity-0 translate-y-2"
       }`}
     >
-      <Icon size={15} className="shrink-0" />
+      <Icon size={15} className={`shrink-0 ${style.iconColor}`} />
       <span>{toast.message}</span>
     </div>
   );
