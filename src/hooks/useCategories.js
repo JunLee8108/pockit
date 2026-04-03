@@ -2,6 +2,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import supabase from "../lib/supabase";
 import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
+import useToastStore from "../store/useToastStore";
+
+const toast = () => useToastStore.getState();
 
 const DEFAULT_CATEGORIES = [
   {
@@ -155,8 +158,11 @@ export const useAddCategory = () => {
           .single(),
       );
     },
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.categories.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.categories.all });
+      toast().success("카테고리가 추가되었습니다");
+    },
+    onError: () => toast().error("카테고리 추가에 실패했습니다"),
   });
 };
 
@@ -172,8 +178,11 @@ export const useUpdateCategory = () => {
           .select()
           .single(),
       ),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.categories.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.categories.all });
+      toast().success("카테고리가 수정되었습니다");
+    },
+    onError: () => toast().error("카테고리 수정에 실패했습니다"),
   });
 };
 
@@ -184,7 +193,10 @@ export const useDeleteCategory = () => {
       const { error } = await supabase.from("categories").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: queryKeys.categories.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.categories.all });
+      toast().success("카테고리가 삭제되었습니다");
+    },
+    onError: () => toast().error("카테고리 삭제에 실패했습니다"),
   });
 };

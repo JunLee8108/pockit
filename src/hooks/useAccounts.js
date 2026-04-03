@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import supabase from "../lib/supabase";
 import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
+import useToastStore from "../store/useToastStore";
 
 export const useAccounts = () => {
   return useQuery({
@@ -24,6 +25,8 @@ const invalidateAll = (qc) => {
   qc.invalidateQueries({ queryKey: ["monthly-summary"] });
 };
 
+const toast = () => useToastStore.getState();
+
 export const useAddAccount = () => {
   const qc = useQueryClient();
   return useMutation({
@@ -37,7 +40,11 @@ export const useAddAccount = () => {
           .single(),
       );
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.accounts.all }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.accounts.all });
+      toast().success("계좌가 추가되었습니다");
+    },
+    onError: () => toast().error("계좌 추가에 실패했습니다"),
   });
 };
 
@@ -54,7 +61,11 @@ export const useUpdateAccount = () => {
           .single(),
       );
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast().success("계좌가 수정되었습니다");
+    },
+    onError: () => toast().error("계좌 수정에 실패했습니다"),
   });
 };
 
@@ -65,6 +76,10 @@ export const useDeleteAccount = () => {
       const { error } = await supabase.from("accounts").delete().eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => invalidateAll(qc),
+    onSuccess: () => {
+      invalidateAll(qc);
+      toast().success("계좌가 삭제되었습니다");
+    },
+    onError: () => toast().error("계좌 삭제에 실패했습니다"),
   });
 };
