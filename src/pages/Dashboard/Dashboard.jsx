@@ -99,7 +99,12 @@ const Dashboard = () => {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">대시보드</h2>
-        <LiveClock />
+        <div className="flex items-center gap-3">
+          <LiveClock />
+          <Suspense fallback={null}>
+            <DashboardAlerts fmt={fmt} />
+          </Suspense>
+        </div>
       </div>
 
       <KpiCards
@@ -112,11 +117,6 @@ const Dashboard = () => {
         prevExpense={prevExpense}
         fmt={fmt}
       />
-
-      {/* 알림 배너 (고정지출 + 예산초과) */}
-      <Suspense fallback={null}>
-        <DashboardAlerts fmt={fmt} />
-      </Suspense>
 
       {/* 계좌 잔액 + 최근 거래 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
