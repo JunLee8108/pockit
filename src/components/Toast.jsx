@@ -34,7 +34,7 @@ const ToastItem = ({ toast, onRemove }) => {
 
   return (
     <div
-      className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg transition-all duration-300 bg-[#1a1a1a] text-white ${
+      className={`toast-item flex items-center gap-2.5 px-4 py-3 rounded-xl text-[13px] font-medium shadow-lg transition-all duration-300 ${
         visible && !exiting
           ? "opacity-100 translate-y-0"
           : "opacity-0 -translate-y-2"
