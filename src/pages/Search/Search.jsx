@@ -63,8 +63,8 @@ const Search = () => {
   );
 
   const handleTxClick = (tx) => {
-    const d = new Date(tx.date);
-    navigate(`/transactions?year=${d.getFullYear()}&month=${d.getMonth() + 1}&highlight=${tx.id}`);
+    const parts = tx.date.split("-");
+    navigate(`/transactions?year=${parts[0]}&month=${Number(parts[1])}&highlight=${tx.id}`);
   };
 
   const handleAccountClick = (account) => {
