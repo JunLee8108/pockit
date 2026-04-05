@@ -30,8 +30,17 @@ const Accounts = () => {
       const el = document.getElementById(`account-${highlightId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("highlight-pulse");
-        setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              el.classList.add("highlight-pulse");
+              setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+              observer.disconnect();
+            }
+          },
+          { threshold: 0.5 },
+        );
+        observer.observe(el);
       }
       highlightedRef.current = true;
       setSearchParams({}, { replace: true });

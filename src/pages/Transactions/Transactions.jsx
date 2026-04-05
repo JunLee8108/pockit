@@ -31,7 +31,7 @@ const Transactions = () => {
   });
   const confirm = useConfirm();
 
-  // 하이라이트 스크롤 + 2초 후 제거
+  // 하이라이트 — 스크롤 완료 후 펄스
   const highlightedRef = useRef(false);
   useEffect(() => {
     if (!highlightId || highlightedRef.current) return;
@@ -39,8 +39,17 @@ const Transactions = () => {
       const el = document.getElementById(`tx-${highlightId}`);
       if (el) {
         el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.classList.add("highlight-pulse");
-        setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              el.classList.add("highlight-pulse");
+              setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+              observer.disconnect();
+            }
+          },
+          { threshold: 0.5 },
+        );
+        observer.observe(el);
       }
       highlightedRef.current = true;
       setSearchParams({}, { replace: true });
