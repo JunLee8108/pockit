@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router";
 import {
   Plus,
   Pencil,
@@ -76,6 +77,8 @@ const VariableAmountInput = ({ fe, currency, onSubmit, isPending }) => {
 };
 
 const FixedExpenses = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [openCardId, setOpenCardId] = useState(null);
@@ -83,6 +86,22 @@ const FixedExpenses = () => {
   const confirm = useConfirm();
 
   const { data: fixedExpenses = [], isLoading } = useFixedExpenses();
+
+  const highlightedRef = useRef(false);
+  useEffect(() => {
+    if (!highlightId || highlightedRef.current) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`fe-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("highlight-pulse");
+        setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+      }
+      highlightedRef.current = true;
+      setSearchParams({}, { replace: true });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [highlightId, setSearchParams]);
   const { data: monthTxs = [] } = useTransactions({ year: YEAR, month: MONTH });
   const { data: currencies = [] } = useCurrencies();
   const deleteMutation = useDeleteFixedExpense();
@@ -294,7 +313,7 @@ const FixedExpenses = () => {
           },
         ]}
       >
-        <div className="dash-card bg-surface shadow-sm rounded-xl p-4 group">
+        <div id={`fe-${fe.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 group">
           <div className="flex items-center gap-3">
             {/* Icon */}
             <div

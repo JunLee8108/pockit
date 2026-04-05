@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useCategories, useDeleteCategory } from "../../hooks/useCategories";
 import supabase from "../../lib/supabase";
@@ -14,6 +15,8 @@ const TABS = [
 ];
 
 const Categories = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
   const { data: categories = [], isLoading } = useCategories();
   const deleteCategory = useDeleteCategory();
   const [activeTab, setActiveTab] = useState("expense");
@@ -21,6 +24,27 @@ const Categories = () => {
   const [editTarget, setEditTarget] = useState(null);
   const [openCardId, setOpenCardId] = useState(null);
   const confirm = useConfirm();
+
+  const highlightedRef = useRef(false);
+  useEffect(() => {
+    if (!highlightId || highlightedRef.current) return;
+    // 하이라이트 대상 카테고리의 탭으로 전환
+    const target = categories.find((c) => c.id === highlightId);
+    if (target && target.type !== activeTab) {
+      setActiveTab(target.type);
+    }
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`cat-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("highlight-pulse");
+        setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+      }
+      highlightedRef.current = true;
+      setSearchParams({}, { replace: true });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [highlightId, categories, activeTab, setSearchParams]);
 
   const filtered = useMemo(
     () => categories.filter((c) => c.type === activeTab),

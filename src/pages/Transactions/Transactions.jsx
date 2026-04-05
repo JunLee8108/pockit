@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useSearchParams } from "react-router";
 import { Plus } from "lucide-react";
 import {
   useTransactions,
@@ -18,14 +19,34 @@ import TransactionSkeleton from "./TransactionSkeleton";
 const now = new Date();
 
 const Transactions = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
+
   const [filters, setFilters] = useState({
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
+    year: Number(searchParams.get("year")) || now.getFullYear(),
+    month: Number(searchParams.get("month")) || now.getMonth() + 1,
     type: "all",
     search: "",
     categoryIds: [],
   });
   const confirm = useConfirm();
+
+  // 하이라이트 스크롤 + 2초 후 제거
+  const highlightedRef = useRef(false);
+  useEffect(() => {
+    if (!highlightId || highlightedRef.current) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`tx-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("highlight-pulse");
+        setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+      }
+      highlightedRef.current = true;
+      setSearchParams({}, { replace: true });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [highlightId, setSearchParams]);
 
   const handleFilterChange = useCallback((next) => {
     setFilters((prev) => {

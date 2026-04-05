@@ -3,7 +3,7 @@ import CategoryIcon from "../../components/CategoryIcon";
 
 const CategoryCard = ({ category, onEdit, onDelete }) => {
   return (
-    <div className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
+    <div id={`cat-${category.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
       {/* Icon */}
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"

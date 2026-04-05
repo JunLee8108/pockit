@@ -165,6 +165,24 @@ body {
   animation: slideDown 0.25s ease-out both;
 }
 
+/* ── Highlight Pulse (검색 결과 이동 시) ── */
+
+@keyframes highlightPulse {
+  0% {
+    box-shadow: 0 0 0 2px var(--color-mint);
+    background-color: var(--color-mint-bg);
+  }
+  100% {
+    box-shadow: 0 0 0 0px transparent;
+    background-color: transparent;
+  }
+}
+
+.highlight-pulse {
+  animation: highlightPulse 2s ease-out;
+  border-radius: 12px;
+}
+
 /* ── Recharts focus outline 제거 ── */
 
 .recharts-wrapper:focus,
