@@ -11,6 +11,7 @@ import {
   Landmark,
   CalendarRange,
   CalendarClock,
+  Search,
 } from "lucide-react";
 import { NAV_ITEMS } from "../utils/constants";
 import useAuthStore from "../store/useAuthStore";
@@ -87,6 +88,26 @@ const Sidebar = ({ collapsed: collapsedProp, canToggle = true }) => {
 
       {/* Nav */}
       <nav className="flex-1 p-3 flex flex-col gap-0.5">
+        <NavLink
+          to="/search"
+          className={({ isActive }) => `
+            flex items-center gap-3 rounded-lg text-sm no-underline
+            transition-colors duration-150 px-3 py-2.5 mb-1
+            ${
+              isActive
+                ? "text-mint bg-mint-bg font-semibold"
+                : "text-sub font-normal hover:bg-light"
+            }
+          `}
+        >
+          <span className="shrink-0 flex items-center justify-center w-5">
+            <Search size={18} />
+          </span>
+          <Label collapsed={c}>검색</Label>
+        </NavLink>
+
+        <div className="h-px bg-border mb-1" />
+
         {NAV_ITEMS.map((item) => {
           const Icon = iconMap[item.icon];
           return (
