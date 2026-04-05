@@ -38,7 +38,7 @@ const Transactions = () => {
     const timer = setTimeout(() => {
       const el = document.getElementById(`tx-${highlightId}`);
       if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.scrollIntoView({ behavior: "instant", block: "center" });
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (entry.isIntersecting) {
