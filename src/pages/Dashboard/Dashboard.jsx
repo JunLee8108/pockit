@@ -1,4 +1,6 @@
 import { lazy, Suspense, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router";
+import { Search } from "lucide-react";
 import { useAccounts } from "../../hooks/useAccounts";
 import { useTransactions } from "../../hooks/useTransactions";
 import { useCurrencies } from "../../hooks/useCurrencies";
@@ -27,6 +29,7 @@ const PREV_YEAR = prevDate.getFullYear();
 const PREV_MONTH = prevDate.getMonth() + 1;
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { data: accounts = [], isLoading: accLoading } = useAccounts();
   const { data: currencies = [] } = useCurrencies();
   const { data: currentTxs = [], isLoading: txLoading } = useTransactions({
@@ -101,6 +104,12 @@ const Dashboard = () => {
         <h2 className="text-xl font-semibold text-text">대시보드</h2>
         <div className="flex items-center gap-3">
           <LiveClock />
+          <button
+            onClick={() => navigate("/search")}
+            className="p-1.5 rounded-lg text-sub hover:bg-light cursor-pointer bg-transparent border-none transition-colors"
+          >
+            <Search size={18} />
+          </button>
           <Suspense fallback={null}>
             <DashboardAlerts fmt={fmt} />
           </Suspense>
