@@ -89,8 +89,8 @@ const FixedExpenses = () => {
 
   const highlightedRef = useRef(false);
   useEffect(() => {
-    if (!highlightId || highlightedRef.current) return;
-    const timer = setTimeout(() => {
+    if (!highlightId || highlightedRef.current || isLoading) return;
+    requestAnimationFrame(() => {
       const el = document.getElementById(`fe-${highlightId}`);
       if (el) {
         el.scrollIntoView({ behavior: "instant", block: "center" });
@@ -108,9 +108,8 @@ const FixedExpenses = () => {
       }
       highlightedRef.current = true;
       setSearchParams({}, { replace: true });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [highlightId, setSearchParams]);
+    });
+  }, [highlightId, isLoading, setSearchParams]);
   const { data: monthTxs = [] } = useTransactions({ year: YEAR, month: MONTH });
   const { data: currencies = [] } = useCurrencies();
   const deleteMutation = useDeleteFixedExpense();
