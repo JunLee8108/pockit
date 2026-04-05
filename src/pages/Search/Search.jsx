@@ -64,11 +64,11 @@ const Search = () => {
 
   const handleTxClick = (tx) => {
     const d = new Date(tx.date);
-    navigate(`/transactions?year=${d.getFullYear()}&month=${d.getMonth() + 1}`);
+    navigate(`/transactions?year=${d.getFullYear()}&month=${d.getMonth() + 1}&highlight=${tx.id}`);
   };
 
   const handleAccountClick = (account) => {
-    navigate("/accounts");
+    navigate(`/accounts?highlight=${account.id}`);
   };
 
   const showTx = tab === "all" || tab === "transactions";
@@ -285,7 +285,7 @@ const Search = () => {
                 return (
                   <button
                     key={fe.id}
-                    onClick={() => navigate("/fixed-expenses")}
+                    onClick={() => navigate(`/fixed-expenses?highlight=${fe.id}`)}
                     className={`flex items-center gap-3 py-2.5 w-full text-left bg-transparent border-none cursor-pointer hover:bg-light transition-colors rounded-lg px-1 -mx-1 ${
                       i < results.fixedExpenses.data.length - 1
                         ? "border-b border-border"
@@ -335,7 +335,7 @@ const Search = () => {
               {results.categories.data.map((cat, i) => (
                 <button
                   key={cat.id}
-                  onClick={() => navigate("/categories")}
+                  onClick={() => navigate(`/categories?highlight=${cat.id}`)}
                   className={`flex items-center gap-3 py-2.5 w-full text-left bg-transparent border-none cursor-pointer hover:bg-light transition-colors rounded-lg px-1 -mx-1 ${
                     i < results.categories.data.length - 1
                       ? "border-b border-border"

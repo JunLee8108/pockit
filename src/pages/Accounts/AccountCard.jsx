@@ -10,6 +10,7 @@ const AccountCard = ({ account, onEdit, onDelete, onClick }) => {
 
   return (
     <div
+      id={`account-${account.id}`}
       className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-4 group cursor-pointer hover:bg-light/50 transition-colors"
       onClick={() => onClick?.(account)}
     >

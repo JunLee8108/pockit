@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useAccounts, useDeleteAccount } from "../../hooks/useAccounts";
 import { useCurrencies } from "../../hooks/useCurrencies";
@@ -13,12 +14,30 @@ import SwipeableCard from "./SwipeableCard";
 import AccountTransactions from "./AccountTransactions";
 
 const Accounts = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightId = searchParams.get("highlight");
   const { data: accounts = [], isLoading } = useAccounts();
   const { data: currencies = [] } = useCurrencies();
   const deleteAccount = useDeleteAccount();
   const [openCardId, setOpenCardId] = useState(null);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const confirm = useConfirm();
+
+  const highlightedRef = useRef(false);
+  useEffect(() => {
+    if (!highlightId || highlightedRef.current) return;
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`account-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("highlight-pulse");
+        setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+      }
+      highlightedRef.current = true;
+      setSearchParams({}, { replace: true });
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [highlightId, setSearchParams]);
 
   const {
     accountFormOpen,
