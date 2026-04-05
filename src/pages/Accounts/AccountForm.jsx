@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useCurrencies } from "../../hooks/useCurrencies";
+import InstitutionAutocomplete from "../../components/InstitutionAutocomplete";
 import { useAddAccount, useUpdateAccount } from "../../hooks/useAccounts";
 import { toMinorUnit, toDisplayValue } from "../../utils/format";
 import {
@@ -128,11 +129,9 @@ const AccountFormInner = ({ onClose, editAccount = null }) => {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-sub font-medium">금융기관</label>
-          <input
-            type="text"
+          <InstitutionAutocomplete
             value={institution}
-            onChange={(e) => setInstitution(e.target.value)}
-            placeholder="예: 신한은행, Chase, Amex"
+            onChange={setInstitution}
             className={inputCls}
           />
         </div>
