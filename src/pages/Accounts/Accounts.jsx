@@ -25,8 +25,8 @@ const Accounts = () => {
 
   const highlightedRef = useRef(false);
   useEffect(() => {
-    if (!highlightId || highlightedRef.current) return;
-    const timer = setTimeout(() => {
+    if (!highlightId || highlightedRef.current || isLoading) return;
+    requestAnimationFrame(() => {
       const el = document.getElementById(`account-${highlightId}`);
       if (el) {
         el.scrollIntoView({ behavior: "instant", block: "center" });
@@ -44,9 +44,8 @@ const Accounts = () => {
       }
       highlightedRef.current = true;
       setSearchParams({}, { replace: true });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [highlightId, setSearchParams]);
+    });
+  }, [highlightId, isLoading, setSearchParams]);
 
   const {
     accountFormOpen,

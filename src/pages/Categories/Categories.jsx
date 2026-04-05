@@ -27,13 +27,13 @@ const Categories = () => {
 
   const highlightedRef = useRef(false);
   useEffect(() => {
-    if (!highlightId || highlightedRef.current) return;
+    if (!highlightId || highlightedRef.current || isLoading) return;
     // 하이라이트 대상 카테고리의 탭으로 전환
     const target = categories.find((c) => c.id === highlightId);
     if (target && target.type !== activeTab) {
       setActiveTab(target.type);
     }
-    const timer = setTimeout(() => {
+    requestAnimationFrame(() => {
       const el = document.getElementById(`cat-${highlightId}`);
       if (el) {
         el.scrollIntoView({ behavior: "instant", block: "center" });
@@ -51,9 +51,8 @@ const Categories = () => {
       }
       highlightedRef.current = true;
       setSearchParams({}, { replace: true });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [highlightId, categories, activeTab, setSearchParams]);
+    });
+  }, [highlightId, isLoading, categories, activeTab, setSearchParams]);
 
   const filtered = useMemo(
     () => categories.filter((c) => c.type === activeTab),

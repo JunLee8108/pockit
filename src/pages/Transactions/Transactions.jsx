@@ -31,11 +31,11 @@ const Transactions = () => {
   });
   const confirm = useConfirm();
 
-  // 하이라이트 — 스크롤 완료 후 펄스
+  // 하이라이트 — 데이터 로드 완료 후 펄스
   const highlightedRef = useRef(false);
   useEffect(() => {
-    if (!highlightId || highlightedRef.current) return;
-    const timer = setTimeout(() => {
+    if (!highlightId || highlightedRef.current || isLoading) return;
+    requestAnimationFrame(() => {
       const el = document.getElementById(`tx-${highlightId}`);
       if (el) {
         el.scrollIntoView({ behavior: "instant", block: "center" });
@@ -53,9 +53,8 @@ const Transactions = () => {
       }
       highlightedRef.current = true;
       setSearchParams({}, { replace: true });
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [highlightId, setSearchParams]);
+    });
+  }, [highlightId, isLoading, setSearchParams]);
 
   const handleFilterChange = useCallback((next) => {
     setFilters((prev) => {
