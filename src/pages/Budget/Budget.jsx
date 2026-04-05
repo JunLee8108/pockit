@@ -69,6 +69,18 @@ const Budget = () => {
     return map;
   }, [transactions]);
 
+  const txsByCategory = useMemo(() => {
+    const map = {};
+    transactions
+      .filter((tx) => tx.type === "expense")
+      .forEach((tx) => {
+        const key = tx.category_id || "uncategorized";
+        if (!map[key]) map[key] = [];
+        map[key].push(tx);
+      });
+    return map;
+  }, [transactions]);
+
   // 카테고리 필터용 — 예산에 사용된 카테고리만
   const usedCategories = useMemo(() => {
     const map = {};
@@ -421,6 +433,7 @@ const Budget = () => {
                     fmt={fmt}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    transactions={txsByCategory[b.category_id] || []}
                   />
                 </SwipeableCard>
               ))}

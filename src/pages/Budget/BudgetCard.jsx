@@ -1,5 +1,8 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Trash2, ChevronDown } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
+import { formatMoney } from "../../utils/format";
+import { useCurrencyByCode } from "../../hooks/useCurrencies";
 
 const getStatus = (pct) => {
   if (pct >= 100)
@@ -9,11 +12,38 @@ const getStatus = (pct) => {
   return { color: "bg-mint", text: "text-mint", label: "" };
 };
 
-const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete }) => {
+const INITIAL_SHOW = 5;
+
+const TxRow = ({ tx }) => {
+  const currency = useCurrencyByCode(tx.currency);
+  return (
+    <div className="flex items-center gap-2 py-2 border-b border-border last:border-b-0">
+      <span className="text-[11px] text-sub shrink-0 w-12">
+        {tx.date.slice(5).replace("-", "/")}
+      </span>
+      <span className="text-[12px] text-text truncate flex-1">
+        {tx.description || "거래"}
+      </span>
+      <span className="text-[11px] text-sub truncate max-w-[80px] shrink-0">
+        {tx.account?.name}
+      </span>
+      <span className="text-[12px] font-medium text-coral shrink-0">
+        -{formatMoney(tx.amount, currency)}
+      </span>
+    </div>
+  );
+};
+
+const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete, transactions = [] }) => {
+  const [expanded, setExpanded] = useState(false);
   const cat = budget.category;
   const remaining = budget.amount - spent;
   const pct = budget.amount > 0 ? Math.round((spent / budget.amount) * 100) : 0;
   const status = getStatus(pct);
+
+  const sortedTxs = transactions.sort((a, b) => b.date.localeCompare(a.date));
+  const visibleTxs = expanded ? sortedTxs : sortedTxs.slice(0, INITIAL_SHOW);
+  const hasMore = sortedTxs.length > INITIAL_SHOW;
 
   return (
     <div className="dash-card bg-surface shadow-sm rounded-xl p-4 group">
@@ -91,6 +121,32 @@ const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete }) => {
         <span>지출 {fmt(spent)}</span>
         <span>{pct}%</span>
       </div>
+
+      {/* Transaction List */}
+      {sortedTxs.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border">
+          {visibleTxs.map((tx) => (
+            <TxRow key={tx.id} tx={tx} />
+          ))}
+
+          {hasMore && !expanded && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(true);
+              }}
+              className="flex items-center justify-center gap-1 w-full mt-2 py-1.5 text-[11px] text-mint font-medium bg-transparent border-none cursor-pointer hover:bg-light rounded-lg transition-colors"
+            >
+              <ChevronDown size={12} />
+              {sortedTxs.length - INITIAL_SHOW}건 더 보기
+            </button>
+          )}
+
+          <div className="mt-2 text-[11px] text-sub text-right">
+            {sortedTxs.length}건 · {fmt(spent)}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
