@@ -31,31 +31,6 @@ const Transactions = () => {
   });
   const confirm = useConfirm();
 
-  // 하이라이트 — 데이터 로드 완료 후 펄스
-  const highlightedRef = useRef(false);
-  useEffect(() => {
-    if (!highlightId || highlightedRef.current || isLoading) return;
-    requestAnimationFrame(() => {
-      const el = document.getElementById(`tx-${highlightId}`);
-      if (el) {
-        el.scrollIntoView({ behavior: "instant", block: "center" });
-        const observer = new IntersectionObserver(
-          ([entry]) => {
-            if (entry.isIntersecting) {
-              el.classList.add("highlight-pulse");
-              setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
-              observer.disconnect();
-            }
-          },
-          { threshold: 0.5 },
-        );
-        observer.observe(el);
-      }
-      highlightedRef.current = true;
-      setSearchParams({}, { replace: true });
-    });
-  }, [highlightId, isLoading, setSearchParams]);
-
   const handleFilterChange = useCallback((next) => {
     setFilters((prev) => {
       if (next.type !== prev.type) {
@@ -106,6 +81,31 @@ const Transactions = () => {
   const deleteTx = useDeleteTransaction();
 
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
+
+  // 하이라이트 — 데이터 로드 완료 후 펄스
+  const highlightedRef = useRef(false);
+  useEffect(() => {
+    if (!highlightId || highlightedRef.current || isLoading) return;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`tx-${highlightId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "instant", block: "center" });
+        const observer = new IntersectionObserver(
+          ([entry]) => {
+            if (entry.isIntersecting) {
+              el.classList.add("highlight-pulse");
+              setTimeout(() => el.classList.remove("highlight-pulse"), 2000);
+              observer.disconnect();
+            }
+          },
+          { threshold: 0.5 },
+        );
+        observer.observe(el);
+      }
+      highlightedRef.current = true;
+      setSearchParams({}, { replace: true });
+    });
+  }, [highlightId, isLoading, setSearchParams]);
 
   const filteredCategories = useMemo(() => {
     if (filters.type === "transfer") return [];
