@@ -12,7 +12,7 @@ export default defineConfig({
       manifest: {
         name: "Pockit",
         short_name: "Pockit",
-        theme_color: "#6dd4b4",
+        theme_color: "#fafafa",
         background_color: "#fafafa",
         display: "standalone",
         icons: [
