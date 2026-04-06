@@ -74,16 +74,22 @@ const CategoryFormInner = ({ onClose, editCategory = null, defaultType }) => {
   const addCategory = useAddCategory();
   const updateCategory = useUpdateCategory();
 
-  const isEdit = !!editCategory;
+  const isNewSub = editCategory?._isNewSub;
+  const isEdit = !!editCategory && !isNewSub;
 
-  const [name, setName] = useState(editCategory?.name || "");
-  const [icon, setIcon] = useState(editCategory?.icon || CATEGORY_ICONS[0]);
-  const [color, setColor] = useState(editCategory?.color || CATEGORY_COLORS[0]);
+  const [name, setName] = useState(isNewSub ? "" : editCategory?.name || "");
+  const [icon, setIcon] = useState(
+    isNewSub ? CATEGORY_ICONS[0] : editCategory?.icon || CATEGORY_ICONS[0],
+  );
+  const [color, setColor] = useState(
+    editCategory?.color || CATEGORY_COLORS[0],
+  );
   const [type, setType] = useState(
     editCategory?.type || defaultType || "expense",
   );
   const [error, setError] = useState("");
 
+  const parentId = isNewSub ? editCategory.parent_id : editCategory?.parent_id || null;
   const submitting = addCategory.isPending || updateCategory.isPending;
 
   const handleSubmit = async (e) => {
@@ -100,6 +106,7 @@ const CategoryFormInner = ({ onClose, editCategory = null, defaultType }) => {
       icon,
       color,
       type,
+      ...(parentId && { parent_id: parentId }),
     };
 
     try {
@@ -126,38 +133,40 @@ const CategoryFormInner = ({ onClose, editCategory = null, defaultType }) => {
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        {/* Type */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] text-sub font-medium">유형 *</label>
-          {isEdit ? (
-            <div className="px-4 py-2.5 bg-light border border-border rounded-lg text-sm text-sub">
-              {type === "expense" ? "지출" : "수입"}
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setType("expense")}
-                className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none transition-colors ${
-                  type === "expense"
-                    ? "bg-coral text-white"
-                    : "bg-light text-sub"
-                }`}
-              >
-                지출
-              </button>
-              <button
-                type="button"
-                onClick={() => setType("income")}
-                className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none transition-colors ${
-                  type === "income" ? "bg-mint text-white" : "bg-light text-sub"
-                }`}
-              >
-                수입
-              </button>
-            </div>
-          )}
-        </div>
+        {/* Type — 서브 카테고리일 때 숨김 (부모 타입 상속) */}
+        {!parentId && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] text-sub font-medium">유형 *</label>
+            {isEdit ? (
+              <div className="px-4 py-2.5 bg-light border border-border rounded-lg text-sm text-sub">
+                {type === "expense" ? "지출" : "수입"}
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setType("expense")}
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none transition-colors ${
+                    type === "expense"
+                      ? "bg-coral text-white"
+                      : "bg-light text-sub"
+                  }`}
+                >
+                  지출
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setType("income")}
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none transition-colors ${
+                    type === "income" ? "bg-mint text-white" : "bg-light text-sub"
+                  }`}
+                >
+                  수입
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Name */}
         <div className="flex flex-col gap-1.5">
@@ -296,7 +305,11 @@ const CategoryForm = ({
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-[17px] font-semibold text-text">
-            {editCategory ? "카테고리 수정" : "카테고리 추가"}
+            {editCategory?._isNewSub
+              ? "서브 카테고리 추가"
+              : editCategory
+                ? "카테고리 수정"
+                : "카테고리 추가"}
           </h3>
           <button
             onClick={handleClose}
