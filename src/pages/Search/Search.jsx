@@ -9,6 +9,8 @@ import {
 } from "lucide-react";
 import useGlobalSearch from "../../hooks/useGlobalSearch";
 import { useCurrencies } from "../../hooks/useCurrencies";
+import { useCategories } from "../../hooks/useCategories";
+import { getDisplayCategory } from "../../utils/categoryHelpers";
 import { useAccounts } from "../../hooks/useAccounts";
 import { formatMoney } from "../../utils/format";
 import { ACCOUNT_TYPE_LABELS } from "../../utils/constants";
@@ -41,6 +43,7 @@ const Search = () => {
   }, []);
 
   const results = useGlobalSearch(query);
+  const { data: allCategories = [] } = useCategories();
 
   const primaryCurrency = useMemo(() => {
     if (accounts.length === 0) return currencies.find((c) => c.code === "USD");
@@ -155,8 +158,7 @@ const Search = () => {
               {results.transactions.data.map((tx, i) => {
                 const style = TYPE_STYLES[tx.type];
                 const cur = getCurrency(tx.currency);
-                const displayCat = tx.category?.parent || tx.category;
-                const subName = tx.category?.parent_id ? tx.category.name : null;
+                const { displayCat, subName } = getDisplayCategory(tx, allCategories);
                 return (
                   <button
                     key={tx.id}

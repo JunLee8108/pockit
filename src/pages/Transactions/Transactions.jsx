@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router";
 import { Plus } from "lucide-react";
+import { getParentCategoryId } from "../../utils/categoryHelpers";
 import {
   useTransactions,
   useDeleteTransaction,
@@ -65,9 +66,24 @@ const Transactions = () => {
     return () => clearTimeout(debounceRef.current);
   }, [filters.search]);
 
+  const { data: currencies = [] } = useCurrencies();
+  const { data: categories = [] } = useCategories();
+
+  // 선택된 부모 카테고리의 서브 카테고리 ID도 포함
+  const expandedCategoryIds = useMemo(() => {
+    if (!filters.categoryIds || filters.categoryIds.length === 0) return [];
+    const expanded = new Set(filters.categoryIds);
+    categories.forEach((c) => {
+      if (c.parent_id && expanded.has(c.parent_id)) {
+        expanded.add(c.id);
+      }
+    });
+    return [...expanded];
+  }, [filters.categoryIds, categories]);
+
   const queryFilters = useMemo(
-    () => ({ ...filters, search: debouncedSearch }),
-    [filters, debouncedSearch],
+    () => ({ ...filters, search: debouncedSearch, categoryIds: expandedCategoryIds }),
+    [filters, debouncedSearch, expandedCategoryIds],
   );
 
   const {
@@ -76,8 +92,6 @@ const Transactions = () => {
     isLoading,
   } = useTransactions(queryFilters);
   const showSkeleton = isLoading && transactions.length === 0;
-  const { data: currencies = [] } = useCurrencies();
-  const { data: categories = [] } = useCategories();
   const deleteTx = useDeleteTransaction();
 
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
@@ -110,17 +124,18 @@ const Transactions = () => {
   const filteredCategories = useMemo(() => {
     if (filters.type === "transfer") return [];
 
-    const usedIds = new Set();
+    const usedParentIds = new Set();
     rawData.forEach((tx) => {
       if (
         tx.category_id &&
         (filters.type === "all" || tx.type === filters.type)
       ) {
-        usedIds.add(tx.category_id);
+        const parentId = getParentCategoryId(tx, categories);
+        if (parentId) usedParentIds.add(parentId);
       }
     });
 
-    return categories.filter((c) => usedIds.has(c.id));
+    return categories.filter((c) => !c.parent_id && usedParentIds.has(c.id));
   }, [categories, rawData, filters.type]);
 
   const getCurrencyByCode = useCallback(

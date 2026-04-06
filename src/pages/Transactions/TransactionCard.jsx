@@ -1,7 +1,9 @@
 import { Pencil, Trash2, Copy, ArrowRightLeft } from "lucide-react";
 import { formatMoney } from "../../utils/format";
+import { getDisplayCategory } from "../../utils/categoryHelpers";
 import CategoryIcon from "../../components/CategoryIcon";
 import { useCurrencyByCode } from "../../hooks/useCurrencies";
+import { useCategories } from "../../hooks/useCategories";
 
 const TYPE_STYLES = {
   income: { sign: "+", color: "text-mint" },
@@ -11,15 +13,12 @@ const TYPE_STYLES = {
 
 const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
   const currency = useCurrencyByCode(tx.currency);
+  const { data: categories = [] } = useCategories();
   const style = TYPE_STYLES[tx.type];
-
-  // 부모 카테고리 표시 (서브면 부모, 아니면 자신)
-  const displayCat = tx.category?.parent || tx.category;
-  const subName = tx.category?.parent_id ? tx.category.name : null;
+  const { displayCat, subName } = getDisplayCategory(tx, categories);
 
   return (
     <div id={`tx-${tx.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
-      {/* Category Icon — 항상 부모 카테고리 */}
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
         style={{
@@ -39,7 +38,6 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
         )}
       </div>
 
-      {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="text-[14px] font-medium text-text truncate">
           {tx.description ||
@@ -68,13 +66,11 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
         </div>
       </div>
 
-      {/* Amount */}
       <div className={`text-[15px] font-semibold shrink-0 ${style.color}`}>
         {style.sign}
         {formatMoney(tx.amount, currency)}
       </div>
 
-      {/* Actions */}
       <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
         <button
           onClick={() => onDuplicate(tx)}

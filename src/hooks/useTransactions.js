@@ -6,7 +6,7 @@ import { queryKeys } from "../lib/queryKeys";
 import useToastStore from "../store/useToastStore";
 
 const TX_SELECT =
-  "*, category:categories(*, parent:categories!parent_id(*)), account:accounts!account_id(*), to_account:accounts!to_account_id(*)";
+  "*, category:categories(*), account:accounts!account_id(*), to_account:accounts!to_account_id(*)";
 
 // ── 월 단위 데이터 fetch (서버) ──
 
