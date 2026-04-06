@@ -155,6 +155,8 @@ const Search = () => {
               {results.transactions.data.map((tx, i) => {
                 const style = TYPE_STYLES[tx.type];
                 const cur = getCurrency(tx.currency);
+                const displayCat = tx.category?.parent || tx.category;
+                const subName = tx.category?.parent_id ? tx.category.name : null;
                 return (
                   <button
                     key={tx.id}
@@ -168,8 +170,8 @@ const Search = () => {
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{
-                        backgroundColor: tx.category?.color
-                          ? tx.category.color + "18"
+                        backgroundColor: displayCat?.color
+                          ? displayCat.color + "18"
                           : "var(--color-light)",
                       }}
                     >
@@ -177,10 +179,10 @@ const Search = () => {
                         <ArrowRightLeft size={14} className="text-sub" />
                       ) : (
                         <CategoryIcon
-                          name={tx.category?.icon}
+                          name={displayCat?.icon}
                           size={14}
                           style={{
-                            color: tx.category?.color || "#94a3b8",
+                            color: displayCat?.color || "#94a3b8",
                           }}
                         />
                       )}
@@ -188,16 +190,29 @@ const Search = () => {
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-medium text-text truncate">
                         {tx.description ||
-                          tx.category?.name ||
+                          displayCat?.name ||
                           (tx.type === "transfer" ? "이체" : "거래")}
                       </div>
-                      <div className="text-[11px] text-sub truncate">
-                        {tx.account?.name}
-                        {tx.category &&
-                          tx.type !== "transfer" &&
-                          ` · ${tx.category.name}`}
-                        {" · "}
-                        {tx.date}
+                      <div className="text-[11px] text-sub truncate flex items-center gap-1">
+                        <span>
+                          {tx.account?.name}
+                          {displayCat &&
+                            tx.type !== "transfer" &&
+                            ` · ${displayCat.name}`}
+                          {" · "}
+                          {tx.date}
+                        </span>
+                        {subName && (
+                          <span
+                            className="text-[9px] font-medium px-1 py-0.5 rounded"
+                            style={{
+                              backgroundColor: (tx.category?.color || "#94a3b8") + "18",
+                              color: tx.category?.color || "#94a3b8",
+                            }}
+                          >
+                            {subName}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <span
