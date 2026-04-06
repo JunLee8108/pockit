@@ -1,33 +1,22 @@
 import { Pencil, Trash2 } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
 
-const CategoryCard = ({ category, onEdit, onDelete, isSub = false }) => {
+const CategoryCard = ({ category, onEdit, onDelete }) => {
   return (
-    <div
-      id={`cat-${category.id}`}
-      className={`dash-card bg-surface shadow-sm rounded-xl flex items-center gap-3 group ${
-        isSub ? "p-3" : "p-4"
-      }`}
-    >
+    <div id={`cat-${category.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
       <div
-        className={`rounded-lg flex items-center justify-center shrink-0 ${
-          isSub ? "w-7 h-7" : "w-9 h-9"
-        }`}
+        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
         style={{ backgroundColor: category.color + "18" }}
       >
         <CategoryIcon
           name={category.icon}
-          size={isSub ? 14 : 18}
+          size={18}
           style={{ color: category.color }}
         />
       </div>
 
       <div className="flex-1 min-w-0">
-        <div
-          className={`font-medium text-text truncate ${
-            isSub ? "text-[13px]" : "text-[14px]"
-          }`}
-        >
+        <div className="text-[14px] font-medium text-text truncate">
           {category.name}
         </div>
         {category.is_default && (

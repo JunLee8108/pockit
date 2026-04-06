@@ -34,7 +34,7 @@ const TxRow = ({ tx }) => {
   );
 };
 
-const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete, transactions = [], subCategories = [] }) => {
+const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete, transactions = [] }) => {
   const [expanded, setExpanded] = useState(false);
   const cat = budget.category;
   const remaining = budget.amount - spent;
@@ -44,19 +44,6 @@ const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete, transactions = [], s
   const sortedTxs = [...transactions].sort((a, b) => b.date.localeCompare(a.date));
   const visibleTxs = expanded ? sortedTxs : sortedTxs.slice(0, INITIAL_SHOW);
   const hasMore = sortedTxs.length > INITIAL_SHOW;
-
-  // 서브 카테고리별 지출 집계
-  const subSpending = subCategories.length > 0
-    ? subCategories
-        .map((sub) => {
-          const subSpent = transactions
-            .filter((tx) => tx.category_id === sub.id)
-            .reduce((s, tx) => s + tx.amount, 0);
-          return { ...sub, spent: subSpent };
-        })
-        .filter((s) => s.spent > 0)
-        .sort((a, b) => b.spent - a.spent)
-    : [];
 
   return (
     <div className="dash-card bg-surface shadow-sm rounded-xl p-4 group">
@@ -134,39 +121,6 @@ const BudgetCard = ({ budget, spent, fmt, onEdit, onDelete, transactions = [], s
         <span>지출 {fmt(spent)}</span>
         <span>{pct}%</span>
       </div>
-
-      {/* Sub-category Spending Bars */}
-      {subSpending.length > 0 && (
-        <div className="mt-3 flex flex-col gap-1.5">
-          {subSpending.map((sub) => {
-            const subPct = spent > 0 ? Math.round((sub.spent / spent) * 100) : 0;
-            return (
-              <div key={sub.id} className="flex items-center gap-2">
-                <CategoryIcon
-                  name={sub.icon}
-                  size={11}
-                  style={{ color: sub.color || cat?.color || "#94a3b8" }}
-                />
-                <span className="text-[11px] text-sub truncate w-14 shrink-0">
-                  {sub.name}
-                </span>
-                <div className="flex-1 h-1.5 bg-light rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${subPct}%`,
-                      backgroundColor: sub.color || cat?.color || "#94a3b8",
-                    }}
-                  />
-                </div>
-                <span className="text-[10px] text-sub w-16 text-right shrink-0">
-                  {fmt(sub.spent)}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* Transaction List */}
       {sortedTxs.length > 0 && (

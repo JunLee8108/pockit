@@ -9,8 +9,6 @@ import {
 } from "lucide-react";
 import useGlobalSearch from "../../hooks/useGlobalSearch";
 import { useCurrencies } from "../../hooks/useCurrencies";
-import { useCategories } from "../../hooks/useCategories";
-import { getDisplayCategory } from "../../utils/categoryHelpers";
 import { useAccounts } from "../../hooks/useAccounts";
 import { formatMoney } from "../../utils/format";
 import { ACCOUNT_TYPE_LABELS } from "../../utils/constants";
@@ -43,7 +41,6 @@ const Search = () => {
   }, []);
 
   const results = useGlobalSearch(query);
-  const { data: allCategories = [] } = useCategories();
 
   const primaryCurrency = useMemo(() => {
     if (accounts.length === 0) return currencies.find((c) => c.code === "USD");
@@ -158,7 +155,6 @@ const Search = () => {
               {results.transactions.data.map((tx, i) => {
                 const style = TYPE_STYLES[tx.type];
                 const cur = getCurrency(tx.currency);
-                const { displayCat, subName } = getDisplayCategory(tx, allCategories);
                 return (
                   <button
                     key={tx.id}
@@ -172,8 +168,8 @@ const Search = () => {
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                       style={{
-                        backgroundColor: displayCat?.color
-                          ? displayCat.color + "18"
+                        backgroundColor: tx.category?.color
+                          ? tx.category.color + "18"
                           : "var(--color-light)",
                       }}
                     >
@@ -181,10 +177,10 @@ const Search = () => {
                         <ArrowRightLeft size={14} className="text-sub" />
                       ) : (
                         <CategoryIcon
-                          name={displayCat?.icon}
+                          name={tx.category?.icon}
                           size={14}
                           style={{
-                            color: displayCat?.color || "#94a3b8",
+                            color: tx.category?.color || "#94a3b8",
                           }}
                         />
                       )}
@@ -192,29 +188,16 @@ const Search = () => {
                     <div className="flex-1 min-w-0">
                       <div className="text-[13px] font-medium text-text truncate">
                         {tx.description ||
-                          displayCat?.name ||
+                          tx.category?.name ||
                           (tx.type === "transfer" ? "이체" : "거래")}
                       </div>
-                      <div className="text-[11px] text-sub truncate flex items-center gap-1">
-                        <span>
-                          {tx.account?.name}
-                          {displayCat &&
-                            tx.type !== "transfer" &&
-                            ` · ${displayCat.name}`}
-                          {" · "}
-                          {tx.date}
-                        </span>
-                        {subName && (
-                          <span
-                            className="text-[9px] font-medium px-1 py-0.5 rounded"
-                            style={{
-                              backgroundColor: (tx.category?.color || "#94a3b8") + "18",
-                              color: tx.category?.color || "#94a3b8",
-                            }}
-                          >
-                            {subName}
-                          </span>
-                        )}
+                      <div className="text-[11px] text-sub truncate">
+                        {tx.account?.name}
+                        {tx.category &&
+                          tx.type !== "transfer" &&
+                          ` · ${tx.category.name}`}
+                        {" · "}
+                        {tx.date}
                       </div>
                     </div>
                     <span

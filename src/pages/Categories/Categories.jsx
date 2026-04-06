@@ -59,41 +59,10 @@ const Categories = () => {
     [categories, activeTab],
   );
 
-  // 계층 구조 — 부모 + 자식 그룹
-  const hierarchyList = useMemo(() => {
-    const parents = filtered.filter((c) => !c.parent_id);
-    const childMap = {};
-    filtered
-      .filter((c) => c.parent_id)
-      .forEach((c) => {
-        if (!childMap[c.parent_id]) childMap[c.parent_id] = [];
-        childMap[c.parent_id].push(c);
-      });
-    return parents.map((p) => ({
-      ...p,
-      children: (childMap[p.id] || []).sort(
-        (a, b) => a.sort_order - b.sort_order,
-      ),
-    }));
-  }, [filtered]);
-
   const handleAdd = () => {
     setEditTarget(null);
     setFormOpen(true);
   };
-
-  const handleAddSub = useCallback(
-    (parent) => {
-      setEditTarget({
-        _isNewSub: true,
-        parent_id: parent.id,
-        type: parent.type,
-        color: parent.color,
-      });
-      setFormOpen(true);
-    },
-    [],
-  );
 
   const handleEdit = useCallback((cat) => {
     setEditTarget(cat);
@@ -186,87 +155,38 @@ const Categories = () => {
         </div>
       ) : (
         <div
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-2"
           onClick={() => setOpenCardId(null)}
         >
-          {hierarchyList.map((parent) => (
-            <div key={parent.id}>
-              <SwipeableCard
-                cardId={parent.id}
-                openCardId={openCardId}
-                onOpenChange={setOpenCardId}
-                actions={[
-                  {
-                    key: "edit",
-                    label: "수정",
-                    icon: <Pencil size={18} />,
-                    className: "bg-mint",
-                    onClick: () => handleEdit(parent),
-                  },
-                  {
-                    key: "delete",
-                    label: "삭제",
-                    icon: <Trash2 size={18} />,
-                    className: "bg-coral",
-                    onClick: () => handleDelete(parent),
-                  },
-                ]}
-              >
-                <CategoryCard
-                  category={parent}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                />
-              </SwipeableCard>
-
-              {/* Sub-categories */}
-              {parent.children.length > 0 && (
-                <div className="ml-6 mt-1 flex flex-col gap-1">
-                  {parent.children.map((sub) => (
-                    <SwipeableCard
-                      key={sub.id}
-                      cardId={sub.id}
-                      openCardId={openCardId}
-                      onOpenChange={setOpenCardId}
-                      actions={[
-                        {
-                          key: "edit",
-                          label: "수정",
-                          icon: <Pencil size={18} />,
-                          className: "bg-mint",
-                          onClick: () => handleEdit(sub),
-                        },
-                        {
-                          key: "delete",
-                          label: "삭제",
-                          icon: <Trash2 size={18} />,
-                          className: "bg-coral",
-                          onClick: () => handleDelete(sub),
-                        },
-                      ]}
-                    >
-                      <CategoryCard
-                        category={sub}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        isSub
-                      />
-                    </SwipeableCard>
-                  ))}
-                </div>
-              )}
-
-              {/* Add sub button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddSub(parent);
-                }}
-                className="ml-6 mt-1 px-3 py-1.5 text-[11px] text-sub font-medium bg-transparent border border-dashed border-border rounded-lg cursor-pointer hover:border-mint hover:text-mint transition-colors"
-              >
-                + 서브 카테고리
-              </button>
-            </div>
+          {filtered.map((cat) => (
+            <SwipeableCard
+              key={cat.id}
+              cardId={cat.id}
+              openCardId={openCardId}
+              onOpenChange={setOpenCardId}
+              actions={[
+                {
+                  key: "edit",
+                  label: "수정",
+                  icon: <Pencil size={18} />,
+                  className: "bg-mint",
+                  onClick: () => handleEdit(cat),
+                },
+                {
+                  key: "delete",
+                  label: "삭제",
+                  icon: <Trash2 size={18} />,
+                  className: "bg-coral",
+                  onClick: () => handleDelete(cat),
+                },
+              ]}
+            >
+              <CategoryCard
+                category={cat}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            </SwipeableCard>
           ))}
         </div>
       )}

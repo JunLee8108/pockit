@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ChevronDown, X } from "lucide-react";
 import CategoryIcon from "../components/CategoryIcon";
 
@@ -12,29 +12,6 @@ const CategorySelect = ({
   const ref = useRef(null);
 
   const selected = categories.find((c) => c.id === value) || null;
-
-  // 계층 구조로 정렬 — 부모 → 자식 순서
-  const orderedList = useMemo(() => {
-    const parents = categories.filter((c) => !c.parent_id);
-    const childMap = {};
-    categories
-      .filter((c) => c.parent_id)
-      .forEach((c) => {
-        if (!childMap[c.parent_id]) childMap[c.parent_id] = [];
-        childMap[c.parent_id].push(c);
-      });
-
-    const result = [];
-    parents.forEach((p) => {
-      result.push({ ...p, depth: 0 });
-      (childMap[p.id] || [])
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .forEach((child) => {
-          result.push({ ...child, depth: 1 });
-        });
-    });
-    return result;
-  }, [categories]);
 
   useEffect(() => {
     if (!open) return;
@@ -120,9 +97,8 @@ const CategorySelect = ({
             <span>미분류</span>
           </button>
 
-          {orderedList.map((cat) => {
+          {categories.map((cat) => {
             const isSelected = cat.id === value;
-            const isSub = cat.depth === 1;
             return (
               <button
                 key={cat.id}
@@ -131,27 +107,23 @@ const CategorySelect = ({
                   onChange(cat.id);
                   setOpen(false);
                 }}
-                className={`w-full py-2 flex items-center gap-2.5 text-sm text-left cursor-pointer border-none transition-colors ${
-                  isSub ? "px-7" : "px-3"
-                } ${
+                className={`w-full px-3 py-2 flex items-center gap-2.5 text-sm text-left cursor-pointer border-none transition-colors ${
                   isSelected
                     ? "bg-mint-bg text-mint font-medium"
                     : "bg-transparent text-text hover:bg-light"
                 }`}
               >
                 <span
-                  className={`rounded-md flex items-center justify-center shrink-0 ${isSub ? "w-5 h-5" : "w-6 h-6"}`}
+                  className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
                   style={{ backgroundColor: cat.color + "18" }}
                 >
                   <CategoryIcon
                     name={cat.icon}
-                    size={isSub ? 12 : 14}
+                    size={14}
                     style={{ color: cat.color }}
                   />
                 </span>
-                <span className={`truncate ${isSub ? "text-[13px]" : ""}`}>
-                  {cat.name}
-                </span>
+                <span className="truncate">{cat.name}</span>
               </button>
             );
           })}

@@ -94,7 +94,6 @@ $$ language plpgsql;
 | `color` | text | '#6DD4B4' | 색상 |
 | `type` | text | 'expense' | income \| expense |
 | `sort_order` | int | 0 | 정렬 순서 |
-| `parent_id` | uuid | — | 부모 카테고리 ID (null이면 최상위) |
 | `is_default` | boolean | false | 기본 카테고리 여부 |
 | `created_at` | timestamptz | now() | 생성일 |
 | `updated_at` | timestamptz | now() | 수정일 (자동) |

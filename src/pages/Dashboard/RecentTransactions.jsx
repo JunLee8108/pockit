@@ -2,9 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router";
 import { ArrowRightLeft } from "lucide-react";
 import { formatMoney } from "../../utils/format";
-import { getDisplayCategory, getParentCategoryId } from "../../utils/categoryHelpers";
 import { useCurrencyByCode } from "../../hooks/useCurrencies";
-import { useCategories } from "../../hooks/useCategories";
 import CategoryIcon from "../../components/CategoryIcon";
 
 const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -24,20 +22,17 @@ const TYPE_STYLES = {
 };
 
 const CategoryDistribution = ({ transactions }) => {
-  const { data: allCategories = [] } = useCategories();
-
   const categories = useMemo(() => {
     const map = {};
     transactions
       .filter((tx) => tx.type === "expense")
       .forEach((tx) => {
-        const { displayCat } = getDisplayCategory(tx, allCategories);
-        const key = displayCat?.id || "uncategorized";
+        const key = tx.category_id || "uncategorized";
         if (!map[key]) {
           map[key] = {
-            name: displayCat?.name || "미분류",
-            icon: displayCat?.icon || "Package",
-            color: displayCat?.color || "#94a3b8",
+            name: tx.category?.name || "미분류",
+            icon: tx.category?.icon || "Package",
+            color: tx.category?.color || "#94a3b8",
             amount: 0,
           };
         }
@@ -85,10 +80,9 @@ const CategoryDistribution = ({ transactions }) => {
   );
 };
 
-const TxRow = ({ tx, isLast, allCategories }) => {
-  const currency = useCurrencyByCode(tx.currency);
+const TxRow = ({ tx, isLast }) => {
+  const currency = useCurrencyByCode(tx.currency)
   const style = TYPE_STYLES[tx.type];
-  const { displayCat, subName } = getDisplayCategory(tx, allCategories);
 
   return (
     <div
@@ -97,8 +91,8 @@ const TxRow = ({ tx, isLast, allCategories }) => {
       <div
         className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
         style={{
-          backgroundColor: displayCat?.color
-            ? displayCat.color + "18"
+          backgroundColor: tx.category?.color
+            ? tx.category.color + "18"
             : "var(--color-light)",
         }}
       >
@@ -106,9 +100,9 @@ const TxRow = ({ tx, isLast, allCategories }) => {
           <ArrowRightLeft size={14} className="text-sub" />
         ) : (
           <CategoryIcon
-            name={displayCat?.icon}
+            name={tx.category?.icon}
             size={14}
-            style={{ color: displayCat?.color || "#94a3b8" }}
+            style={{ color: tx.category?.color || "#94a3b8" }}
           />
         )}
       </div>
@@ -116,28 +110,15 @@ const TxRow = ({ tx, isLast, allCategories }) => {
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-medium text-text truncate">
           {tx.description ||
-            displayCat?.name ||
+            tx.category?.name ||
             (tx.type === "transfer" ? "이체" : "거래")}
         </div>
-        <div className="text-[11px] text-sub truncate flex items-center gap-1">
-          <span>
-            {tx.account?.name}
-            {tx.type === "transfer" &&
-              tx.to_account &&
-              ` → ${tx.to_account.name}`}
-            {displayCat && tx.type !== "transfer" && ` · ${displayCat.name}`}
-          </span>
-          {subName && (
-            <span
-              className="text-[9px] font-medium px-1 py-0.5 rounded"
-              style={{
-                backgroundColor: (tx.category?.color || "#94a3b8") + "18",
-                color: tx.category?.color || "#94a3b8",
-              }}
-            >
-              {subName}
-            </span>
-          )}
+        <div className="text-[11px] text-sub truncate">
+          {tx.account?.name}
+          {tx.type === "transfer" &&
+            tx.to_account &&
+            ` → ${tx.to_account.name}`}
+          {tx.category && tx.type !== "transfer" && ` · ${tx.category.name}`}
         </div>
       </div>
 
@@ -150,7 +131,6 @@ const TxRow = ({ tx, isLast, allCategories }) => {
 };
 
 const RecentTransactions = ({ transactions }) => {
-  const { data: allCategories = [] } = useCategories();
   const grouped = useMemo(() => {
     const recent = transactions.slice(0, 5);
     const map = new Map();
@@ -196,7 +176,7 @@ const RecentTransactions = ({ transactions }) => {
             {formatDateHeader(date)}
           </div>
           {txs.map((tx, ti) => (
-            <TxRow key={tx.id} tx={tx} isLast={ti === txs.length - 1} allCategories={allCategories} />
+            <TxRow key={tx.id} tx={tx} isLast={ti === txs.length - 1} />
           ))}
         </div>
       ))}
