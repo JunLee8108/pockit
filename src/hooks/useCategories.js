@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import supabase from "../lib/supabase";
 import { fromSupabase, getAuthUser } from "../lib/supabaseQuery";
 import { queryKeys } from "../lib/queryKeys";
@@ -143,6 +144,33 @@ export const useSeedDefaultCategories = () => {
     onSuccess: () =>
       qc.invalidateQueries({ queryKey: queryKeys.categories.all }),
   });
+};
+
+/**
+ * 카테고리를 계층 구조로 변환 — 부모 카테고리 아래 서브 카테고리 그룹핑
+ * [{ ...parent, children: [sub1, sub2] }, ...]
+ */
+export const useCategoryTree = () => {
+  const { data: categories = [], ...rest } = useCategories();
+
+  const tree = useMemo(() => {
+    const parents = categories.filter((c) => !c.parent_id);
+    const childMap = {};
+    categories
+      .filter((c) => c.parent_id)
+      .forEach((c) => {
+        if (!childMap[c.parent_id]) childMap[c.parent_id] = [];
+        childMap[c.parent_id].push(c);
+      });
+    return parents.map((p) => ({
+      ...p,
+      children: (childMap[p.id] || []).sort(
+        (a, b) => a.sort_order - b.sort_order,
+      ),
+    }));
+  }, [categories]);
+
+  return { data: tree, categories, ...rest };
 };
 
 export const useAddCategory = () => {

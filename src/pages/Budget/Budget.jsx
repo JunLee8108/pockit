@@ -6,6 +6,7 @@ import {
   useCopyBudgets,
 } from "../../hooks/useBudgets";
 import { useTransactions } from "../../hooks/useTransactions";
+import { useCategories } from "../../hooks/useCategories";
 import { useCurrencies } from "../../hooks/useCurrencies";
 import { formatMoney } from "../../utils/format";
 import CategoryIcon from "../../components/CategoryIcon";
@@ -32,6 +33,7 @@ const Budget = () => {
     month,
   );
   const { data: transactions = [] } = useTransactions({ year, month });
+  const { data: categories = [] } = useCategories();
   const { data: currencies = [] } = useCurrencies();
   const deleteBudget = useDeleteBudget();
   const copyBudgets = useCopyBudgets();
@@ -58,28 +60,62 @@ const Budget = () => {
     [primaryCurrency],
   );
 
+  // 서브 카테고리 → 부모 매핑
+  const parentMap = useMemo(() => {
+    const map = {};
+    categories.forEach((c) => {
+      if (c.parent_id) map[c.id] = c.parent_id;
+    });
+    return map;
+  }, [categories]);
+
+  // 서브 카테고리의 지출도 부모에 합산
   const spentByCategory = useMemo(() => {
     const map = {};
     transactions
       .filter((tx) => tx.type === "expense")
       .forEach((tx) => {
-        const key = tx.category_id || "uncategorized";
-        map[key] = (map[key] || 0) + tx.amount;
+        const catId = tx.category_id || "uncategorized";
+        const parentId = parentMap[catId] || catId;
+        map[parentId] = (map[parentId] || 0) + tx.amount;
+        // 서브 자체도 기록 (서브별 분석용)
+        if (parentMap[catId]) {
+          map[catId] = (map[catId] || 0) + tx.amount;
+        }
       });
     return map;
-  }, [transactions]);
+  }, [transactions, parentMap]);
 
   const txsByCategory = useMemo(() => {
     const map = {};
     transactions
       .filter((tx) => tx.type === "expense")
       .forEach((tx) => {
-        const key = tx.category_id || "uncategorized";
-        if (!map[key]) map[key] = [];
-        map[key].push(tx);
+        const catId = tx.category_id || "uncategorized";
+        const parentId = parentMap[catId] || catId;
+        // 부모에 포함
+        if (!map[parentId]) map[parentId] = [];
+        map[parentId].push(tx);
+        // 서브면 서브에도 포함
+        if (parentMap[catId]) {
+          if (!map[catId]) map[catId] = [];
+          map[catId].push(tx);
+        }
       });
     return map;
-  }, [transactions]);
+  }, [transactions, parentMap]);
+
+  // 서브 카테고리 목록 (부모별)
+  const subCategoriesByParent = useMemo(() => {
+    const map = {};
+    categories
+      .filter((c) => c.parent_id)
+      .forEach((c) => {
+        if (!map[c.parent_id]) map[c.parent_id] = [];
+        map[c.parent_id].push(c);
+      });
+    return map;
+  }, [categories]);
 
   // 카테고리 필터용 — 예산에 사용된 카테고리만
   const usedCategories = useMemo(() => {
@@ -434,6 +470,7 @@ const Budget = () => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     transactions={txsByCategory[b.category_id] || []}
+                    subCategories={subCategoriesByParent[b.category_id] || []}
                   />
                 </SwipeableCard>
               ))}

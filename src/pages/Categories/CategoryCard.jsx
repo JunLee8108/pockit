@@ -1,24 +1,33 @@
 import { Pencil, Trash2 } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
 
-const CategoryCard = ({ category, onEdit, onDelete }) => {
+const CategoryCard = ({ category, onEdit, onDelete, isSub = false }) => {
   return (
-    <div id={`cat-${category.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
-      {/* Icon */}
+    <div
+      id={`cat-${category.id}`}
+      className={`dash-card bg-surface shadow-sm rounded-xl flex items-center gap-3 group ${
+        isSub ? "p-3" : "p-4"
+      }`}
+    >
       <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+        className={`rounded-lg flex items-center justify-center shrink-0 ${
+          isSub ? "w-7 h-7" : "w-9 h-9"
+        }`}
         style={{ backgroundColor: category.color + "18" }}
       >
         <CategoryIcon
           name={category.icon}
-          size={18}
+          size={isSub ? 14 : 18}
           style={{ color: category.color }}
         />
       </div>
 
-      {/* Name */}
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-medium text-text truncate">
+        <div
+          className={`font-medium text-text truncate ${
+            isSub ? "text-[13px]" : "text-[14px]"
+          }`}
+        >
           {category.name}
         </div>
         {category.is_default && (
@@ -26,13 +35,11 @@ const CategoryCard = ({ category, onEdit, onDelete }) => {
         )}
       </div>
 
-      {/* Color Dot */}
       <div
         className="w-3.5 h-3.5 rounded-full shrink-0"
         style={{ backgroundColor: category.color }}
       />
 
-      {/* Hover Actions */}
       <div className="hover-actions flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
         <button
           onClick={(e) => {
