@@ -31,7 +31,7 @@ const useGlobalSearch = (query) => {
         const { data, count, error } = await supabase
           .from("transactions")
           .select(
-            "*, category:categories(*), account:accounts!account_id(*)",
+            "*, category:categories(*, parent:categories!parent_id(*)), account:accounts!account_id(*)",
             { count: "exact" },
           )
           .or(

@@ -13,14 +13,18 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
   const currency = useCurrencyByCode(tx.currency);
   const style = TYPE_STYLES[tx.type];
 
+  // 부모 카테고리 표시 (서브면 부모, 아니면 자신)
+  const displayCat = tx.category?.parent || tx.category;
+  const subName = tx.category?.parent_id ? tx.category.name : null;
+
   return (
     <div id={`tx-${tx.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
-      {/* Category Icon */}
+      {/* Category Icon — 항상 부모 카테고리 */}
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
         style={{
-          backgroundColor: tx.category?.color
-            ? tx.category.color + "18"
+          backgroundColor: displayCat?.color
+            ? displayCat.color + "18"
             : "var(--color-light)",
         }}
       >
@@ -28,9 +32,9 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
           <ArrowRightLeft size={16} className="text-sub" />
         ) : (
           <CategoryIcon
-            name={tx.category?.icon}
+            name={displayCat?.icon}
             size={18}
-            style={{ color: tx.category?.color || "#94a3b8" }}
+            style={{ color: displayCat?.color || "#94a3b8" }}
           />
         )}
       </div>
@@ -39,15 +43,28 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
       <div className="flex-1 min-w-0">
         <div className="text-[14px] font-medium text-text truncate">
           {tx.description ||
-            tx.category?.name ||
+            displayCat?.name ||
             (tx.type === "transfer" ? "이체" : "거래")}
         </div>
-        <div className="text-[12px] text-sub truncate">
-          {tx.account?.name}
-          {tx.type === "transfer" &&
-            tx.to_account &&
-            ` → ${tx.to_account.name}`}
-          {tx.category && tx.type !== "transfer" && ` · ${tx.category.name}`}
+        <div className="text-[12px] text-sub truncate flex items-center gap-1">
+          <span>
+            {tx.account?.name}
+            {tx.type === "transfer" &&
+              tx.to_account &&
+              ` → ${tx.to_account.name}`}
+            {displayCat && tx.type !== "transfer" && ` · ${displayCat.name}`}
+          </span>
+          {subName && (
+            <span
+              className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+              style={{
+                backgroundColor: (tx.category?.color || "#94a3b8") + "18",
+                color: tx.category?.color || "#94a3b8",
+              }}
+            >
+              {subName}
+            </span>
+          )}
         </div>
       </div>
 

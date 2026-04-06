@@ -27,12 +27,13 @@ const CategoryDistribution = ({ transactions }) => {
     transactions
       .filter((tx) => tx.type === "expense")
       .forEach((tx) => {
-        const key = tx.category_id || "uncategorized";
+        const displayCat = tx.category?.parent || tx.category;
+        const key = displayCat?.id || "uncategorized";
         if (!map[key]) {
           map[key] = {
-            name: tx.category?.name || "미분류",
-            icon: tx.category?.icon || "Package",
-            color: tx.category?.color || "#94a3b8",
+            name: displayCat?.name || "미분류",
+            icon: displayCat?.icon || "Package",
+            color: displayCat?.color || "#94a3b8",
             amount: 0,
           };
         }
@@ -83,6 +84,8 @@ const CategoryDistribution = ({ transactions }) => {
 const TxRow = ({ tx, isLast }) => {
   const currency = useCurrencyByCode(tx.currency);
   const style = TYPE_STYLES[tx.type];
+  const displayCat = tx.category?.parent || tx.category;
+  const subName = tx.category?.parent_id ? tx.category.name : null;
 
   return (
     <div
@@ -91,8 +94,8 @@ const TxRow = ({ tx, isLast }) => {
       <div
         className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
         style={{
-          backgroundColor: tx.category?.color
-            ? tx.category.color + "18"
+          backgroundColor: displayCat?.color
+            ? displayCat.color + "18"
             : "var(--color-light)",
         }}
       >
@@ -100,9 +103,9 @@ const TxRow = ({ tx, isLast }) => {
           <ArrowRightLeft size={14} className="text-sub" />
         ) : (
           <CategoryIcon
-            name={tx.category?.icon}
+            name={displayCat?.icon}
             size={14}
-            style={{ color: tx.category?.color || "#94a3b8" }}
+            style={{ color: displayCat?.color || "#94a3b8" }}
           />
         )}
       </div>
@@ -110,15 +113,28 @@ const TxRow = ({ tx, isLast }) => {
       <div className="flex-1 min-w-0">
         <div className="text-[13px] font-medium text-text truncate">
           {tx.description ||
-            tx.category?.name ||
+            displayCat?.name ||
             (tx.type === "transfer" ? "이체" : "거래")}
         </div>
-        <div className="text-[11px] text-sub truncate">
-          {tx.account?.name}
-          {tx.type === "transfer" &&
-            tx.to_account &&
-            ` → ${tx.to_account.name}`}
-          {tx.category && tx.type !== "transfer" && ` · ${tx.category.name}`}
+        <div className="text-[11px] text-sub truncate flex items-center gap-1">
+          <span>
+            {tx.account?.name}
+            {tx.type === "transfer" &&
+              tx.to_account &&
+              ` → ${tx.to_account.name}`}
+            {displayCat && tx.type !== "transfer" && ` · ${displayCat.name}`}
+          </span>
+          {subName && (
+            <span
+              className="text-[9px] font-medium px-1 py-0.5 rounded"
+              style={{
+                backgroundColor: (tx.category?.color || "#94a3b8") + "18",
+                color: tx.category?.color || "#94a3b8",
+              }}
+            >
+              {subName}
+            </span>
+          )}
         </div>
       </div>
 
