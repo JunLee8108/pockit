@@ -3,8 +3,6 @@ import { PieChart, Pie, Cell, Tooltip, Label } from "recharts";
 import { ChevronRight } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
 import CategoryTransactionModal from "./CategoryTransactionModal";
-import { useCategories } from "../../hooks/useCategories";
-import { getParentCategoryId, getDisplayCategory } from "../../utils/categoryHelpers";
 
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
@@ -19,21 +17,19 @@ const CustomTooltip = ({ active, payload }) => {
 
 const CategoryBreakdown = memo(({ transactions, fmt, year, month }) => {
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const { data: allCategories = [] } = useCategories();
 
   const { chartData, total, categoryMap } = useMemo(() => {
     const map = {};
     transactions
       .filter((tx) => tx.type === "expense")
       .forEach((tx) => {
-        const { displayCat } = getDisplayCategory(tx, allCategories);
-        const key = displayCat?.id || "uncategorized";
+        const key = tx.category_id || "uncategorized";
         if (!map[key]) {
           map[key] = {
             id: key,
-            name: displayCat?.name || "미분류",
-            icon: displayCat?.icon || "Package",
-            color: displayCat?.color || "#94a3b8",
+            name: tx.category?.name || "미분류",
+            icon: tx.category?.icon || "Package",
+            color: tx.category?.color || "#94a3b8",
             value: 0,
             count: 0,
           };
@@ -52,17 +48,16 @@ const CategoryBreakdown = memo(({ transactions, fmt, year, month }) => {
     return { chartData: withPct, total: tot, categoryMap: map };
   }, [transactions]);
 
-  // 클릭한 카테고리의 거래 목록 (부모 기준)
+  // 클릭한 카테고리의 거래 목록
   const categoryTxs = useMemo(() => {
     if (!selectedCategory) return [];
     return transactions
       .filter((tx) => {
-        if (tx.type !== "expense") return false;
-        const { displayCat } = getDisplayCategory(tx, allCategories);
-        return (displayCat?.id || "uncategorized") === selectedCategory.id;
+        const key = tx.category_id || "uncategorized";
+        return tx.type === "expense" && key === selectedCategory.id;
       })
       .sort((a, b) => b.date.localeCompare(a.date));
-  }, [transactions, selectedCategory, allCategories]);
+  }, [transactions, selectedCategory]);
 
   // 도넛 차트용: Top 5 + 기타
   const pieData = useMemo(() => {
