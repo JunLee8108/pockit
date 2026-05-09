@@ -21,4 +21,11 @@ export const queryKeys = {
   },
   annualSummary: (year) => ["annual-summary", year],
   annualCategory: (year) => ["annual-category", year],
+  tasks: {
+    all: ["tasks"],
+    list: (filters) => ["tasks", "list", filters],
+  },
+  taskCategories: {
+    all: ["task-categories"],
+  },
 };

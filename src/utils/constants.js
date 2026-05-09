@@ -25,6 +25,7 @@ export const NAV_ITEMS = [
     path: "/transactions",
     icon: "Receipt",
   },
+  { id: "tasks", label: "할일", path: "/tasks", icon: "ListTodo" },
   { id: "statistics", label: "통계", path: "/statistics", icon: "BarChart3" },
   { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
   {
@@ -34,6 +35,12 @@ export const NAV_ITEMS = [
     icon: "CalendarClock",
   },
   { id: "categories", label: "카테고리", path: "/categories", icon: "Tag" },
+  {
+    id: "task-categories",
+    label: "할일 카테고리",
+    path: "/task-categories",
+    icon: "ListTodo",
+  },
   {
     id: "annual-report",
     label: "연간 리포트",

@@ -146,7 +146,49 @@ $$ language plpgsql;
 
 ---
 
-### 7. `fixed_expenses` — 고정지출
+### 7. `task_categories` — 할일 카테고리
+
+| 컬럼 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `id` | uuid **PK** | gen_random_uuid() | — |
+| `user_id` | uuid | — | `auth.users(id)` FK |
+| `name` | text | — | 카테고리명 (업무, 개인, 공부 등) |
+| `icon` | text | 'ListTodo' | 아이콘 |
+| `color` | text | '#6DD4B4' | 색상 |
+| `sort_order` | int | 0 | 정렬 순서 |
+| `is_default` | boolean | false | 기본 카테고리 여부 |
+| `created_at` | timestamptz | now() | 생성일 |
+| `updated_at` | timestamptz | now() | 수정일 (자동) |
+
+**RLS**: 본인만 CRUD
+**인덱스**: `user_id`
+
+---
+
+### 8. `tasks` — 할일
+
+| 컬럼 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `id` | uuid **PK** | gen_random_uuid() | — |
+| `user_id` | uuid | — | `auth.users(id)` FK |
+| `title` | text | — | 할일 제목 |
+| `description` | text | — | 상세 설명 |
+| `due_date` | date | — | 기한 날짜 (nullable) |
+| `due_time` | time | — | 기한 시각 (nullable) |
+| `priority` | text | 'normal' | low \| normal \| high |
+| `status` | text | 'todo' | todo \| done |
+| `category_id` | uuid | — | `task_categories(id)` FK (on delete set null) |
+| `completed_at` | timestamptz | — | 완료 시각 |
+| `sort_order` | int | 0 | 정렬 순서 |
+| `created_at` | timestamptz | now() | 생성일 |
+| `updated_at` | timestamptz | now() | 수정일 (자동) |
+
+**RLS**: 본인만 CRUD
+**인덱스**: `user_id`, `due_date`, `status`, `category_id`
+
+---
+
+### 9. `fixed_expenses` — 고정지출
 
 | 컬럼 | 타입 | 기본값 | 설명 |
 |------|------|--------|------|

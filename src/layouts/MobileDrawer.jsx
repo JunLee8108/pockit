@@ -7,6 +7,9 @@ import {
   Wallet,
   Tag,
   Landmark,
+  CalendarRange,
+  CalendarClock,
+  ListTodo,
   LogOut,
   X,
 } from "lucide-react";
@@ -14,7 +17,7 @@ import { NAV_ITEMS } from "../utils/constants";
 import useUIStore from "../store/useUIStore";
 import useAuthStore from "../store/useAuthStore";
 
-const iconMap = { LayoutDashboard, Receipt, BarChart3, Wallet, Tag, Landmark };
+const iconMap = { LayoutDashboard, Receipt, BarChart3, Wallet, Tag, Landmark, CalendarRange, CalendarClock, ListTodo };
 
 const MobileDrawer = () => {
   const { mobileDrawerOpen, closeMobileDrawer } = useUIStore();
