@@ -35,6 +35,8 @@ const Categories = lazyLoad(() => import("./pages/Categories/Categories"));
 const AnnualReport = lazyLoad(() => import("./pages/AnnualReport/AnnualReport"));
 const FixedExpenses = lazyLoad(() => import("./pages/FixedExpenses/FixedExpenses"));
 const SearchPage = lazyLoad(() => import("./pages/Search/Search"));
+const Tasks = lazyLoad(() => import("./pages/Tasks/Tasks"));
+const TaskCategories = lazyLoad(() => import("./pages/TaskCategories/TaskCategories"));
 
 const PageFallback = () => (
   <div className="flex items-center justify-center py-20">
@@ -137,6 +139,22 @@ const App = () => {
               element={
                 <Suspense fallback={<PageFallback />}>
                   <SearchPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <Tasks />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/task-categories"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <TaskCategories />
                 </Suspense>
               }
             />

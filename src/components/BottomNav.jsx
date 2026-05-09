@@ -10,6 +10,7 @@ import {
   Tag,
   CalendarRange,
   CalendarClock,
+  ListTodo,
   Sun,
   Moon,
   Monitor,
@@ -22,7 +23,7 @@ import BottomSheet from "../components/BottomSheet";
 const TABS = [
   { path: "/", icon: LayoutDashboard, label: "대시보드" },
   { path: "/transactions", icon: Receipt, label: "거래" },
-  { path: "/budget", icon: PiggyBank, label: "예산" },
+  { path: "/tasks", icon: ListTodo, label: "할일" },
   { path: "/statistics", icon: BarChart3, label: "통계" },
 ];
 
@@ -182,6 +183,14 @@ const BottomNav = () => {
           </button>
 
           <button
+            {...makeSheetHandler(() => handleNavigate("/budget"))}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
+          >
+            <PiggyBank size={18} className="text-sub shrink-0" />
+            <span className="pointer-events-none">예산 관리</span>
+          </button>
+
+          <button
             {...makeSheetHandler(() => handleNavigate("/fixed-expenses"))}
             className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
           >
@@ -195,6 +204,14 @@ const BottomNav = () => {
           >
             <Tag size={18} className="text-sub shrink-0" />
             <span className="pointer-events-none">카테고리 관리</span>
+          </button>
+
+          <button
+            {...makeSheetHandler(() => handleNavigate("/task-categories"))}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
+          >
+            <ListTodo size={18} className="text-sub shrink-0" />
+            <span className="pointer-events-none">할일 카테고리</span>
           </button>
 
           <button
