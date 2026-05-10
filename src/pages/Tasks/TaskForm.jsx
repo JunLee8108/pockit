@@ -13,14 +13,19 @@ const PRIORITIES = [
   { value: "high", label: "높음", color: "#ef4444" },
 ];
 
-const TaskFormInner = ({ onClose, editTask = null, defaultDate = null }) => {
+const TaskFormInner = ({
+  onClose,
+  editTask = null,
+  defaultDate = null,
+  defaultTitle = "",
+}) => {
   const addTask = useAddTask();
   const updateTask = useUpdateTask();
   const { data: categories = [] } = useTaskCategories();
 
   const isEdit = !!editTask;
 
-  const [title, setTitle] = useState(editTask?.title || "");
+  const [title, setTitle] = useState(editTask?.title || defaultTitle || "");
   const [description, setDescription] = useState(editTask?.description || "");
   const [dueDate, setDueDate] = useState(
     editTask?.due_date || defaultDate || "",
@@ -200,7 +205,13 @@ const TaskFormInner = ({ onClose, editTask = null, defaultDate = null }) => {
 
 const ANIM_DURATION = 250;
 
-const TaskForm = ({ open, onClose, editTask = null, defaultDate = null }) => {
+const TaskForm = ({
+  open,
+  onClose,
+  editTask = null,
+  defaultDate = null,
+  defaultTitle = "",
+}) => {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
 
@@ -248,10 +259,11 @@ const TaskForm = ({ open, onClose, editTask = null, defaultDate = null }) => {
         </div>
 
         <TaskFormInner
-          key={editTask?.id || `new-${defaultDate || ""}`}
+          key={editTask?.id || `new-${defaultDate || ""}-${defaultTitle || ""}`}
           onClose={handleClose}
           editTask={editTask}
           defaultDate={defaultDate}
+          defaultTitle={defaultTitle}
         />
       </div>
     </div>

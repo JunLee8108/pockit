@@ -13,6 +13,7 @@ import useConfirm from "../../hooks/useConfirm";
 import TaskList from "./TaskList";
 import TaskForm from "./TaskForm";
 import TaskCalendar from "./TaskCalendar";
+import QuickAdd from "./QuickAdd";
 
 const TABS = [
   { value: "today", label: "오늘" },
@@ -32,6 +33,7 @@ const Tasks = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [defaultDate, setDefaultDate] = useState(null);
+  const [defaultTitle, setDefaultTitle] = useState("");
   const [openCardId, setOpenCardId] = useState(null);
   const confirm = useConfirm();
 
@@ -68,15 +70,17 @@ const Tasks = () => {
     return counts;
   }, [rawData]);
 
-  const handleAdd = (date = null) => {
+  const handleAdd = (date = null, title = "") => {
     setEditTarget(null);
     setDefaultDate(date);
+    setDefaultTitle(title || "");
     setFormOpen(true);
   };
 
   const handleEdit = useCallback((task) => {
     setEditTarget(task);
     setDefaultDate(null);
+    setDefaultTitle("");
     setFormOpen(true);
   }, []);
 
@@ -145,6 +149,8 @@ const Tasks = () => {
 
       {view === "list" && (
         <>
+          <QuickAdd onOpenFull={(t) => handleAdd(null, t)} />
+
           {/* Tabs */}
           <div className="flex gap-1 bg-light rounded-lg p-1 overflow-x-auto">
             {TABS.map((tab) => (
@@ -222,9 +228,11 @@ const Tasks = () => {
           setFormOpen(false);
           setEditTarget(null);
           setDefaultDate(null);
+          setDefaultTitle("");
         }}
         editTask={editTarget}
         defaultDate={defaultDate}
+        defaultTitle={defaultTitle}
       />
     </div>
   );
