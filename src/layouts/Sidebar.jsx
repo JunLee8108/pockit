@@ -111,18 +111,16 @@ const Sidebar = ({ collapsed: collapsedProp, canToggle = true }) => {
 
         {NAV_SECTIONS.map((section, sIdx) => (
           <div key={section.label || `sec-${sIdx}`} className="flex flex-col gap-0.5">
-            {sIdx > 0 &&
-              (c ? (
-                <div className="h-px bg-border my-2 mx-2" />
-              ) : (
-                <div className="px-3 pt-3 pb-1">
-                  <Label collapsed={c}>
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-sub">
-                      {section.label}
-                    </span>
-                  </Label>
-                </div>
-              ))}
+            {sIdx > 0 && c && <div className="h-px bg-border my-2 mx-2" />}
+            {section.label && !c && (
+              <div className={`px-3 pb-1 ${sIdx > 0 ? "pt-3" : "pt-1"}`}>
+                <Label collapsed={c}>
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-sub">
+                    {section.label}
+                  </span>
+                </Label>
+              </div>
+            )}
             {section.items.map((item) => {
               const Icon = iconMap[item.icon];
               return (

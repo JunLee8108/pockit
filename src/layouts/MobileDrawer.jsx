@@ -83,8 +83,8 @@ const MobileDrawer = () => {
         <nav className="flex-1 p-3 flex flex-col gap-0.5 overflow-y-auto">
           {NAV_SECTIONS.map((section, sIdx) => (
             <div key={section.label || `sec-${sIdx}`} className="flex flex-col gap-0.5">
-              {sIdx > 0 && (
-                <div className="px-3 pt-3 pb-1">
+              {section.label && (
+                <div className={`px-3 pb-1 ${sIdx > 0 ? "pt-3" : "pt-1"}`}>
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-sub">
                     {section.label}
                   </span>
