@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useUpdateTask } from "../../hooks/useTasks";
+import { getReadableTextColor } from "../../utils/colorContrast";
 import BottomSheet from "../../components/BottomSheet";
 import TaskItem from "./TaskItem";
 
@@ -28,6 +29,7 @@ const VISIBLE_PER_CELL = 3;
 const TaskBar = ({ task, onClick, onDragStart, onDragEnd }) => {
   const isDone = task.status === "done";
   const color = barColor(task);
+  const textColor = getReadableTextColor(color);
 
   return (
     <button
@@ -44,12 +46,12 @@ const TaskBar = ({ task, onClick, onDragStart, onDragEnd }) => {
       }`}
       style={{
         backgroundColor: color,
-        color: "#fff",
+        color: textColor,
       }}
       title={task.title}
     >
       {task.due_time && (
-        <span className="opacity-90 mr-1">{task.due_time.slice(0, 5)}</span>
+        <span className="opacity-80 mr-1">{task.due_time.slice(0, 5)}</span>
       )}
       {task.title}
     </button>
