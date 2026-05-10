@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useUpdateTask } from "../../hooks/useTasks";
+import BottomSheet from "../../components/BottomSheet";
 import TaskItem from "./TaskItem";
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
 const ymd = (year, month, day) =>
   `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -12,11 +14,56 @@ const todayStr = () => {
   return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate());
 };
 
+const PRIORITY_DEFAULT_COLOR = {
+  low: "#94a3b8",
+  normal: "#7dd3fc",
+  high: "#ef4444",
+};
+
+const barColor = (task) =>
+  task.category?.color || PRIORITY_DEFAULT_COLOR[task.priority] || "#7dd3fc";
+
+const VISIBLE_PER_CELL = 3;
+
+const TaskBar = ({ task, onClick, onDragStart, onDragEnd }) => {
+  const isDone = task.status === "done";
+  const color = barColor(task);
+
+  return (
+    <button
+      type="button"
+      draggable={!isDone}
+      onDragStart={(e) => onDragStart(e, task)}
+      onDragEnd={onDragEnd}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(task);
+      }}
+      className={`w-full text-left px-1.5 py-0.5 rounded text-[11px] font-medium leading-tight truncate cursor-pointer border-none transition-opacity hover:opacity-90 ${
+        isDone ? "opacity-50 line-through" : ""
+      }`}
+      style={{
+        backgroundColor: color,
+        color: "#fff",
+      }}
+      title={task.title}
+    >
+      {task.due_time && (
+        <span className="opacity-90 mr-1">{task.due_time.slice(0, 5)}</span>
+      )}
+      {task.title}
+    </button>
+  );
+};
+
 const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1); // 1-12
-  const [selectedDate, setSelectedDate] = useState(todayStr());
+  const [dragOverDate, setDragOverDate] = useState(null);
+  const [draggingId, setDraggingId] = useState(null);
+  const [sheetDate, setSheetDate] = useState(null);
+  const updateTask = useUpdateTask();
 
   const tasksByDate = useMemo(() => {
     const map = new Map();
@@ -28,25 +75,28 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
     return map;
   }, [tasks]);
 
-  const grid = useMemo(() => {
-    const firstDay = new Date(year, month - 1, 1);
-    const lastDay = new Date(year, month, 0);
-    const startWeekday = firstDay.getDay(); // 0=Sun
-    const totalDays = lastDay.getDate();
+  // 6주(42칸) 그리드 — 이전/다음 달 날짜 포함
+  const cells = useMemo(() => {
+    const firstOfMonth = new Date(year, month - 1, 1);
+    // JS getDay: Sun=0..Sat=6 → 월요일 시작 인덱스로 변환
+    const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mon=0..Sun=6
+    // 그리드 첫 칸의 실제 날짜
+    const gridStart = new Date(year, month - 1, 1 - firstWeekday);
 
-    const cells = [];
-    // 앞 빈칸
-    for (let i = 0; i < startWeekday; i++) cells.push(null);
-    // 날짜
-    for (let d = 1; d <= totalDays; d++) {
-      cells.push({
-        day: d,
-        date: ymd(year, month, d),
-      });
-    }
-    // 6주 채우기 (42칸)
-    while (cells.length < 42) cells.push(null);
-    return cells;
+    return Array.from({ length: 42 }, (_, i) => {
+      const d = new Date(gridStart);
+      d.setDate(gridStart.getDate() + i);
+      const yy = d.getFullYear();
+      const mm = d.getMonth() + 1;
+      const dd = d.getDate();
+      return {
+        date: ymd(yy, mm, dd),
+        year: yy,
+        month: mm,
+        day: dd,
+        isCurrentMonth: mm === month && yy === year,
+      };
+    });
   }, [year, month]);
 
   const today = todayStr();
@@ -67,13 +117,57 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
     const d = new Date();
     setYear(d.getFullYear());
     setMonth(d.getMonth() + 1);
-    setSelectedDate(todayStr());
   };
 
-  const selectedTasks = selectedDate ? tasksByDate.get(selectedDate) || [] : [];
+  // ── DnD ──
+  const handleDragStart = useCallback((e, task) => {
+    e.dataTransfer.setData("text/task-id", task.id);
+    e.dataTransfer.effectAllowed = "move";
+    setDraggingId(task.id);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    setDraggingId(null);
+    setDragOverDate(null);
+  }, []);
+
+  const handleDragOver = useCallback((e, date) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverDate(date);
+  }, []);
+
+  const handleDragLeave = useCallback((e, date) => {
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setDragOverDate((curr) => (curr === date ? null : curr));
+  }, []);
+
+  const handleDrop = useCallback(
+    (e, targetDate) => {
+      e.preventDefault();
+      const taskId = e.dataTransfer.getData("text/task-id");
+      setDragOverDate(null);
+      setDraggingId(null);
+      if (!taskId) return;
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) return;
+      if (task.due_date === targetDate) return;
+      updateTask.mutate({
+        id: taskId,
+        updates: { due_date: targetDate },
+      });
+    },
+    [tasks, updateTask],
+  );
+
+  const handleCellClick = (cell) => {
+    onAddForDate(cell.date);
+  };
+
+  const sheetTasks = sheetDate ? tasksByDate.get(sheetDate) || [] : [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
@@ -104,109 +198,147 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
       </div>
 
       {/* Calendar grid */}
-      <div className="dash-card bg-surface shadow-sm rounded-2xl p-3">
-        <div className="grid grid-cols-7 mb-1">
+      <div className="dash-card bg-surface shadow-sm rounded-2xl overflow-hidden border border-border">
+        {/* Weekday header */}
+        <div className="grid grid-cols-7 border-b border-border">
           {WEEKDAYS.map((w, i) => (
             <div
               key={w}
-              className={`text-center text-[11px] font-medium py-1 ${
-                i === 0 ? "text-coral" : i === 6 ? "text-sky" : "text-sub"
+              className={`text-center text-[11px] font-medium py-2 ${
+                i === 5 ? "text-sky" : i === 6 ? "text-coral" : "text-sub"
               }`}
             >
               {w}
             </div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
-          {grid.map((cell, idx) => {
-            if (!cell) return <div key={idx} className="aspect-square" />;
+
+        {/* 6주 × 7일 */}
+        <div className="grid grid-cols-7 grid-rows-6">
+          {cells.map((cell, idx) => {
             const items = tasksByDate.get(cell.date) || [];
-            const todoCount = items.filter((t) => t.status === "todo").length;
-            const doneCount = items.filter((t) => t.status === "done").length;
+            const visible = items.slice(0, VISIBLE_PER_CELL);
+            const overflow = items.length - visible.length;
             const isToday = cell.date === today;
-            const isSelected = cell.date === selectedDate;
+            const isDragOver = dragOverDate === cell.date;
             const weekday = idx % 7;
+            const isFirstOfMonth = cell.day === 1;
+            const dayLabel = isFirstOfMonth ? `${cell.month}월 1일` : cell.day;
 
             return (
-              <button
+              <div
                 key={cell.date}
-                onClick={() => setSelectedDate(cell.date)}
-                className={`aspect-square rounded-lg p-1 flex flex-col items-center cursor-pointer border transition-colors ${
-                  isSelected
-                    ? "border-mint bg-mint-bg"
-                    : isToday
-                      ? "border-mint bg-transparent"
-                      : "border-transparent bg-transparent hover:bg-light"
-                }`}
+                onClick={() => handleCellClick(cell)}
+                onDragOver={(e) => handleDragOver(e, cell.date)}
+                onDragLeave={(e) => handleDragLeave(e, cell.date)}
+                onDrop={(e) => handleDrop(e, cell.date)}
+                className={`min-h-[88px] sm:min-h-[110px] p-1 sm:p-1.5 border-r border-b border-border last:border-r-0 cursor-pointer transition-colors flex flex-col gap-0.5 ${
+                  idx >= 35 ? "border-b-0" : ""
+                } ${(idx + 1) % 7 === 0 ? "border-r-0" : ""} ${
+                  isDragOver
+                    ? "bg-mint-bg ring-2 ring-mint ring-inset"
+                    : "hover:bg-light"
+                } ${cell.isCurrentMonth ? "" : "bg-bg/40"}`}
               >
-                <span
-                  className={`text-[12px] font-medium leading-none mt-1 ${
-                    isToday
-                      ? "text-mint font-bold"
-                      : weekday === 0
-                        ? "text-coral"
-                        : weekday === 6
-                          ? "text-sky"
-                          : "text-text"
-                  }`}
-                >
-                  {cell.day}
-                </span>
-                <div className="flex-1 flex items-end gap-0.5 pb-0.5">
-                  {todoCount > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-mint" />
-                  )}
-                  {doneCount > 0 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-border" />
+                {/* Day label */}
+                <div className="flex items-center justify-start mb-0.5">
+                  {isToday ? (
+                    <span className="inline-flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-full bg-mint text-white text-[11px] font-semibold">
+                      {dayLabel}
+                    </span>
+                  ) : (
+                    <span
+                      className={`text-[11px] font-medium px-1 ${
+                        !cell.isCurrentMonth
+                          ? "text-sub/50"
+                          : weekday === 5
+                            ? "text-sky"
+                            : weekday === 6
+                              ? "text-coral"
+                              : "text-text"
+                      }`}
+                    >
+                      {dayLabel}
+                    </span>
                   )}
                 </div>
-              </button>
+
+                {/* Task bars */}
+                <div className="flex flex-col gap-0.5">
+                  {visible.map((task) => (
+                    <TaskBar
+                      key={task.id}
+                      task={task}
+                      onClick={onEdit}
+                      onDragStart={handleDragStart}
+                      onDragEnd={handleDragEnd}
+                    />
+                  ))}
+                  {overflow > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSheetDate(cell.date);
+                      }}
+                      className="text-[10px] text-sub hover:text-text cursor-pointer bg-transparent border-none text-left px-1 py-0.5"
+                    >
+                      + {overflow}건 더
+                    </button>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
       </div>
 
-      {/* Selected day list */}
-      {selectedDate && (
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between mt-2">
-            <h3 className="text-[14px] font-semibold text-text">
-              {(() => {
-                const [y, m, d] = selectedDate.split("-").map(Number);
+      {/* Drag hint */}
+      {draggingId && (
+        <div className="text-[12px] text-sub text-center">
+          다른 날짜로 드래그해서 기한을 변경하세요
+        </div>
+      )}
+
+      {/* Day overflow sheet */}
+      <BottomSheet open={!!sheetDate} onClose={() => setSheetDate(null)}>
+        <div className="px-4 pb-6">
+          <div className="flex items-center justify-between py-3">
+            <h3 className="text-[15px] font-semibold text-text">
+              {sheetDate && (() => {
+                const [y, m, d] = sheetDate.split("-").map(Number);
                 return `${y}년 ${m}월 ${d}일`;
               })()}
               <span className="ml-2 text-[12px] font-normal text-sub">
-                {selectedTasks.length}건
+                {sheetTasks.length}건
               </span>
             </h3>
             <button
-              onClick={() => onAddForDate(selectedDate)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-mint text-white rounded-lg text-[12px] font-medium cursor-pointer border-none hover:bg-mint-hover transition-colors"
+              onClick={() => setSheetDate(null)}
+              className="text-sub p-1 cursor-pointer bg-transparent border-none"
             >
-              <Plus size={14} />
-              추가
+              <X size={18} />
             </button>
           </div>
-
-          {selectedTasks.length === 0 ? (
-            <div className="dash-card bg-surface shadow-sm rounded-xl p-6 text-center">
-              <p className="text-sub text-[13px]">할일이 없습니다</p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {selectedTasks.map((task) => (
-                <TaskItem
-                  key={task.id}
-                  task={task}
-                  onToggle={onToggle}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
-            </div>
-          )}
+          <div className="flex flex-col gap-2 max-h-[60vh] overflow-y-auto">
+            {sheetTasks.map((task) => (
+              <TaskItem
+                key={task.id}
+                task={task}
+                onToggle={onToggle}
+                onEdit={(t) => {
+                  setSheetDate(null);
+                  onEdit(t);
+                }}
+                onDelete={(t) => {
+                  setSheetDate(null);
+                  onDelete(t);
+                }}
+              />
+            ))}
+          </div>
         </div>
-      )}
+      </BottomSheet>
     </div>
   );
 };

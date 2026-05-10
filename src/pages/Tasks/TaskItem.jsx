@@ -64,9 +64,9 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete }) => {
 
       {/* Body */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-start gap-2">
+        <div className="flex items-center gap-2">
           <span
-            className="shrink-0 mt-1 w-2 h-2 rounded-full"
+            className="shrink-0 w-2 h-2 rounded-full"
             style={{ backgroundColor: PRIORITY_DOT[task.priority] }}
             title={PRIORITY_LABEL[task.priority]}
           />
