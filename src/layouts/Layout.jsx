@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import Sidebar from "./Sidebar";
 import MobileHeader from "./MobileHeader";
@@ -6,21 +5,8 @@ import BottomNav from "../components/BottomNav";
 import ConfirmModal from "../components/ConfirmModal";
 import Toast from "../components/Toast";
 import useUIStore from "../store/useUIStore";
+import useViewport from "../hooks/useViewport";
 import { useFixedExpenseSync } from "../hooks/useFixedExpenseSync";
-
-const useViewport = () => {
-  const [width, setWidth] = useState(window.innerWidth);
-
-  useEffect(() => {
-    const onResize = () => setWidth(window.innerWidth);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
-
-  if (width < 768) return "mobile";
-  if (width < 1024) return "tablet";
-  return "desktop";
-};
 
 const Layout = () => {
   const viewport = useViewport();

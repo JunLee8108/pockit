@@ -16,36 +16,66 @@ import {
   Package,
 } from "lucide-react";
 
-export const NAV_ITEMS = [
-  { id: "dashboard", label: "대시보드", path: "/", icon: "LayoutDashboard" },
-  { id: "accounts", label: "계좌", path: "/accounts", icon: "Landmark" },
+export const NAV_SECTIONS = [
   {
-    id: "transactions",
-    label: "거래내역",
-    path: "/transactions",
-    icon: "Receipt",
-  },
-  { id: "tasks", label: "할일", path: "/tasks", icon: "ListTodo" },
-  { id: "statistics", label: "통계", path: "/statistics", icon: "BarChart3" },
-  { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
-  {
-    id: "fixed-expenses",
-    label: "고정지출",
-    path: "/fixed-expenses",
-    icon: "CalendarClock",
-  },
-  { id: "categories", label: "카테고리", path: "/categories", icon: "Tag" },
-  {
-    id: "task-categories",
-    label: "할일 카테고리",
-    path: "/task-categories",
-    icon: "ListTodo",
+    label: null,
+    items: [
+      {
+        id: "dashboard",
+        label: "대시보드",
+        path: "/",
+        icon: "LayoutDashboard",
+      },
+    ],
   },
   {
-    id: "annual-report",
-    label: "연간 리포트",
-    path: "/annual-report",
-    icon: "CalendarRange",
+    label: "가계부",
+    items: [
+      { id: "accounts", label: "계좌", path: "/accounts", icon: "Landmark" },
+      {
+        id: "transactions",
+        label: "거래내역",
+        path: "/transactions",
+        icon: "Receipt",
+      },
+      {
+        id: "statistics",
+        label: "통계",
+        path: "/statistics",
+        icon: "BarChart3",
+      },
+      { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
+      {
+        id: "fixed-expenses",
+        label: "고정지출",
+        path: "/fixed-expenses",
+        icon: "CalendarClock",
+      },
+      {
+        id: "categories",
+        label: "카테고리",
+        path: "/categories",
+        icon: "Tag",
+      },
+      {
+        id: "annual-report",
+        label: "연간 리포트",
+        path: "/annual-report",
+        icon: "CalendarRange",
+      },
+    ],
+  },
+  {
+    label: "할일",
+    items: [
+      { id: "tasks", label: "할일", path: "/tasks", icon: "ListTodo" },
+      {
+        id: "task-categories",
+        label: "카테고리",
+        path: "/task-categories",
+        icon: "Tag",
+      },
+    ],
   },
 ];
 

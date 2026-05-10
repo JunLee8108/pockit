@@ -14,7 +14,7 @@ import {
   Search,
   ListTodo,
 } from "lucide-react";
-import { NAV_ITEMS } from "../utils/constants";
+import { NAV_SECTIONS } from "../utils/constants";
 import useAuthStore from "../store/useAuthStore";
 import useUIStore from "../store/useUIStore";
 import ThemeToggle from "../components/ThemeToggle";
@@ -109,30 +109,46 @@ const Sidebar = ({ collapsed: collapsedProp, canToggle = true }) => {
 
         <div className="h-px bg-border mb-1" />
 
-        {NAV_ITEMS.map((item) => {
-          const Icon = iconMap[item.icon];
-          return (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              end={item.path === "/"}
-              className={({ isActive }) => `
-                flex items-center gap-3 rounded-lg text-sm no-underline
-                transition-colors duration-150 px-3 py-2.5
-                ${
-                  isActive
-                    ? "text-mint bg-mint-bg font-semibold"
-                    : "text-sub font-normal hover:bg-light"
-                }
-              `}
-            >
-              <span className="shrink-0 flex items-center justify-center w-5">
-                <Icon size={18} />
-              </span>
-              <Label collapsed={c}>{item.label}</Label>
-            </NavLink>
-          );
-        })}
+        {NAV_SECTIONS.map((section, sIdx) => (
+          <div key={section.label || `sec-${sIdx}`} className="flex flex-col gap-0.5">
+            {sIdx > 0 &&
+              (c ? (
+                <div className="h-px bg-border my-2 mx-2" />
+              ) : (
+                <div className="px-3 pt-3 pb-1">
+                  <Label collapsed={c}>
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-sub">
+                      {section.label}
+                    </span>
+                  </Label>
+                </div>
+              ))}
+            {section.items.map((item) => {
+              const Icon = iconMap[item.icon];
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  end={item.path === "/"}
+                  className={({ isActive }) => `
+                    flex items-center gap-3 rounded-lg text-sm no-underline
+                    transition-colors duration-150 px-3 py-2.5
+                    ${
+                      isActive
+                        ? "text-mint bg-mint-bg font-semibold"
+                        : "text-sub font-normal hover:bg-light"
+                    }
+                  `}
+                >
+                  <span className="shrink-0 flex items-center justify-center w-5">
+                    <Icon size={18} />
+                  </span>
+                  <Label collapsed={c}>{item.label}</Label>
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Theme + Profile + Logout */}
