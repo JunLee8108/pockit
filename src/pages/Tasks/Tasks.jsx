@@ -13,7 +13,9 @@ import useConfirm from "../../hooks/useConfirm";
 import TaskList from "./TaskList";
 import TaskForm from "./TaskForm";
 import TaskCalendar from "./TaskCalendar";
+import WeekCalendar from "./WeekCalendar";
 import QuickAdd from "./QuickAdd";
+import useViewport from "../../hooks/useViewport";
 
 const TABS = [
   { value: "today", label: "오늘" },
@@ -28,6 +30,8 @@ const todayStr = () => {
 };
 
 const Tasks = () => {
+  const viewport = useViewport();
+  const isMobile = viewport === "mobile";
   const [view, setView] = useState("list"); // list | calendar
   const [scope, setScope] = useState("today");
   const [formOpen, setFormOpen] = useState(false);
@@ -212,15 +216,24 @@ const Tasks = () => {
         </>
       )}
 
-      {view === "calendar" && (
-        <TaskCalendar
-          tasks={rawData}
-          onAddForDate={handleAdd}
-          onToggle={handleToggle}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-        />
-      )}
+      {view === "calendar" &&
+        (isMobile ? (
+          <WeekCalendar
+            tasks={rawData}
+            onAddForDate={handleAdd}
+            onToggle={handleToggle}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <TaskCalendar
+            tasks={rawData}
+            onAddForDate={handleAdd}
+            onToggle={handleToggle}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        ))}
 
       <TaskForm
         open={formOpen}

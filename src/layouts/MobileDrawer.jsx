@@ -13,7 +13,7 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import { NAV_ITEMS } from "../utils/constants";
+import { NAV_SECTIONS } from "../utils/constants";
 import useUIStore from "../store/useUIStore";
 import useAuthStore from "../store/useAuthStore";
 
@@ -81,30 +81,41 @@ const MobileDrawer = () => {
 
         {/* 네비게이션 */}
         <nav className="flex-1 p-3 flex flex-col gap-0.5 overflow-y-auto">
-          {NAV_ITEMS.map((item) => {
-            const Icon = iconMap[item.icon];
-            return (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                end={item.path === "/"}
-                className={({ isActive }) => `
-                  flex items-center gap-3 rounded-lg text-sm no-underline
-                  transition-colors duration-150 px-3 py-3
-                  ${
-                    isActive
-                      ? "text-mint bg-mint-bg font-semibold"
-                      : "text-sub font-normal hover:bg-light active:bg-light"
-                  }
-                `}
-              >
-                <span className="shrink-0 flex items-center justify-center w-5">
-                  <Icon size={18} />
-                </span>
-                <span>{item.label}</span>
-              </NavLink>
-            );
-          })}
+          {NAV_SECTIONS.map((section, sIdx) => (
+            <div key={section.label || `sec-${sIdx}`} className="flex flex-col gap-0.5">
+              {sIdx > 0 && (
+                <div className="px-3 pt-3 pb-1">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-sub">
+                    {section.label}
+                  </span>
+                </div>
+              )}
+              {section.items.map((item) => {
+                const Icon = iconMap[item.icon];
+                return (
+                  <NavLink
+                    key={item.id}
+                    to={item.path}
+                    end={item.path === "/"}
+                    className={({ isActive }) => `
+                      flex items-center gap-3 rounded-lg text-sm no-underline
+                      transition-colors duration-150 px-3 py-3
+                      ${
+                        isActive
+                          ? "text-mint bg-mint-bg font-semibold"
+                          : "text-sub font-normal hover:bg-light active:bg-light"
+                      }
+                    `}
+                  >
+                    <span className="shrink-0 flex items-center justify-center w-5">
+                      <Icon size={18} />
+                    </span>
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
         {/* 하단: 프로필 + 로그아웃 */}
