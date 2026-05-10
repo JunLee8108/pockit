@@ -18,7 +18,7 @@ import {
 
 export const NAV_SECTIONS = [
   {
-    label: null,
+    label: "가계부",
     items: [
       {
         id: "dashboard",
@@ -26,11 +26,6 @@ export const NAV_SECTIONS = [
         path: "/",
         icon: "LayoutDashboard",
       },
-    ],
-  },
-  {
-    label: "가계부",
-    items: [
       { id: "accounts", label: "계좌", path: "/accounts", icon: "Landmark" },
       {
         id: "transactions",
