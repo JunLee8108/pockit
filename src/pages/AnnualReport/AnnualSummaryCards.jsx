@@ -26,7 +26,7 @@ const Change = ({ current, previous }) => {
   );
 };
 
-const Card = ({ icon, label, value, color, current, previous, showChange }) => {
+const Card = ({ icon, label, value, color, current, previous, showChange, hint }) => {
   const IconComp = icon;
   return (
     <div className="dash-card bg-surface shadow-sm rounded-2xl p-6 flex flex-col gap-2">
@@ -38,6 +38,7 @@ const Card = ({ icon, label, value, color, current, previous, showChange }) => {
       {showChange && previous !== undefined && (
         <Change current={current} previous={previous} />
       )}
+      {hint && <span className="text-[12px] text-sub">{hint}</span>}
     </div>
   );
 };
@@ -47,11 +48,15 @@ const AnnualSummaryCards = ({
   expense,
   prevIncome,
   prevExpense,
+  summary = [],
   fmt,
 }) => {
   const net = income - expense;
   const prevNet = prevIncome - prevExpense;
-  const monthlyAvgExpense = expense / 12;
+  const activeMonths = summary.filter(
+    (s) => s.income > 0 || s.expense > 0,
+  ).length;
+  const monthlyAvgExpense = activeMonths > 0 ? expense / activeMonths : 0;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -88,6 +93,7 @@ const AnnualSummaryCards = ({
         value={fmt(Math.round(monthlyAvgExpense))}
         color="text-text"
         showChange={false}
+        hint={activeMonths > 0 ? `${activeMonths}개월 기준` : "데이터 없음"}
       />
     </div>
   );
