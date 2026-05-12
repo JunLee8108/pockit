@@ -111,6 +111,7 @@ const AnnualReport = () => {
         expense={currentTotals.expense}
         prevIncome={prevTotals.income}
         prevExpense={prevTotals.expense}
+        summary={summary}
         fmt={fmt}
       />
 
