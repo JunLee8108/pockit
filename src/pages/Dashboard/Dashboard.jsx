@@ -100,7 +100,9 @@ const Dashboard = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">대시보드</h2>
         <div className="flex items-center gap-3">
-          <LiveClock />
+          <div className="hidden sm:flex">
+            <LiveClock />
+          </div>
           <Suspense fallback={null}>
             <DashboardAlerts fmt={fmt} />
           </Suspense>
