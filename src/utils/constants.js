@@ -41,12 +41,6 @@ export const NAV_SECTIONS = [
       },
       { id: "budget", label: "예산", path: "/budget", icon: "Wallet" },
       {
-        id: "fixed-expenses",
-        label: "고정지출",
-        path: "/fixed-expenses",
-        icon: "CalendarClock",
-      },
-      {
         id: "categories",
         label: "카테고리",
         path: "/categories",

@@ -123,7 +123,6 @@ $$ language plpgsql;
 | `description` | text | '' | 설명 |
 | `date` | date | current_date | 거래일 |
 | `to_account_id` | uuid | — | `accounts(id)` FK (이체 대상, on delete set null) |
-| `fixed_expense_id` | uuid | — | `fixed_expenses(id)` FK (on delete set null) |
 | `memo` | text | — | 메모 |
 | `plaid_transaction_id` | text | — | Plaid transaction_id (unique, 동기화 upsert 키) |
 | `pending_plaid_transaction_id` | text | — | pending → posted 전환 시 원본 pending 거래의 Plaid ID |
@@ -135,7 +134,7 @@ $$ language plpgsql;
 | `updated_at` | timestamptz | now() | 수정일 (자동) |
 
 **RLS**: 본인만 CRUD  
-**인덱스**: `user_id`, `account_id`, `category_id`, `date DESC`, `type`, `fixed_expense_id`, `is_pending` (partial), `pending_plaid_transaction_id` (partial)
+**인덱스**: `user_id`, `account_id`, `category_id`, `date DESC`, `type`, `is_pending` (partial), `pending_plaid_transaction_id` (partial)
 
 ---
 
@@ -200,30 +199,7 @@ $$ language plpgsql;
 
 ---
 
-### 9. `fixed_expenses` — 고정지출
-
-| 컬럼 | 타입 | 기본값 | 설명 |
-|------|------|--------|------|
-| `id` | uuid **PK** | gen_random_uuid() | — |
-| `user_id` | uuid | — | `auth.users(id)` FK |
-| `name` | text | — | 지출명 (넷플릭스, 월세 등) |
-| `amount` | bigint | — | 금액 (minor unit) |
-| `currency` | text | 'USD' | `currencies(code)` FK |
-| `category_id` | uuid | — | `categories(id)` FK (on delete set null) |
-| `account_id` | uuid | — | `accounts(id)` FK (on delete set null) |
-| `billing_day` | int | 1 | 결제일 (1-31) |
-| `is_variable` | boolean | false | 변동 금액 여부 (true면 자동 생성 안 함, 수동 등록) |
-| `memo` | text | — | 메모 |
-| `is_active` | boolean | true | 활성 여부 |
-| `created_at` | timestamptz | now() | 생성일 |
-| `updated_at` | timestamptz | now() | 수정일 (자동) |
-
-**RLS**: 본인만 CRUD  
-**인덱스**: `user_id`, `(user_id, is_active)`
-
----
-
-### 10. `plaid_items` — Plaid 은행 연결 (Item)
+### 9. `plaid_items` — Plaid 은행 연결 (Item)
 
 | 컬럼 | 타입 | 기본값 | 설명 |
 |------|------|--------|------|
@@ -253,7 +229,7 @@ supabase.from("plaid_items")
 
 ---
 
-### 11. `plaid_category_map` — Plaid 카테고리 매핑
+### 10. `plaid_category_map` — Plaid 카테고리 매핑
 
 Plaid `personal_finance_category`(detailed) → 사용자 `categories` 매핑.
 사용자가 Plaid 거래를 재분류하면 저장해 두고 다음 동기화부터 자동 적용(학습).

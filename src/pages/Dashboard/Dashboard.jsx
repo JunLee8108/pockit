@@ -10,7 +10,6 @@ import LiveClock from "./LiveClock";
 const AccountBalanceList = lazy(() => import("./AccountBalanceList"));
 const RecentTransactions = lazy(() => import("./RecentTransactions"));
 const BudgetOverview = lazy(() => import("./BudgetOverview"));
-const FixedExpenseOverview = lazy(() => import("./FixedExpenseOverview"));
 const DashboardAlerts = lazy(() => import("./DashboardAlerts"));
 
 const ChartFallback = () => (
@@ -133,15 +132,10 @@ const Dashboard = () => {
         </Suspense>
       </div>
 
-      {/* 예산 현황 + 고정지출 현황 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Suspense fallback={<ChartFallback />}>
-          <BudgetOverview fmt={fmt} />
-        </Suspense>
-        <Suspense fallback={<ChartFallback />}>
-          <FixedExpenseOverview fmt={fmt} />
-        </Suspense>
-      </div>
+      {/* 예산 현황 */}
+      <Suspense fallback={<ChartFallback />}>
+        <BudgetOverview fmt={fmt} />
+      </Suspense>
     </div>
   );
 };
