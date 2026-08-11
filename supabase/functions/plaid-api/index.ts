@@ -1,21 +1,31 @@
 // Pockit Plaid API — 단일 Edge Function (액션 라우팅)
 //
-// actions:
+// 사용자 액션 (Authorization: 사용자 JWT 필수):
 //   create_link_token   { plaid_item_id? }        → { link_token }  (item_id 있으면 update mode)
 //   exchange_public_token { public_token, institution } → 계좌 생성 + 초기 동기화
 //   sync                { plaid_item_id? }        → 전체 or 단일 item 동기화
 //   unlink              { plaid_item_id }         → Plaid item 제거, 계좌는 수동 계좌로 전환
 //
-// Plaid 설정(PLAID_CLIENT_ID/SECRET/ENV)은 Supabase Vault에 저장되어 있고
+// 서버 트리거 (verify_jwt=false, 자체 검증):
+//   plaid-verification 헤더 → Plaid 웹훅 (JWT 서명 + body sha256 검증 후 해당 item 동기화)
+//   x-cron-secret 헤더      → pg_cron 정기 동기화 (Vault의 PLAID_CRON_SECRET 대조)
+//
+// Plaid 설정(PLAID_CLIENT_ID/SECRET/ENV/CRON_SECRET)은 Supabase Vault에 저장되어 있고
 // service role 전용 RPC get_plaid_config()로만 읽는다.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
+import {
+  jwtVerify,
+  importJWK,
+  decodeProtectedHeader,
+} from "npm:jose@5";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const MAX_PLAID_ITEMS = 10;
+const WEBHOOK_URL = `${SUPABASE_URL}/functions/v1/plaid-api`;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -178,6 +188,7 @@ async function createLinkToken(
     ...base,
     products: ["transactions"],
     transactions: { days_requested: 730 },
+    webhook: WEBHOOK_URL,
   });
   return { link_token: res.link_token, update_mode: false };
 }
@@ -499,11 +510,159 @@ async function unlink(userId: string, body: { plaid_item_id: string }) {
   return { unlinked: true };
 }
 
+// ── Plaid 웹훅 ───────────────────────────────────────────────
+
+// plaid-verification 헤더의 ES256 JWT를 Plaid 공개키로 검증하고
+// body sha256이 클레임과 일치하는지 확인
+async function verifyPlaidWebhook(
+  req: Request,
+  rawBody: string,
+): Promise<boolean> {
+  const token = req.headers.get("plaid-verification");
+  if (!token) return false;
+  try {
+    const { kid, alg } = decodeProtectedHeader(token);
+    if (alg !== "ES256" || !kid) return false;
+    const keyRes = await plaid("/webhook_verification_key/get", {
+      key_id: kid,
+    });
+    const key = await importJWK(keyRes.key, "ES256");
+    const { payload } = await jwtVerify(token, key, {
+      algorithms: ["ES256"],
+      maxTokenAge: "5 min",
+    });
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      new TextEncoder().encode(rawBody),
+    );
+    const bodyHash = [...new Uint8Array(digest)]
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+    return payload.request_body_sha256 === bodyHash;
+  } catch (_e) {
+    return false;
+  }
+}
+
+async function handleWebhook(req: Request, rawBody: string) {
+  if (!(await verifyPlaidWebhook(req, rawBody))) {
+    return new Response("invalid signature", { status: 401 });
+  }
+
+  const hook = JSON.parse(rawBody);
+  const ack = () =>
+    new Response(JSON.stringify({ received: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+
+  const { data: item } = await admin
+    .from("plaid_items")
+    .select("*")
+    .eq("item_id", hook.item_id)
+    .maybeSingle();
+  if (!item) return ack();
+
+  if (hook.webhook_type === "TRANSACTIONS") {
+    // SYNC_UPDATES_AVAILABLE 및 레거시 업데이트 코드 모두 동기화로 처리
+    try {
+      await syncItem(item.user_id, item);
+    } catch (_e) {
+      // 실패 상태는 syncItem이 plaid_items에 기록
+    }
+  } else if (hook.webhook_type === "ITEM") {
+    switch (hook.webhook_code) {
+      case "ERROR":
+        await admin
+          .from("plaid_items")
+          .update({
+            status:
+              hook.error?.error_code === "ITEM_LOGIN_REQUIRED"
+                ? "login_required"
+                : "error",
+            error_code: hook.error?.error_code ?? "ITEM_ERROR",
+          })
+          .eq("id", item.id);
+        break;
+      case "PENDING_EXPIRATION":
+      case "PENDING_DISCONNECT":
+        await admin
+          .from("plaid_items")
+          .update({ status: "login_required", error_code: hook.webhook_code })
+          .eq("id", item.id);
+        break;
+      case "LOGIN_REPAIRED":
+        await admin
+          .from("plaid_items")
+          .update({ status: "active", error_code: null })
+          .eq("id", item.id);
+        try {
+          await syncItem(item.user_id, item);
+        } catch (_e) {
+          // 실패 상태는 syncItem이 기록
+        }
+        break;
+      case "USER_PERMISSION_REVOKED":
+      case "USER_ACCOUNT_REVOKED":
+        await admin
+          .from("plaid_items")
+          .update({ status: "disconnected", error_code: hook.webhook_code })
+          .eq("id", item.id);
+        break;
+    }
+  }
+
+  return ack();
+}
+
+// ── pg_cron 정기 동기화 (모든 사용자) ────────────────────────
+
+async function handleCron(req: Request) {
+  const cfg = await getPlaidConfig();
+  if (
+    !cfg.PLAID_CRON_SECRET ||
+    req.headers.get("x-cron-secret") !== cfg.PLAID_CRON_SECRET
+  ) {
+    return new Response("unauthorized", { status: 401 });
+  }
+
+  const { data: items, error } = await admin
+    .from("plaid_items")
+    .select("*")
+    .in("status", ["active", "error"]);
+  if (error) throw error;
+
+  const results = [];
+  for (const item of items) {
+    try {
+      const r = await syncItem(item.user_id, item);
+      results.push({ plaid_item_id: item.id, ok: true, ...r });
+    } catch (e) {
+      results.push({
+        plaid_item_id: item.id,
+        ok: false,
+        error_code: e instanceof PlaidError ? e.code : "SYNC_FAILED",
+      });
+    }
+  }
+
+  return new Response(JSON.stringify({ results }), {
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
 // ── 라우터 ───────────────────────────────────────────────────
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
+  }
+
+  // 서버 트리거 경로 (사용자 JWT 없음, 자체 검증)
+  if (req.headers.get("plaid-verification")) {
+    return await handleWebhook(req, await req.text());
+  }
+  if (req.headers.get("x-cron-secret")) {
+    return await handleCron(req);
   }
 
   try {
