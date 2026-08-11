@@ -75,11 +75,17 @@ $$ language plpgsql;
 | `is_active` | boolean | true | 활성 여부 |
 | `sort_order` | int | 0 | 정렬 순서 |
 | `memo` | text | — | 메모 |
+| `plaid_item_id` | uuid | — | `plaid_items(id)` FK (on delete set null) — Plaid 연결 계좌 |
+| `plaid_account_id` | text | — | Plaid account_id (unique) |
+| `available_balance` | bigint | — | Plaid available 잔액 (minor unit) |
 | `created_at` | timestamptz | now() | 생성일 |
 | `updated_at` | timestamptz | now() | 수정일 (자동) |
 
 **RLS**: 본인만 CRUD  
-**인덱스**: `user_id`, `is_active`
+**인덱스**: `user_id`, `is_active`, `plaid_item_id` (partial)
+
+> `plaid_item_id`가 있는 계좌는 Plaid 동기화가 잔액을 관리한다.
+> 클라이언트의 수동 잔액 증감(`adjustBalance`) 로직은 이 계좌를 건너뛰어야 한다.
 
 ---
 
@@ -119,11 +125,17 @@ $$ language plpgsql;
 | `to_account_id` | uuid | — | `accounts(id)` FK (이체 대상, on delete set null) |
 | `fixed_expense_id` | uuid | — | `fixed_expenses(id)` FK (on delete set null) |
 | `memo` | text | — | 메모 |
+| `plaid_transaction_id` | text | — | Plaid transaction_id (unique, 동기화 upsert 키) |
+| `pending_plaid_transaction_id` | text | — | pending → posted 전환 시 원본 pending 거래의 Plaid ID |
+| `is_pending` | boolean | false | Plaid 승인 대기 거래 여부 |
+| `source` | text | 'manual' | manual \| plaid |
+| `merchant_name` | text | — | Plaid 가맹점명 |
+| `plaid_category` | text | — | Plaid personal_finance_category (detailed) |
 | `created_at` | timestamptz | now() | 생성일 |
 | `updated_at` | timestamptz | now() | 수정일 (자동) |
 
 **RLS**: 본인만 CRUD  
-**인덱스**: `user_id`, `account_id`, `category_id`, `date DESC`, `type`, `fixed_expense_id`
+**인덱스**: `user_id`, `account_id`, `category_id`, `date DESC`, `type`, `fixed_expense_id`, `is_pending` (partial), `pending_plaid_transaction_id` (partial)
 
 ---
 
@@ -208,6 +220,65 @@ $$ language plpgsql;
 
 **RLS**: 본인만 CRUD  
 **인덱스**: `user_id`, `(user_id, is_active)`
+
+---
+
+### 10. `plaid_items` — Plaid 은행 연결 (Item)
+
+| 컬럼 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `id` | uuid **PK** | gen_random_uuid() | — |
+| `user_id` | uuid | — | `auth.users(id)` FK (on delete cascade) |
+| `item_id` | text | — | Plaid item_id (unique) |
+| `access_token` | text | — | Plaid access_token — **서버 전용, 클라이언트 노출 금지** |
+| `institution_id` | text | — | Plaid 기관 ID |
+| `institution_name` | text | '' | 기관명 |
+| `sync_cursor` | text | — | `/transactions/sync` cursor — **서버 전용** |
+| `status` | text | 'active' | active \| login_required \| error \| disconnected |
+| `error_code` | text | — | 마지막 Plaid 에러 코드 |
+| `last_synced_at` | timestamptz | — | 마지막 동기화 시각 |
+| `created_at` | timestamptz | now() | 생성일 |
+| `updated_at` | timestamptz | now() | 수정일 (자동) |
+
+**RLS**: 본인만 SELECT (쓰기 정책 없음 — Edge Function의 service role 전용)  
+**컬럼 권한**: `authenticated`에는 `access_token`, `sync_cursor`를 **제외한** 컬럼만 SELECT 허용.
+따라서 클라이언트에서 `select("*")`는 permission denied — 반드시 컬럼을 명시해서 조회할 것:
+
+```js
+supabase.from("plaid_items")
+  .select("id, institution_id, institution_name, status, error_code, last_synced_at, created_at, updated_at")
+```
+
+**인덱스**: `user_id`
+
+---
+
+### 11. `plaid_category_map` — Plaid 카테고리 매핑
+
+Plaid `personal_finance_category`(detailed) → 사용자 `categories` 매핑.
+사용자가 Plaid 거래를 재분류하면 저장해 두고 다음 동기화부터 자동 적용(학습).
+
+| 컬럼 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `id` | uuid **PK** | gen_random_uuid() | — |
+| `user_id` | uuid | — | `auth.users(id)` FK (on delete cascade) |
+| `plaid_category` | text | — | Plaid detailed 카테고리 (예: FOOD_AND_DRINK_COFFEE) |
+| `category_id` | uuid | — | `categories(id)` FK (on delete cascade) |
+| `created_at` | timestamptz | now() | 생성일 |
+| `updated_at` | timestamptz | now() | 수정일 (자동) |
+
+**RLS**: 본인만 CRUD  
+**유니크**: `(user_id, plaid_category)`  
+**인덱스**: `user_id`
+
+---
+
+## Plaid 데이터 변환 규칙
+
+- **금액**: Plaid는 주 통화 단위 float(`12.34`) → minor unit bigint(`1234`)로 `Math.round(amount * 100)` 변환 (통화의 `decimal_places` 기준)
+- **부호**: Plaid는 출금이 양수 → `expense`, 입금(음수) → `income` (amount는 절대값 저장)
+- **잔액**: Plaid 연결 계좌는 동기화 시 Plaid의 실제 잔액으로 덮어씀 (클라이언트 증감 금지)
+- **pending**: posted 전환 시 `pending_plaid_transaction_id`로 기존 pending 행을 찾아 교체
 
 ---
 
