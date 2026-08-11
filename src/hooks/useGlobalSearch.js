@@ -1,14 +1,12 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import supabase from "../lib/supabase";
 import { useAccounts } from "./useAccounts";
-import { useFixedExpenses } from "./useFixedExpenses";
 import { useCategories } from "./useCategories";
 
 const PAGE_SIZE = 20;
 
 const useGlobalSearch = (query) => {
   const { data: accounts = [] } = useAccounts();
-  const { data: fixedExpenses = [] } = useFixedExpenses();
   const { data: categories = [] } = useCategories();
 
   // 거래 서버 검색 상태
@@ -94,17 +92,6 @@ const useGlobalSearch = (query) => {
     );
   }, [accounts, trimmed, isValid]);
 
-  // 클라이언트 필터 — 고정지출
-  const fixedExpenseResults = useMemo(() => {
-    if (!isValid) return [];
-    return fixedExpenses.filter(
-      (fe) =>
-        fe.name?.toLowerCase().includes(trimmed) ||
-        fe.memo?.toLowerCase().includes(trimmed) ||
-        fe.category?.name?.toLowerCase().includes(trimmed),
-    );
-  }, [fixedExpenses, trimmed, isValid]);
-
   // 클라이언트 필터 — 카테고리
   const categoryResults = useMemo(() => {
     if (!isValid) return [];
@@ -114,13 +101,12 @@ const useGlobalSearch = (query) => {
   }, [categories, trimmed, isValid]);
 
   const totalCount =
-    txTotal + accountResults.length + fixedExpenseResults.length + categoryResults.length;
+    txTotal + accountResults.length + categoryResults.length;
 
   return {
     isValid,
     transactions: { data: txResults, total: txTotal, loading: txLoading, hasMore: hasMoreTx, loadMore: loadMoreTx },
     accounts: { data: accountResults, total: accountResults.length },
-    fixedExpenses: { data: fixedExpenseResults, total: fixedExpenseResults.length },
     categories: { data: categoryResults, total: categoryResults.length },
     totalCount,
   };

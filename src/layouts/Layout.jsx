@@ -6,14 +6,10 @@ import ConfirmModal from "../components/ConfirmModal";
 import Toast from "../components/Toast";
 import useUIStore from "../store/useUIStore";
 import useViewport from "../hooks/useViewport";
-import { useFixedExpenseSync } from "../hooks/useFixedExpenseSync";
 
 const Layout = () => {
   const viewport = useViewport();
   const { sidebarCollapsed } = useUIStore();
-
-  // 앱 접속 시 고정지출 자동 동기화
-  useFixedExpenseSync();
 
   const isMobile = viewport === "mobile";
   const isTablet = viewport === "tablet";

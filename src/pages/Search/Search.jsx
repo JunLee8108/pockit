@@ -18,7 +18,6 @@ const TABS = [
   { id: "all", label: "전체" },
   { id: "transactions", label: "거래" },
   { id: "accounts", label: "계좌" },
-  { id: "fixedExpenses", label: "고정지출" },
   { id: "categories", label: "카테고리" },
 ];
 
@@ -73,7 +72,6 @@ const Search = () => {
 
   const showTx = tab === "all" || tab === "transactions";
   const showAccounts = tab === "all" || tab === "accounts";
-  const showFe = tab === "all" || tab === "fixedExpenses";
   const showCat = tab === "all" || tab === "categories";
 
   return (
@@ -100,7 +98,7 @@ const Search = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="거래, 계좌, 고정지출, 카테고리 검색..."
+          placeholder="거래, 계좌, 카테고리 검색..."
           className="w-full pl-11 pr-10 py-3 dash-card bg-surface shadow-sm rounded-2xl text-[14px] text-text outline-none border-none focus:ring-2 focus:ring-mint/30"
         />
         {query && (
@@ -267,58 +265,6 @@ const Search = () => {
                       className={`text-[13px] font-semibold shrink-0 ${neg ? "text-coral" : "text-text"}`}
                     >
                       {formatMoney(a.balance, cur)}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {/* 고정지출 결과 */}
-          {showFe && results.fixedExpenses.total > 0 && (
-            <div className="dash-card bg-surface shadow-sm rounded-2xl p-5">
-              <h3 className="text-[13px] text-sub font-medium tracking-wide mb-3">
-                고정지출 ({results.fixedExpenses.total}건)
-              </h3>
-              {results.fixedExpenses.data.map((fe, i) => {
-                const cur = getCurrency(fe.currency);
-                return (
-                  <button
-                    key={fe.id}
-                    onClick={() => navigate(`/fixed-expenses?highlight=${fe.id}`)}
-                    className={`flex items-center gap-3 py-2.5 w-full text-left bg-transparent border-none cursor-pointer hover:bg-light transition-colors rounded-lg px-1 -mx-1 ${
-                      i < results.fixedExpenses.data.length - 1
-                        ? "border-b border-border"
-                        : ""
-                    }`}
-                  >
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                      style={{
-                        backgroundColor:
-                          (fe.category?.color || "#94a3b8") + "18",
-                      }}
-                    >
-                      <CategoryIcon
-                        name={fe.category?.icon}
-                        size={14}
-                        style={{
-                          color: fe.category?.color || "#94a3b8",
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[13px] font-medium text-text truncate">
-                        {fe.name}
-                      </div>
-                      <div className="text-[11px] text-sub">
-                        {fe.category?.name || "미분류"}
-                        {" · 매월 "}
-                        {fe.billing_day}일
-                      </div>
-                    </div>
-                    <span className="text-[13px] font-semibold text-text shrink-0">
-                      {formatMoney(fe.amount, cur)}
                     </span>
                   </button>
                 );

@@ -15,10 +15,6 @@ export const queryKeys = {
     all: ["budgets"],
     list: (params) => ["budgets", params],
   },
-  fixedExpenses: {
-    all: ["fixed-expenses"],
-    list: (params) => ["fixed-expenses", params],
-  },
   annualSummary: (year) => ["annual-summary", year],
   annualCategory: (year) => ["annual-category", year],
   tasks: {

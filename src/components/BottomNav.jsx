@@ -9,7 +9,6 @@ import {
   Landmark,
   Tag,
   CalendarRange,
-  CalendarClock,
   ListTodo,
   Sun,
   Moon,
@@ -188,14 +187,6 @@ const BottomNav = () => {
           >
             <PiggyBank size={18} className="text-sub shrink-0" />
             <span className="pointer-events-none">예산 관리</span>
-          </button>
-
-          <button
-            {...makeSheetHandler(() => handleNavigate("/fixed-expenses"))}
-            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
-          >
-            <CalendarClock size={18} className="text-sub shrink-0" />
-            <span className="pointer-events-none">고정지출 관리</span>
           </button>
 
           <button
