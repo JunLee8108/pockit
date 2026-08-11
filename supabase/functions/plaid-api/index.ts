@@ -340,7 +340,7 @@ async function syncItem(
 
   const upserts = [...added, ...modified];
 
-  // 기존 행의 사용자 수정(카테고리/메모)을 보존하기 위해 미리 조회
+  // 기존 행의 사용자 수정(카테고리/메모/타입)을 보존하기 위해 미리 조회
   // pending → posted 전환 시에도 pending 행의 카테고리를 승계
   const lookupIds = new Set<string>();
   for (const t of upserts) {
@@ -351,7 +351,7 @@ async function syncItem(
   if (lookupIds.size > 0) {
     const { data: existing } = await admin
       .from("transactions")
-      .select("plaid_transaction_id, category_id, memo")
+      .select("plaid_transaction_id, category_id, memo, type")
       .eq("user_id", userId)
       .in("plaid_transaction_id", [...lookupIds]);
     for (const row of existing ?? []) {
@@ -379,10 +379,27 @@ async function syncItem(
         ? existingById.get(t.pending_transaction_id as string)
         : undefined);
 
+    // 카드 대금 결제는 내 계좌 간 이동 — 수입/지출이 아닌 이체로 분류.
+    // Plaid는 양쪽(출금/입금)을 독립된 거래로 주므로 각각 단방향 이체로 저장.
+    const isCardPayment =
+      pfc?.detailed === "LOAN_PAYMENTS_CREDIT_CARD_PAYMENT" ||
+      (account.account_type === "credit_card" &&
+        (t.amount as number) < 0 &&
+        pfc?.primary === "TRANSFER_IN");
+
+    // 사용자가 수동으로 바꾼 type은 재동기화 때 보존
+    const txType =
+      (prev?.type as string) ??
+      (isCardPayment
+        ? "transfer"
+        : (t.amount as number) >= 0
+          ? "expense"
+          : "income");
+
     rows.push({
       user_id: userId,
       account_id: account.id,
-      type: (t.amount as number) >= 0 ? "expense" : "income",
+      type: txType,
       amount: await toMinorUnits(t.amount as number, currency),
       currency,
       description: (t.merchant_name as string) || (t.name as string) || "",
@@ -390,11 +407,13 @@ async function syncItem(
       date: (t.date as string) ?? null,
       memo: (prev?.memo as string) ?? null,
       category_id:
-        (prev?.category_id as string) ??
-        matchRule(t) ??
-        categoryMap.get(pfc?.detailed ?? "") ??
-        categoryMap.get(pfc?.primary ?? "") ??
-        null,
+        txType === "transfer"
+          ? null
+          : ((prev?.category_id as string) ??
+            matchRule(t) ??
+            categoryMap.get(pfc?.detailed ?? "") ??
+            categoryMap.get(pfc?.primary ?? "") ??
+            null),
       plaid_transaction_id: t.transaction_id as string,
       pending_plaid_transaction_id:
         (t.pending_transaction_id as string) ?? null,
