@@ -28,4 +28,7 @@ export const queryKeys = {
   taskCategories: {
     all: ["task-categories"],
   },
+  plaidItems: {
+    all: ["plaid-items"],
+  },
 };

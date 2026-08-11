@@ -26,8 +26,15 @@ const AccountCard = ({ account, onEdit, onDelete, onClick }) => {
       </div>
 
       <div className="flex-1 min-w-0">
-        <div className="text-[14px] font-medium text-text truncate">
-          {account.name}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div className="text-[14px] font-medium text-text truncate">
+            {account.name}
+          </div>
+          {account.plaid_item_id && (
+            <span className="text-[10px] text-mint bg-mint/10 px-1.5 py-0.5 rounded font-medium shrink-0">
+              연동
+            </span>
+          )}
         </div>
         {account.institution && (
           <div className="text-[12px] text-sub truncate">

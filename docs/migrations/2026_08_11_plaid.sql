@@ -101,7 +101,31 @@ create policy "plaid_category_map_update_own" on public.plaid_category_map
 create policy "plaid_category_map_delete_own" on public.plaid_category_map
   for delete using (auth.uid() = user_id);
 
--- 6) 트리거 함수 보안 하드닝 ---------------------------------
+-- 6) Plaid 설정 (Vault) --------------------------------------
+-- 시크릿 값 자체는 Vault에 별도 저장 (마이그레이션 이력에 남기지 않음):
+--   select vault.create_secret('<client_id>', 'PLAID_CLIENT_ID');
+--   select vault.create_secret('<secret>', 'PLAID_SECRET');
+--   select vault.create_secret('production', 'PLAID_ENV');
+
+-- pg_net: 서버측 HTTP 호출 (향후 스케줄 동기화용)
+create extension if not exists pg_net with schema extensions;
+
+-- Vault의 Plaid 설정을 service role만 읽을 수 있게 하는 래퍼
+create or replace function public.get_plaid_config()
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$
+  select jsonb_object_agg(name, decrypted_secret)
+  from vault.decrypted_secrets
+  where name in ('PLAID_CLIENT_ID', 'PLAID_SECRET', 'PLAID_ENV');
+$$;
+
+revoke execute on function public.get_plaid_config() from anon, authenticated, public;
+grant execute on function public.get_plaid_config() to service_role;
+
+-- 7) 트리거 함수 보안 하드닝 ---------------------------------
 alter function public.update_updated_at() set search_path = '';
 alter function public.handle_new_user() set search_path = '';
 
