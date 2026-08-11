@@ -249,12 +249,35 @@ Plaid `personal_finance_category`(detailed) → 사용자 `categories` 매핑.
 
 ---
 
+### 11. `category_rules` — 카테고리 자동분류 키워드 규칙
+
+거래 설명/가맹점명에 키워드가 포함되면 지정 카테고리로 자동 분류.
+Plaid 동기화(Edge Function)가 `sort_order` 순으로 첫 매칭을 적용한다.
+
+| 컬럼 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `id` | uuid **PK** | gen_random_uuid() | — |
+| `user_id` | uuid | — | `auth.users(id)` FK (on delete cascade) |
+| `keyword` | text | — | 부분일치 키워드 (대소문자 무시) |
+| `category_id` | uuid | — | `categories(id)` FK (on delete cascade) |
+| `is_active` | boolean | true | 활성 여부 |
+| `sort_order` | int | 0 | 우선순위 (낮을수록 먼저 적용) |
+| `created_at` | timestamptz | now() | 생성일 |
+| `updated_at` | timestamptz | now() | 수정일 (자동) |
+
+**RLS**: 본인만 CRUD  
+**유니크 인덱스**: `(user_id, lower(keyword))`  
+**인덱스**: `user_id`
+
+---
+
 ## Plaid 데이터 변환 규칙
 
 - **금액**: Plaid는 주 통화 단위 float(`12.34`) → minor unit bigint(`1234`)로 `Math.round(amount * 100)` 변환 (통화의 `decimal_places` 기준)
 - **부호**: Plaid는 출금이 양수 → `expense`, 입금(음수) → `income` (amount는 절대값 저장)
 - **잔액**: Plaid 연결 계좌는 동기화 시 Plaid의 실제 잔액으로 덮어씀 (클라이언트 증감 금지)
 - **pending**: posted 전환 시 `pending_plaid_transaction_id`로 기존 pending 행을 찾아 교체
+- **카테고리 우선순위**: 사용자 직접 수정(기존 행 보존) > `category_rules` 키워드 규칙 > `plaid_category_map` detailed > primary > 미분류
 
 ---
 

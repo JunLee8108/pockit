@@ -10,6 +10,7 @@ import {
   Tag,
   CalendarRange,
   ListTodo,
+  Wand2,
   Sun,
   Moon,
   Monitor,
@@ -195,6 +196,14 @@ const BottomNav = () => {
           >
             <Tag size={18} className="text-sub shrink-0" />
             <span className="pointer-events-none">카테고리 관리</span>
+          </button>
+
+          <button
+            {...makeSheetHandler(() => handleNavigate("/category-rules"))}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-lg text-sm text-text bg-transparent border-none cursor-pointer active:bg-light transition-colors w-full text-left select-none"
+          >
+            <Wand2 size={18} className="text-sub shrink-0" />
+            <span className="pointer-events-none">분류 규칙</span>
           </button>
 
           <button

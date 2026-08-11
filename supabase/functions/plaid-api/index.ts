@@ -321,6 +321,23 @@ async function syncItem(
     (catMaps ?? []).map((m) => [m.plaid_category, m.category_id]),
   );
 
+  // 키워드 규칙 (가맹점명/설명 부분일치, sort_order 순으로 첫 매칭 적용)
+  const { data: rules } = await admin
+    .from("category_rules")
+    .select("keyword, category_id")
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("created_at");
+  const matchRule = (t: Record<string, unknown>): string | null => {
+    const haystack = `${(t.merchant_name as string) ?? ""} ${(t.name as string) ?? ""}`
+      .toLowerCase();
+    for (const r of rules ?? []) {
+      if (haystack.includes(r.keyword.toLowerCase())) return r.category_id;
+    }
+    return null;
+  };
+
   const upserts = [...added, ...modified];
 
   // 기존 행의 사용자 수정(카테고리/메모)을 보존하기 위해 미리 조회
@@ -374,6 +391,7 @@ async function syncItem(
       memo: (prev?.memo as string) ?? null,
       category_id:
         (prev?.category_id as string) ??
+        matchRule(t) ??
         categoryMap.get(pfc?.detailed ?? "") ??
         categoryMap.get(pfc?.primary ?? "") ??
         null,

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
+import { UNCATEGORIZED } from "../../hooks/useTransactions";
 
 const TYPE_OPTIONS = [
   { value: "all", label: "전체" },
@@ -14,6 +15,7 @@ const TransactionFilter = ({
   categories = [],
   categoryIds = [],
   onCategoryToggle,
+  uncategorizedCount = 0,
 }) => {
   const { year, month, type, search } = filters;
 
@@ -32,7 +34,9 @@ const TransactionFilter = ({
   };
 
   const showCategories =
-    type !== "transfer" && categories.length > 0 && onCategoryToggle;
+    type !== "transfer" &&
+    (categories.length > 0 || uncategorizedCount > 0) &&
+    onCategoryToggle;
 
   return (
     <div className="flex flex-col gap-3">
@@ -87,6 +91,18 @@ const TransactionFilter = ({
           >
             전체
           </button>
+          {uncategorizedCount > 0 && (
+            <button
+              onClick={() => onCategoryToggle(UNCATEGORIZED)}
+              className={`px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors whitespace-nowrap shrink-0 ${
+                categoryIds.includes(UNCATEGORIZED)
+                  ? "bg-amber text-white"
+                  : "bg-light text-sub"
+              }`}
+            >
+              미분류 {uncategorizedCount}
+            </button>
+          )}
           {categories.map((cat) => {
             const selected = categoryIds.includes(cat.id);
             return (
