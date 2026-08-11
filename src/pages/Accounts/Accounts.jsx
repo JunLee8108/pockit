@@ -12,6 +12,7 @@ import AccountForm from "./AccountForm";
 import AccountsSkeleton from "./AccountSkeleton";
 import SwipeableCard from "./SwipeableCard";
 import AccountTransactions from "./AccountTransactions";
+import PlaidConnections from "./PlaidConnections";
 
 const Accounts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -202,6 +203,8 @@ const Accounts = () => {
                   </div>
                 </div>
               )}
+
+              <PlaidConnections />
 
               {accounts.length > 0 && (
                 <div className="dash-card bg-surface shadow-sm rounded-2xl p-6">

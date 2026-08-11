@@ -155,6 +155,24 @@ export const useUpdateTransaction = () => {
         updates.to_account_id,
       );
 
+      // Plaid 거래 재분류 시 매핑 학습 → 다음 동기화부터 자동 분류
+      if (
+        prevTx.source === "plaid" &&
+        prevTx.plaid_category &&
+        updates.category_id &&
+        updates.category_id !== prevTx.category_id
+      ) {
+        const user = await getAuthUser();
+        await supabase.from("plaid_category_map").upsert(
+          {
+            user_id: user.id,
+            plaid_category: prevTx.plaid_category,
+            category_id: updates.category_id,
+          },
+          { onConflict: "user_id,plaid_category" },
+        );
+      }
+
       return tx;
     },
     onSuccess: () => {
@@ -192,7 +210,7 @@ async function adjustBalance(accountId, delta) {
 
   const { data, error: selectErr } = await supabase
     .from("accounts")
-    .select("balance")
+    .select("balance, plaid_item_id")
     .eq("id", accountId)
     .single();
 
@@ -200,6 +218,9 @@ async function adjustBalance(accountId, delta) {
     console.error("adjustBalance select failed:", selectErr);
     return;
   }
+
+  // Plaid 연결 계좌는 동기화가 실제 잔액을 관리하므로 수동 증감 금지
+  if (data.plaid_item_id) return;
 
   const { error: updateErr } = await supabase
     .from("accounts")
