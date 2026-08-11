@@ -47,6 +47,12 @@ export const NAV_SECTIONS = [
         icon: "Tag",
       },
       {
+        id: "category-rules",
+        label: "분류 규칙",
+        path: "/category-rules",
+        icon: "Wand2",
+      },
+      {
         id: "annual-report",
         label: "연간 리포트",
         path: "/annual-report",

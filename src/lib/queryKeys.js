@@ -27,4 +27,10 @@ export const queryKeys = {
   plaidItems: {
     all: ["plaid-items"],
   },
+  categoryRules: {
+    all: ["category-rules"],
+  },
+  plaidCategoryMap: {
+    all: ["plaid-category-map"],
+  },
 };

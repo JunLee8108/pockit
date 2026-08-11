@@ -32,6 +32,7 @@ const Transactions = lazyLoad(() => import("./pages/Transactions/Transactions"))
 const Statistics = lazyLoad(() => import("./pages/Statistics/Statistics"));
 const Budget = lazyLoad(() => import("./pages/Budget/Budget"));
 const Categories = lazyLoad(() => import("./pages/Categories/Categories"));
+const CategoryRules = lazyLoad(() => import("./pages/CategoryRules/CategoryRules"));
 const AnnualReport = lazyLoad(() => import("./pages/AnnualReport/AnnualReport"));
 const SearchPage = lazyLoad(() => import("./pages/Search/Search"));
 const Tasks = lazyLoad(() => import("./pages/Tasks/Tasks"));
@@ -122,6 +123,14 @@ const App = () => {
               element={
                 <Suspense fallback={<PageFallback />}>
                   <Categories />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/category-rules"
+              element={
+                <Suspense fallback={<PageFallback />}>
+                  <CategoryRules />
                 </Suspense>
               }
             />

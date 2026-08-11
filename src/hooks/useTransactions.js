@@ -8,6 +8,9 @@ import useToastStore from "../store/useToastStore";
 const TX_SELECT =
   "*, category:categories(*), account:accounts!account_id(*), to_account:accounts!to_account_id(*)";
 
+// 카테고리 필터에서 "미분류"를 나타내는 특수 값
+export const UNCATEGORIZED = "__uncategorized__";
+
 // ── 월 단위 데이터 fetch (서버) ──
 
 const useMonthTransactions = (year, month) => {
@@ -57,7 +60,13 @@ export const useTransactions = (filters = {}) => {
 
     if (categoryIds && categoryIds.length > 0) {
       const set = new Set(categoryIds);
-      result = result.filter((tx) => set.has(tx.category_id));
+      result = result.filter(
+        (tx) =>
+          set.has(tx.category_id) ||
+          (set.has(UNCATEGORIZED) &&
+            !tx.category_id &&
+            tx.type !== "transfer"),
+      );
     }
 
     if (search && search.trim()) {
@@ -180,6 +189,60 @@ export const useUpdateTransaction = () => {
       toast().success("거래가 수정되었습니다");
     },
     onError: () => toast().error("거래 수정에 실패했습니다"),
+  });
+};
+
+// 일괄 카테고리 지정 — 금액/잔액에 영향이 없으므로 단일 update로 처리.
+// Plaid 거래가 포함되면 plaid_category_map에 학습해 다음 동기화부터 자동 분류.
+export const useBulkUpdateCategory = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ txs, categoryId }) => {
+      const ids = txs.map((t) => t.id);
+      const { data, error } = await supabase
+        .from("transactions")
+        .update({ category_id: categoryId })
+        .in("id", ids)
+        .select("id");
+      if (error) throw error;
+
+      let learned = 0;
+      if (categoryId) {
+        const plaidCategories = [
+          ...new Set(
+            txs
+              .filter((t) => t.source === "plaid" && t.plaid_category)
+              .map((t) => t.plaid_category),
+          ),
+        ];
+        if (plaidCategories.length > 0) {
+          const user = await getAuthUser();
+          const { error: mapErr } = await supabase
+            .from("plaid_category_map")
+            .upsert(
+              plaidCategories.map((pc) => ({
+                user_id: user.id,
+                plaid_category: pc,
+                category_id: categoryId,
+              })),
+              { onConflict: "user_id,plaid_category" },
+            );
+          if (!mapErr) learned = plaidCategories.length;
+        }
+      }
+
+      return { updated: data?.length ?? 0, learned };
+    },
+    onSuccess: ({ updated, learned }) => {
+      invalidateAll(qc);
+      qc.invalidateQueries({ queryKey: queryKeys.plaidCategoryMap.all });
+      toast().success(
+        learned > 0
+          ? `${updated}건 변경 · ${learned}개 유형을 학습했습니다`
+          : `${updated}건의 카테고리를 변경했습니다`,
+      );
+    },
+    onError: () => toast().error("일괄 변경에 실패했습니다"),
   });
 };
 

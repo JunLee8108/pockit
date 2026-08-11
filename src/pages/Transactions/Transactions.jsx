@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router";
-import { Plus } from "lucide-react";
+import { Plus, ListChecks } from "lucide-react";
 import {
   useTransactions,
   useDeleteTransaction,
+  useBulkUpdateCategory,
+  UNCATEGORIZED,
 } from "../../hooks/useTransactions";
 import { useCategories } from "../../hooks/useCategories";
 import { useCurrencies } from "../../hooks/useCurrencies";
@@ -15,6 +17,7 @@ import TransactionList from "./TransactionList";
 import TransactionForm from "./TransactionForm";
 import TransactionFilter from "./TransactionFilter";
 import TransactionSkeleton from "./TransactionSkeleton";
+import BulkCategoryBar from "./BulkCategoryBar";
 
 const now = new Date();
 
@@ -79,8 +82,56 @@ const Transactions = () => {
   const { data: currencies = [] } = useCurrencies();
   const { data: categories = [] } = useCategories();
   const deleteTx = useDeleteTransaction();
+  const bulkUpdate = useBulkUpdateCategory();
 
   const { txFormOpen, txEditTarget, openTxForm, closeTxForm } = useUIStore();
+
+  // ── 선택 모드 (일괄 카테고리 지정) ──
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+
+  const exitSelectMode = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleToggleSelect = useCallback((id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  // 이체는 카테고리가 없으므로 선택 대상에서 제외
+  const selectableTxs = useMemo(
+    () => transactions.filter((tx) => tx.type !== "transfer"),
+    [transactions],
+  );
+
+  const allSelected =
+    selectableTxs.length > 0 && selectedIds.size === selectableTxs.length;
+
+  const handleSelectAll = useCallback(() => {
+    setSelectedIds((prev) =>
+      prev.size === selectableTxs.length
+        ? new Set()
+        : new Set(selectableTxs.map((tx) => tx.id)),
+    );
+  }, [selectableTxs]);
+
+  const handleBulkApply = useCallback(
+    (categoryId) => {
+      const txs = selectableTxs.filter((tx) => selectedIds.has(tx.id));
+      if (txs.length === 0) return;
+      bulkUpdate.mutate(
+        { txs, categoryId },
+        { onSuccess: exitSelectMode },
+      );
+    },
+    [selectableTxs, selectedIds, bulkUpdate, exitSelectMode],
+  );
 
   // 하이라이트 — 데이터 로드 완료 후 펄스
   const highlightedRef = useRef(false);
@@ -122,6 +173,17 @@ const Transactions = () => {
 
     return categories.filter((c) => usedIds.has(c.id));
   }, [categories, rawData, filters.type]);
+
+  // 미분류 거래 수 (이체 제외, 타입 필터 반영)
+  const uncategorizedCount = useMemo(() => {
+    if (filters.type === "transfer") return 0;
+    return rawData.filter(
+      (tx) =>
+        !tx.category_id &&
+        tx.type !== "transfer" &&
+        (filters.type === "all" || tx.type === filters.type),
+    ).length;
+  }, [rawData, filters.type]);
 
   const getCurrencyByCode = useCallback(
     (code) => currencies.find((c) => c.code === code) ?? null,
@@ -199,13 +261,30 @@ const Transactions = () => {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-text">거래내역</h2>
-        <button
-          onClick={() => openTxForm()}
-          className="flex items-center gap-1.5 px-4 py-2 bg-mint text-white rounded-lg text-sm font-medium cursor-pointer border-none hover:bg-mint-hover transition-colors"
-        >
-          <Plus size={16} />
-          거래 추가
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              selectMode ? exitSelectMode() : setSelectMode(true)
+            }
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer border-none transition-colors ${
+              selectMode
+                ? "bg-text text-surface"
+                : "bg-light text-sub hover:text-text"
+            }`}
+          >
+            <ListChecks size={16} />
+            {selectMode ? "선택 취소" : "선택"}
+          </button>
+          {!selectMode && (
+            <button
+              onClick={() => openTxForm()}
+              className="flex items-center gap-1.5 px-4 py-2 bg-mint text-white rounded-lg text-sm font-medium cursor-pointer border-none hover:bg-mint-hover transition-colors"
+            >
+              <Plus size={16} />
+              거래 추가
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -298,7 +377,8 @@ const Transactions = () => {
               </div>
             )}
 
-            {filters.type !== "transfer" && filteredCategories.length > 0 && (
+            {filters.type !== "transfer" &&
+              (filteredCategories.length > 0 || uncategorizedCount > 0) && (
               <div className="hidden lg:block dash-card bg-surface shadow-sm rounded-2xl p-6">
                 <h3 className="text-[13px] text-sub font-medium mb-3">
                   카테고리 필터
@@ -314,6 +394,18 @@ const Transactions = () => {
                   >
                     전체
                   </button>
+                  {uncategorizedCount > 0 && (
+                    <button
+                      onClick={() => handleCategoryToggle(UNCATEGORIZED)}
+                      className={`px-3 py-1.5 rounded-full text-[12px] font-medium cursor-pointer border-none transition-colors ${
+                        filters.categoryIds.includes(UNCATEGORIZED)
+                          ? "bg-amber text-white"
+                          : "bg-light text-sub"
+                      }`}
+                    >
+                      미분류 {uncategorizedCount}
+                    </button>
+                  )}
                   {filteredCategories.map((cat) => {
                     const selected = filters.categoryIds.includes(cat.id);
                     return (
@@ -355,15 +447,31 @@ const Transactions = () => {
             categories={filteredCategories}
             categoryIds={filters.categoryIds}
             onCategoryToggle={handleCategoryToggle}
+            uncategorizedCount={uncategorizedCount}
           />
           <TransactionList
             transactions={transactions}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onDuplicate={handleDuplicate}
+            selectMode={selectMode}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
           />
         </div>
       </div>
+
+      {selectMode && (
+        <BulkCategoryBar
+          count={selectedIds.size}
+          allSelected={allSelected}
+          onSelectAll={handleSelectAll}
+          onApply={handleBulkApply}
+          onClose={exitSelectMode}
+          categories={categories}
+          applying={bulkUpdate.isPending}
+        />
+      )}
 
       <TransactionForm
         open={txFormOpen}

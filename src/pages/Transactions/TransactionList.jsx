@@ -12,7 +12,15 @@ const formatDateLabel = (dateStr) => {
   return `${month}월 ${date}일 (${day})`;
 };
 
-const TransactionList = ({ transactions, onEdit, onDelete, onDuplicate }) => {
+const TransactionList = ({
+  transactions,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  selectMode = false,
+  selectedIds,
+  onToggleSelect,
+}) => {
   const [openCardId, setOpenCardId] = useState(null);
 
   // 날짜별 그룹핑
@@ -41,44 +49,57 @@ const TransactionList = ({ transactions, onEdit, onDelete, onDuplicate }) => {
             {formatDateLabel(date)}
           </h4>
           <div className="flex flex-col gap-2">
-            {grouped[date].map((tx) => (
-              <SwipeableCard
-                key={tx.id}
-                cardId={tx.id}
-                openCardId={openCardId}
-                onOpenChange={setOpenCardId}
-                actions={[
-                  {
-                    key: "duplicate",
-                    label: "복제",
-                    icon: <Copy size={18} />,
-                    className: "bg-sub",
-                    onClick: () => onDuplicate(tx),
-                  },
-                  {
-                    key: "edit",
-                    label: "수정",
-                    icon: <Pencil size={18} />,
-                    className: "bg-mint",
-                    onClick: () => onEdit(tx),
-                  },
-                  {
-                    key: "delete",
-                    label: "삭제",
-                    icon: <Trash2 size={18} />,
-                    className: "bg-coral",
-                    onClick: () => onDelete(tx),
-                  },
-                ]}
-              >
+            {grouped[date].map((tx) =>
+              selectMode ? (
                 <TransactionCard
+                  key={tx.id}
                   tx={tx}
                   onEdit={onEdit}
                   onDelete={onDelete}
                   onDuplicate={onDuplicate}
+                  selectMode
+                  selected={selectedIds?.has(tx.id)}
+                  onToggleSelect={onToggleSelect}
                 />
-              </SwipeableCard>
-            ))}
+              ) : (
+                <SwipeableCard
+                  key={tx.id}
+                  cardId={tx.id}
+                  openCardId={openCardId}
+                  onOpenChange={setOpenCardId}
+                  actions={[
+                    {
+                      key: "duplicate",
+                      label: "복제",
+                      icon: <Copy size={18} />,
+                      className: "bg-sub",
+                      onClick: () => onDuplicate(tx),
+                    },
+                    {
+                      key: "edit",
+                      label: "수정",
+                      icon: <Pencil size={18} />,
+                      className: "bg-mint",
+                      onClick: () => onEdit(tx),
+                    },
+                    {
+                      key: "delete",
+                      label: "삭제",
+                      icon: <Trash2 size={18} />,
+                      className: "bg-coral",
+                      onClick: () => onDelete(tx),
+                    },
+                  ]}
+                >
+                  <TransactionCard
+                    tx={tx}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onDuplicate={onDuplicate}
+                  />
+                </SwipeableCard>
+              ),
+            )}
           </div>
         </div>
       ))}

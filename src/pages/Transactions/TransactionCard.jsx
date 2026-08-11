@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Copy, ArrowRightLeft } from "lucide-react";
+import { Pencil, Trash2, Copy, ArrowRightLeft, Check } from "lucide-react";
 import { formatMoney } from "../../utils/format";
 import CategoryIcon from "../../components/CategoryIcon";
 import { useCurrencyByCode } from "../../hooks/useCurrencies";
@@ -9,12 +9,41 @@ const TYPE_STYLES = {
   transfer: { sign: "", color: "text-sub" },
 };
 
-const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
+const TransactionCard = ({
+  tx,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  selectMode = false,
+  selected = false,
+  onToggleSelect,
+}) => {
   const currency = useCurrencyByCode(tx.currency);
   const style = TYPE_STYLES[tx.type];
+  // 이체는 카테고리 개념이 없어 선택 대상에서 제외
+  const selectable = selectMode && tx.type !== "transfer";
 
   return (
-    <div id={`tx-${tx.id}`} className="dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group">
+    <div
+      id={`tx-${tx.id}`}
+      onClick={selectable ? () => onToggleSelect(tx.id) : undefined}
+      className={`dash-card bg-surface shadow-sm rounded-xl p-4 flex items-center gap-3 group transition-shadow ${
+        selectable ? "cursor-pointer" : ""
+      } ${selected ? "ring-2 ring-mint" : ""} ${
+        selectMode && !selectable ? "opacity-40" : ""
+      }`}
+    >
+      {selectMode && (
+        <span
+          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
+            selected
+              ? "bg-mint border-mint"
+              : "bg-transparent border-border"
+          } ${selectable ? "" : "invisible"}`}
+        >
+          {selected && <Check size={13} className="text-white" />}
+        </span>
+      )}
       <div
         className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
         style={{
@@ -54,7 +83,11 @@ const TransactionCard = ({ tx, onEdit, onDelete, onDuplicate }) => {
         {formatMoney(tx.amount, currency)}
       </div>
 
-      <div className="hidden sm:flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
+      <div
+        className={`gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0 ${
+          selectMode ? "hidden" : "hidden sm:flex"
+        }`}
+      >
         <button
           onClick={() => onDuplicate(tx)}
           className="p-1.5 rounded-md text-sub hover:bg-light cursor-pointer bg-transparent border-none"
