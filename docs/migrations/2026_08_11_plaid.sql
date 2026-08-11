@@ -125,7 +125,59 @@ $$;
 revoke execute on function public.get_plaid_config() from anon, authenticated, public;
 grant execute on function public.get_plaid_config() to service_role;
 
--- 7) 트리거 함수 보안 하드닝 ---------------------------------
+-- 7) 웹훅 + 정기 동기화 (Phase 3) ----------------------------
+-- Plaid 웹훅은 Edge Function(plaid-api)이 plaid-verification JWT로 자체 검증.
+-- pg_cron이 12시간마다 Edge Function을 호출해 웹훅 유실을 보완한다.
+-- 크론 시크릿도 Vault에 저장: select vault.create_secret('<random>', 'PLAID_CRON_SECRET');
+
+-- get_plaid_config에 PLAID_CRON_SECRET 포함
+create or replace function public.get_plaid_config()
+returns jsonb
+language sql
+security definer
+set search_path = ''
+as $$
+  select jsonb_object_agg(name, decrypted_secret)
+  from vault.decrypted_secrets
+  where name in ('PLAID_CLIENT_ID', 'PLAID_SECRET', 'PLAID_ENV', 'PLAID_CRON_SECRET');
+$$;
+
+create extension if not exists pg_cron;
+
+create or replace function public.trigger_plaid_sync()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  secret text;
+begin
+  select decrypted_secret into secret
+  from vault.decrypted_secrets
+  where name = 'PLAID_CRON_SECRET';
+
+  if secret is null then
+    return;
+  end if;
+
+  perform net.http_post(
+    url := 'https://igrnkultrokskrglpwxb.supabase.co/functions/v1/plaid-api',
+    body := '{"source":"cron"}'::jsonb,
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-cron-secret', secret
+    ),
+    timeout_milliseconds := 120000
+  );
+end;
+$$;
+
+revoke execute on function public.trigger_plaid_sync() from anon, authenticated, public;
+
+select cron.schedule('plaid-sync-12h', '0 */12 * * *', 'select public.trigger_plaid_sync()');
+
+-- 8) 트리거 함수 보안 하드닝 ---------------------------------
 alter function public.update_updated_at() set search_path = '';
 alter function public.handle_new_user() set search_path = '';
 
