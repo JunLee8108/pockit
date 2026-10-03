@@ -191,11 +191,22 @@ $$ language plpgsql;
 | `category_id` | uuid | — | `task_categories(id)` FK (on delete set null) |
 | `completed_at` | timestamptz | — | 완료 시각 |
 | `sort_order` | int | 0 | 정렬 순서 |
+| `recurrence_rule` | text | — | 반복 규칙 (RFC 5545 RRULE, DTSTART 제외). 있으면 반복 원본 행 |
+| `recurrence_exdates` | date[] | '{}' | 반복 원본: 삭제된 회차 날짜 |
+| `recurring_task_id` | uuid | — | 예외 행: 원본 `tasks(id)` FK (on delete cascade) |
+| `original_date` | date | — | 예외 행: 대체하는 원래 회차 날짜 |
 | `created_at` | timestamptz | now() | 생성일 |
 | `updated_at` | timestamptz | now() | 수정일 (자동) |
 
 **RLS**: 본인만 CRUD
-**인덱스**: `user_id`, `due_date`, `status`, `category_id`
+**인덱스**: `user_id`, `due_date`, `status`, `category_id`, `recurring_task_id`
+**유니크 인덱스**: `(recurring_task_id, original_date)` — 회차당 예외 행 1건
+
+**반복 할일 (구글 캘린더 방식)**
+- 원본 행은 화면에 표시하지 않고, `due_date`(시작일) + `recurrence_rule`로 회차를 클라이언트에서 계산 (`src/utils/recurrence.js`)
+- 완료/수정/이동된 회차만 예외 행으로 저장, 삭제된 회차는 `recurrence_exdates`
+- 수정/삭제 범위: 이 할일(예외 행) / 이 할일 및 이후 할일(시리즈 분할, 기존 규칙에 UNTIL) / 모든 할일(원본)
+- 목록: 시리즈별 1건 — 놓친 회차가 있으면 가장 최근 것, 없으면 다음 회차
 
 ---
 

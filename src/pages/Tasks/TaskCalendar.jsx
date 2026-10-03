@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
-import { useUpdateTask } from "../../hooks/useTasks";
+import { ChevronLeft, ChevronRight, X, Repeat } from "lucide-react";
+import { useSaveTask } from "../../hooks/useTasks";
+import { groupByDate } from "../../utils/recurrence";
 import { getReadableTextColor } from "../../utils/colorContrast";
 import BottomSheet from "../../components/BottomSheet";
 import TaskItem from "./TaskItem";
@@ -50,6 +51,9 @@ const TaskBar = ({ task, onClick, onDragStart, onDragEnd }) => {
       }}
       title={task.title}
     >
+      {task.recurring_task_id && (
+        <Repeat size={9} className="inline -mt-px mr-0.5 opacity-80" />
+      )}
       {task.due_time && (
         <span className="opacity-80 mr-1">{task.due_time.slice(0, 5)}</span>
       )}
@@ -65,17 +69,7 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
   const [dragOverDate, setDragOverDate] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
   const [sheetDate, setSheetDate] = useState(null);
-  const updateTask = useUpdateTask();
-
-  const tasksByDate = useMemo(() => {
-    const map = new Map();
-    for (const t of tasks) {
-      if (!t.due_date) continue;
-      if (!map.has(t.due_date)) map.set(t.due_date, []);
-      map.get(t.due_date).push(t);
-    }
-    return map;
-  }, [tasks]);
+  const saveTask = useSaveTask();
 
   // 6주(42칸) 그리드 — 이전/다음 달 날짜 포함
   const cells = useMemo(() => {
@@ -100,6 +94,12 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
       };
     });
   }, [year, month]);
+
+  // 그리드 범위 내 반복 회차 포함
+  const tasksByDate = useMemo(
+    () => groupByDate(tasks, cells[0].date, cells[cells.length - 1].date),
+    [tasks, cells],
+  );
 
   const today = todayStr();
 
@@ -151,15 +151,17 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
       setDragOverDate(null);
       setDraggingId(null);
       if (!taskId) return;
-      const task = tasks.find((t) => t.id === taskId);
+      const task = [...tasksByDate.values()].flat().find((t) => t.id === taskId);
       if (!task) return;
       if (task.due_date === targetDate) return;
-      updateTask.mutate({
-        id: taskId,
+      // 반복 회차는 해당 회차만 이동 (예외 행)
+      saveTask.mutate({
+        task,
         updates: { due_date: targetDate },
+        scope: "this",
       });
     },
-    [tasks, updateTask],
+    [tasksByDate, saveTask],
   );
 
   const handleCellClick = (cell) => {

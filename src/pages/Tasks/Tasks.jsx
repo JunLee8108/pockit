@@ -16,6 +16,7 @@ import TaskCalendar from "./TaskCalendar";
 import WeekCalendar from "./WeekCalendar";
 import QuickAdd from "./QuickAdd";
 import useViewport from "../../hooks/useViewport";
+import { SCOPE_CHOICES } from "../../utils/recurrence";
 
 const TABS = [
   { value: "today", label: "오늘" },
@@ -56,13 +57,18 @@ const Tasks = () => {
 
   // 목록 뷰: scope 기반 필터
   const listFilter = useMemo(() => ({ scope }), [scope]);
-  const { data: filteredTasks = [], isLoading, rawData } = useTasks(listFilter);
+  const {
+    data: filteredTasks = [],
+    isLoading,
+    rawData,
+    items,
+  } = useTasks(listFilter);
 
   // 카운트
   const counts = useMemo(() => {
     const today = todayStr();
     const counts = { today: 0, upcoming: 0, "no-date": 0, done: 0, overdue: 0 };
-    rawData.forEach((t) => {
+    items.forEach((t) => {
       if (t.status === "done") counts.done += 1;
       else if (!t.due_date) counts["no-date"] += 1;
       else if (t.due_date < today) {
@@ -72,7 +78,7 @@ const Tasks = () => {
       else counts.upcoming += 1;
     });
     return counts;
-  }, [rawData]);
+  }, [items]);
 
   const handleAdd = (date = null, title = "") => {
     setEditTarget(null);
@@ -90,13 +96,23 @@ const Tasks = () => {
 
   const handleDelete = useCallback(
     async (task) => {
+      if (task.series) {
+        const scope = await confirm({
+          title: "반복 할일 삭제",
+          choices: SCOPE_CHOICES,
+          confirmText: "삭제",
+          variant: "danger",
+        });
+        if (scope) deleteTask.mutate({ task, scope });
+        return;
+      }
       const ok = await confirm({
         title: "할일 삭제",
         message: `"${task.title}" 할일을 삭제하시겠습니까?`,
         confirmText: "삭제",
         variant: "danger",
       });
-      if (ok) deleteTask.mutate(task.id);
+      if (ok) deleteTask.mutate({ task });
     },
     [deleteTask, confirm],
   );

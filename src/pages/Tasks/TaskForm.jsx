@@ -1,8 +1,21 @@
 import { useState } from "react";
 import { X } from "lucide-react";
-import { useAddTask, useUpdateTask } from "../../hooks/useTasks";
+import { useAddTask, useSaveTask } from "../../hooks/useTasks";
 import { useTaskCategories } from "../../hooks/useTaskCategories";
+import useConfirm from "../../hooks/useConfirm";
 import CategoryIcon from "../../components/CategoryIcon";
+import RecurrencePicker from "./RecurrencePicker";
+import {
+  SCOPE_CHOICES,
+  addDays,
+  diffDays,
+  buildRule,
+  buildPresetRule,
+  detectPreset,
+  parseRule,
+  customFromPreset,
+  sameRule,
+} from "../../utils/recurrence";
 
 const inputCls =
   "w-full px-4 py-2.5 bg-bg border border-border rounded-lg text-sm text-text outline-none transition-colors duration-150 focus:border-mint";
@@ -20,10 +33,14 @@ const TaskFormInner = ({
   defaultTitle = "",
 }) => {
   const addTask = useAddTask();
-  const updateTask = useUpdateTask();
+  const saveTask = useSaveTask();
   const { data: categories = [] } = useTaskCategories();
+  const confirm = useConfirm();
 
   const isEdit = !!editTask;
+  // 반복 회차 수정 시 원본 시리즈
+  const series = editTask?.series || null;
+  const origRule = series?.recurrence_rule || editTask?.recurrence_rule || null;
 
   const [title, setTitle] = useState(editTask?.title || defaultTitle || "");
   const [description, setDescription] = useState(editTask?.description || "");
@@ -35,7 +52,19 @@ const TaskFormInner = ({
   const [categoryId, setCategoryId] = useState(editTask?.category_id || "");
   const [error, setError] = useState("");
 
-  const submitting = addTask.isPending || updateTask.isPending;
+  // 반복 프리셋 기준일: 반복 회차는 원래 회차 날짜, 그 외에는 입력한 기한일
+  const anchor = editTask?.original_date || dueDate;
+  const [preset, setPreset] = useState(() =>
+    detectPreset(origRule, editTask?.original_date || editTask?.due_date || defaultDate),
+  );
+  const [custom, setCustom] = useState(() =>
+    origRule ? parseRule(origRule) : customFromPreset("weekly", anchor),
+  );
+
+  const ruleFor = (date) =>
+    preset === "custom" ? buildRule(custom, date) : buildPresetRule(preset, date);
+
+  const submitting = addTask.isPending || saveTask.isPending;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,6 +72,21 @@ const TaskFormInner = ({
 
     if (!title.trim()) {
       setError("할일 제목을 입력하세요");
+      return;
+    }
+
+    const repeating = preset !== "none";
+    if (repeating && !dueDate) {
+      setError("반복 할일은 기한일이 필요합니다");
+      return;
+    }
+    if (
+      repeating &&
+      preset === "custom" &&
+      custom.endType === "until" &&
+      (!custom.until || custom.until < dueDate)
+    ) {
+      setError("반복 종료일은 기한일 이후여야 합니다");
       return;
     }
 
@@ -56,10 +100,40 @@ const TaskFormInner = ({
     };
 
     try {
-      if (isEdit) {
-        await updateTask.mutateAsync({ id: editTask.id, updates: payload });
+      if (!isEdit) {
+        const rule = ruleFor(dueDate);
+        await addTask.mutateAsync(rule ? { ...payload, recurrence_rule: rule } : payload);
+      } else if (!series) {
+        const rule = ruleFor(dueDate);
+        await saveTask.mutateAsync({
+          task: editTask,
+          updates: rule || origRule ? { ...payload, recurrence_rule: rule } : payload,
+        });
       } else {
-        await addTask.mutateAsync(payload);
+        // 반복 회차: 구글 캘린더처럼 수정 범위 선택
+        // 반복 규칙을 바꾸면 "이 할일"만 수정은 불가
+        const ruleChanged = !sameRule(ruleFor(anchor), origRule);
+        const scope = await confirm({
+          title: "반복 할일 수정",
+          choices: ruleChanged ? SCOPE_CHOICES.slice(1) : SCOPE_CHOICES,
+          confirmText: "저장",
+          variant: "info",
+        });
+        if (!scope) return;
+
+        let updates = payload;
+        if (scope !== "this") {
+          // 날짜를 옮긴 만큼 시리즈 기준일도 이동
+          const delta =
+            dueDate && editTask.due_date ? diffDays(dueDate, editTask.due_date) : 0;
+          const seriesDate = dueDate ? addDays(anchor, delta) : null;
+          updates = {
+            ...payload,
+            due_date: seriesDate,
+            recurrence_rule: ruleFor(seriesDate),
+          };
+        }
+        await saveTask.mutateAsync({ task: editTask, updates, scope });
       }
       onClose();
     } catch (err) {
@@ -111,6 +185,18 @@ const TaskFormInner = ({
               className={inputCls}
             />
           </div>
+        </div>
+
+        {/* Recurrence */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] text-sub font-medium">반복</label>
+          <RecurrencePicker
+            date={anchor}
+            preset={preset}
+            onPresetChange={setPreset}
+            custom={custom}
+            onCustomChange={setCustom}
+          />
         </div>
 
         {/* Priority */}
