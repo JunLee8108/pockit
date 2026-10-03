@@ -6,7 +6,7 @@ import useConfirm from "../../hooks/useConfirm";
 import CategoryIcon from "../../components/CategoryIcon";
 import RecurrencePicker from "./RecurrencePicker";
 import {
-  SCOPE_CHOICES,
+  scopeChoices,
   addDays,
   diffDays,
   buildRule,
@@ -16,9 +16,19 @@ import {
   customFromPreset,
   sameRule,
 } from "../../utils/recurrence";
+import {
+  DEFAULT_BLOCK_MINUTES,
+  toMinutes,
+  fromMinutes,
+} from "../../utils/planner";
 
 const inputCls =
   "w-full px-4 py-2.5 bg-bg border border-border rounded-lg text-sm text-text outline-none transition-colors duration-150 focus:border-mint";
+
+const KINDS = [
+  { value: "task", label: "할일" },
+  { value: "event", label: "일정" },
+];
 
 const PRIORITIES = [
   { value: "low", label: "낮음", color: "#94a3b8" },
@@ -31,6 +41,10 @@ const TaskFormInner = ({
   editTask = null,
   defaultDate = null,
   defaultTitle = "",
+  defaultKind = "task",
+  defaultTime = "",
+  defaultEndTime = "",
+  onDelete = null,
 }) => {
   const addTask = useAddTask();
   const saveTask = useSaveTask();
@@ -42,12 +56,18 @@ const TaskFormInner = ({
   const series = editTask?.series || null;
   const origRule = series?.recurrence_rule || editTask?.recurrence_rule || null;
 
+  const [kind, setKind] = useState(editTask?.kind || defaultKind);
   const [title, setTitle] = useState(editTask?.title || defaultTitle || "");
   const [description, setDescription] = useState(editTask?.description || "");
   const [dueDate, setDueDate] = useState(
     editTask?.due_date || defaultDate || "",
   );
-  const [dueTime, setDueTime] = useState(editTask?.due_time?.slice(0, 5) || "");
+  const [dueTime, setDueTime] = useState(
+    editTask?.due_time?.slice(0, 5) || defaultTime || "",
+  );
+  const [endTime, setEndTime] = useState(
+    editTask?.end_time?.slice(0, 5) || defaultEndTime || "",
+  );
   const [priority, setPriority] = useState(editTask?.priority || "normal");
   const [categoryId, setCategoryId] = useState(editTask?.category_id || "");
   const [error, setError] = useState("");
@@ -65,19 +85,43 @@ const TaskFormInner = ({
     preset === "custom" ? buildRule(custom, date) : buildPresetRule(preset, date);
 
   const submitting = addTask.isPending || saveTask.isPending;
+  const isEventKind = kind === "event";
+  const noun = isEventKind ? "일정" : "할일";
+
+  // 일정은 시작 시각을 넣으면 종료를 1시간 뒤로 맞춤 (구글 캘린더처럼)
+  const handleStartChange = (value) => {
+    setDueTime(value);
+    if (!value) {
+      setEndTime("");
+      return;
+    }
+    if (isEventKind && (!endTime || endTime <= value)) {
+      setEndTime(fromMinutes(toMinutes(value) + DEFAULT_BLOCK_MINUTES));
+    } else if (endTime && endTime <= value) {
+      setEndTime("");
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
     if (!title.trim()) {
-      setError("할일 제목을 입력하세요");
+      setError("제목을 입력하세요");
+      return;
+    }
+    if (isEventKind && !dueDate) {
+      setError("일정은 날짜가 필요합니다");
+      return;
+    }
+    if (dueTime && endTime && endTime <= dueTime) {
+      setError("종료 시각은 시작 시각 이후여야 합니다");
       return;
     }
 
     const repeating = preset !== "none";
     if (repeating && !dueDate) {
-      setError("반복 할일은 기한일이 필요합니다");
+      setError("반복하려면 날짜가 필요합니다");
       return;
     }
     if (
@@ -86,16 +130,19 @@ const TaskFormInner = ({
       custom.endType === "until" &&
       (!custom.until || custom.until < dueDate)
     ) {
-      setError("반복 종료일은 기한일 이후여야 합니다");
+      setError("반복 종료일은 시작 날짜 이후여야 합니다");
       return;
     }
 
+    const time = (dueDate && dueTime) || null;
     const payload = {
+      kind,
       title: title.trim(),
       description: description.trim() || null,
       due_date: dueDate || null,
-      due_time: dueTime || null,
-      priority,
+      due_time: time,
+      end_time: (time && endTime) || null,
+      priority: isEventKind ? "normal" : priority,
       category_id: categoryId || null,
     };
 
@@ -113,9 +160,10 @@ const TaskFormInner = ({
         // 반복 회차: 구글 캘린더처럼 수정 범위 선택
         // 반복 규칙을 바꾸면 "이 할일"만 수정은 불가
         const ruleChanged = !sameRule(ruleFor(anchor), origRule);
+        const choices = scopeChoices(kind);
         const scope = await confirm({
-          title: "반복 할일 수정",
-          choices: ruleChanged ? SCOPE_CHOICES.slice(1) : SCOPE_CHOICES,
+          title: `반복 ${noun} 수정`,
+          choices: ruleChanged ? choices.slice(1) : choices,
           confirmText: "저장",
           variant: "info",
         });
@@ -150,6 +198,24 @@ const TaskFormInner = ({
       )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {/* Kind */}
+        <div className="flex bg-light rounded-lg p-0.5">
+          {KINDS.map((k) => (
+            <button
+              key={k.value}
+              type="button"
+              onClick={() => setKind(k.value)}
+              className={`flex-1 py-2 rounded-md text-[13px] font-medium cursor-pointer border-none transition-colors ${
+                kind === k.value
+                  ? "bg-surface text-text shadow-sm"
+                  : "bg-transparent text-sub"
+              }`}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
+
         {/* Title */}
         <div className="flex flex-col gap-1.5">
           <label className="text-[13px] text-sub font-medium">제목 *</label>
@@ -157,34 +223,60 @@ const TaskFormInner = ({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="예: 보고서 작성, 운동 가기"
+            placeholder={isEventKind ? "예: 팀 회의, 병원 예약" : "예: 보고서 작성, 운동 가기"}
             required
             autoFocus={!isEdit}
             className={inputCls}
           />
         </div>
 
-        {/* Due date + time */}
-        <div className="flex gap-2">
-          <div className="flex-1 flex flex-col gap-1.5">
-            <label className="text-[13px] text-sub font-medium">기한일</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className={inputCls}
-            />
+        {/* Date */}
+        <div className="flex flex-col gap-1.5">
+          <label className="text-[13px] text-sub font-medium">
+            {isEventKind ? "날짜 *" : "기한일"}
+          </label>
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className={inputCls}
+          />
+        </div>
+
+        {/* Time range */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-end gap-2">
+            <div className="flex-1 flex flex-col gap-1.5">
+              <label className="text-[13px] text-sub font-medium">
+                {isEventKind ? "시작" : "시각"}
+              </label>
+              <input
+                type="time"
+                value={dueTime}
+                onChange={(e) => handleStartChange(e.target.value)}
+                disabled={!dueDate}
+                className={inputCls}
+              />
+            </div>
+            <span className="pb-2.5 text-sub">~</span>
+            <div className="flex-1 flex flex-col gap-1.5">
+              <label className="text-[13px] text-sub font-medium">
+                종료{isEventKind ? "" : " (선택)"}
+              </label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                disabled={!dueDate || !dueTime}
+                className={inputCls}
+              />
+            </div>
           </div>
-          <div className="w-32 flex flex-col gap-1.5">
-            <label className="text-[13px] text-sub font-medium">시각</label>
-            <input
-              type="time"
-              value={dueTime}
-              onChange={(e) => setDueTime(e.target.value)}
-              disabled={!dueDate}
-              className={inputCls}
-            />
-          </div>
+          <p className="text-[12px] text-sub">
+            {isEventKind
+              ? "시간을 비우면 종일 일정으로 표시됩니다"
+              : "시작·종료 시각을 넣으면 플래너에 시간 블록으로 표시됩니다"}
+          </p>
         </div>
 
         {/* Recurrence */}
@@ -199,27 +291,29 @@ const TaskFormInner = ({
           />
         </div>
 
-        {/* Priority */}
-        <div className="flex flex-col gap-1.5">
-          <label className="text-[13px] text-sub font-medium">우선순위</label>
-          <div className="flex gap-2">
-            {PRIORITIES.map((p) => (
-              <button
-                key={p.value}
-                type="button"
-                onClick={() => setPriority(p.value)}
-                className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none transition-colors ${
-                  priority === p.value ? "text-white" : "bg-light text-sub"
-                }`}
-                style={
-                  priority === p.value ? { backgroundColor: p.color } : undefined
-                }
-              >
-                {p.label}
-              </button>
-            ))}
+        {/* Priority (할일만) */}
+        {!isEventKind && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[13px] text-sub font-medium">우선순위</label>
+            <div className="flex gap-2">
+              {PRIORITIES.map((p) => (
+                <button
+                  key={p.value}
+                  type="button"
+                  onClick={() => setPriority(p.value)}
+                  className={`flex-1 py-2.5 rounded-lg text-[13px] font-semibold cursor-pointer border-none transition-colors ${
+                    priority === p.value ? "text-white" : "bg-light text-sub"
+                  }`}
+                  style={
+                    priority === p.value ? { backgroundColor: p.color } : undefined
+                  }
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Category */}
         <div className="flex flex-col gap-1.5">
@@ -267,23 +361,37 @@ const TaskFormInner = ({
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className={`w-full mt-2 py-3 rounded-lg text-[15px] font-semibold text-white border-none cursor-pointer transition-colors ${
-            submitting
-              ? "bg-border cursor-not-allowed"
-              : "bg-mint hover:bg-mint-hover"
-          }`}
-        >
-          {submitting
-            ? isEdit
-              ? "수정 중..."
-              : "추가 중..."
-            : isEdit
-              ? "수정 완료"
-              : "할일 추가"}
-        </button>
+        <div className="flex gap-2 mt-2">
+          {isEdit && onDelete && (
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onDelete(editTask);
+              }}
+              className="px-5 py-3 rounded-lg text-[15px] font-semibold text-error bg-error-bg border-none cursor-pointer"
+            >
+              삭제
+            </button>
+          )}
+          <button
+            type="submit"
+            disabled={submitting}
+            className={`flex-1 py-3 rounded-lg text-[15px] font-semibold text-white border-none cursor-pointer transition-colors ${
+              submitting
+                ? "bg-border cursor-not-allowed"
+                : "bg-mint hover:bg-mint-hover"
+            }`}
+          >
+            {submitting
+              ? isEdit
+                ? "수정 중..."
+                : "추가 중..."
+              : isEdit
+                ? "수정 완료"
+                : `${noun} 추가`}
+          </button>
+        </div>
       </form>
     </>
   );
@@ -295,8 +403,9 @@ const TaskForm = ({
   open,
   onClose,
   editTask = null,
-  defaultDate = null,
-  defaultTitle = "",
+  // 새 항목 기본값: { date, title, kind, time, endTime }
+  defaults = {},
+  onDelete = null,
 }) => {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -334,7 +443,11 @@ const TaskForm = ({
       >
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-[17px] font-semibold text-text">
-            {editTask ? "할일 수정" : "할일 추가"}
+            {editTask
+              ? editTask.kind === "event"
+                ? "일정 수정"
+                : "할일 수정"
+              : "새로 만들기"}
           </h3>
           <button
             onClick={handleClose}
@@ -345,11 +458,15 @@ const TaskForm = ({
         </div>
 
         <TaskFormInner
-          key={editTask?.id || `new-${defaultDate || ""}-${defaultTitle || ""}`}
+          key={editTask?.id || `new-${JSON.stringify(defaults)}`}
           onClose={handleClose}
           editTask={editTask}
-          defaultDate={defaultDate}
-          defaultTitle={defaultTitle}
+          defaultDate={defaults.date || null}
+          defaultTitle={defaults.title || ""}
+          defaultKind={defaults.kind || "task"}
+          defaultTime={defaults.time || ""}
+          defaultEndTime={defaults.endTime || ""}
+          onDelete={onDelete}
         />
       </div>
     </div>

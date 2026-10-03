@@ -61,9 +61,9 @@ export const NAV_SECTIONS = [
     ],
   },
   {
-    label: "할일",
+    label: "플래너",
     items: [
-      { id: "tasks", label: "할일", path: "/tasks", icon: "ListTodo" },
+      { id: "tasks", label: "플래너", path: "/tasks", icon: "CalendarClock" },
       {
         id: "task-categories",
         label: "카테고리",

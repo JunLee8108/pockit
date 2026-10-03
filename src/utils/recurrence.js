@@ -13,11 +13,14 @@ export const WEEKDAY_CODES = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
 export const WEEKDAY_LABELS = ["월", "화", "수", "목", "금", "토", "일"];
 
 // 반복 회차 수정/삭제 범위 (구글 캘린더와 동일)
-export const SCOPE_CHOICES = [
-  { value: "this", label: "이 할일" },
-  { value: "following", label: "이 할일 및 이후 할일" },
-  { value: "all", label: "모든 할일" },
-];
+export const scopeChoices = (kind = "task") => {
+  const noun = kind === "event" ? "일정" : "할일";
+  return [
+    { value: "this", label: `이 ${noun}` },
+    { value: "following", label: `이 ${noun} 및 이후 ${noun}` },
+    { value: "all", label: `모든 ${noun}` },
+  ];
+};
 
 // ── 날짜 유틸 ──
 
@@ -290,9 +293,11 @@ const indexSeries = (rows) => {
 };
 
 const CONTENT_FIELDS = [
+  "kind",
   "title",
   "description",
   "due_time",
+  "end_time",
   "priority",
   "category_id",
   "category",
@@ -410,7 +415,7 @@ export const expandForList = (rows, today) => {
 
 const PRIORITY_RANK = { high: 3, normal: 2, low: 1 };
 
-// 캘린더용: 기간 내 회차를 날짜별로 묶기 (미완료 → 우선순위 순)
+// 캘린더용: 기간 내 회차를 날짜별로 묶기 (미완료 → 종일/시간 미정 → 시작 시각 → 우선순위)
 export const groupByDate = (rows, from, to) => {
   const map = new Map();
   for (const t of expandForRange(rows, from, to)) {
@@ -421,6 +426,9 @@ export const groupByDate = (rows, from, to) => {
   for (const list of map.values()) {
     list.sort((a, b) => {
       if (a.status !== b.status) return a.status === "todo" ? -1 : 1;
+      const ta = a.due_time || "";
+      const tb = b.due_time || "";
+      if (ta !== tb) return ta < tb ? -1 : 1;
       return (PRIORITY_RANK[b.priority] || 2) - (PRIORITY_RANK[a.priority] || 2);
     });
   }

@@ -1,6 +1,7 @@
 import { Pencil, Trash2, Check, Clock, Repeat } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
 import { describeRule } from "../../utils/recurrence";
+import { isEvent, itemColor } from "../../utils/planner";
 
 const PRIORITY_DOT = {
   low: "#94a3b8",
@@ -19,7 +20,7 @@ const todayStr = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
 
-const formatDueDate = (dateStr, timeStr) => {
+const formatDueDate = (dateStr, timeStr, endStr) => {
   if (!dateStr) return null;
   const today = todayStr();
   const [, m, d] = dateStr.split("-").map(Number);
@@ -33,17 +34,20 @@ const formatDueDate = (dateStr, timeStr) => {
   else label = `${m}월 ${d}일`;
 
   if (timeStr) {
-    const [hh, mm] = timeStr.split(":");
-    return `${label} ${hh}:${mm}`;
+    const range = endStr
+      ? `${timeStr.slice(0, 5)} – ${endStr.slice(0, 5)}`
+      : timeStr.slice(0, 5);
+    return `${label} ${range}`;
   }
   return label;
 };
 
 const TaskItem = ({ task, onToggle, onEdit, onDelete }) => {
+  const event = isEvent(task);
   const isDone = task.status === "done";
   const today = todayStr();
-  const overdue = !isDone && task.due_date && task.due_date < today;
-  const dueLabel = formatDueDate(task.due_date, task.due_time);
+  const overdue = !event && !isDone && task.due_date && task.due_date < today;
+  const dueLabel = formatDueDate(task.due_date, task.due_time, task.end_time);
   const repeatLabel = task.series
     ? describeRule(task.series.recurrence_rule, task.series.due_date)
     : null;
@@ -53,27 +57,38 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete }) => {
       id={`task-${task.id}`}
       className="dash-card bg-surface shadow-sm rounded-xl p-3 flex items-start gap-3 group"
     >
-      {/* Checkbox */}
-      <button
-        onClick={() => onToggle(task)}
-        className={`shrink-0 mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-colors ${
-          isDone
-            ? "bg-mint border-mint"
-            : "bg-transparent border-border hover:border-mint"
-        }`}
-        aria-label={isDone ? "완료 취소" : "완료"}
-      >
-        {isDone && <Check size={12} className="text-white" strokeWidth={3} />}
-      </button>
+      {/* Checkbox (일정은 색 막대) */}
+      {event ? (
+        <span className="shrink-0 w-5 self-stretch flex justify-center">
+          <span
+            className="w-1 h-full rounded-full"
+            style={{ backgroundColor: itemColor(task) }}
+          />
+        </span>
+      ) : (
+        <button
+          onClick={() => onToggle(task)}
+          className={`shrink-0 mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center cursor-pointer transition-colors ${
+            isDone
+              ? "bg-mint border-mint"
+              : "bg-transparent border-border hover:border-mint"
+          }`}
+          aria-label={isDone ? "완료 취소" : "완료"}
+        >
+          {isDone && <Check size={12} className="text-white" strokeWidth={3} />}
+        </button>
+      )}
 
       {/* Body */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span
-            className="shrink-0 w-2 h-2 rounded-full"
-            style={{ backgroundColor: PRIORITY_DOT[task.priority] }}
-            title={PRIORITY_LABEL[task.priority]}
-          />
+          {!event && (
+            <span
+              className="shrink-0 w-2 h-2 rounded-full"
+              style={{ backgroundColor: PRIORITY_DOT[task.priority] }}
+              title={PRIORITY_LABEL[task.priority]}
+            />
+          )}
           <div
             className={`text-[14px] font-medium leading-snug break-all ${
               isDone ? "line-through text-sub" : "text-text"

@@ -19,6 +19,8 @@ const TASK_SELECT = "*, category:task_categories(*)";
 
 const toast = () => useToastStore.getState();
 
+const noun = (t) => (t?.kind === "event" ? "일정" : "할일");
+
 // 모든 할일을 한 번에 가져와서 클라이언트에서 필터링
 // (할일 수는 보통 수백 단위, 거래내역처럼 많지 않음)
 const useAllTasks = () => {
@@ -49,9 +51,16 @@ export const useTasks = (filters = {}) => {
   const { status, scope, categoryId, search, priority } = filters;
   const query = useAllTasks();
 
-  // 반복 원본은 시리즈별 회차 1개로 펼침 (놓친 회차 우선, 없으면 다음 회차)
+  // 할일함 목록: 일정 제외, 반복 원본은 시리즈별 회차 1개로 펼침
+  // (놓친 회차 우선, 없으면 다음 회차)
   const items = useMemo(
-    () => (query.data ? expandForList(query.data, todayStr()) : []),
+    () =>
+      query.data
+        ? expandForList(
+            query.data.filter((t) => t.kind !== "event"),
+            todayStr(),
+          )
+        : [],
     [query.data],
   );
 
@@ -135,11 +144,11 @@ export const useAddTask = () => {
           .single(),
       );
     },
-    onSuccess: () => {
+    onSuccess: (_data, payload) => {
       qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-      toast().success("할일이 추가되었습니다");
+      toast().success(`${noun(payload)}이 추가되었습니다`);
     },
-    onError: () => toast().error("할일 추가에 실패했습니다"),
+    onError: (_err, payload) => toast().error(`${noun(payload)} 추가에 실패했습니다`),
   });
 };
 
@@ -148,9 +157,11 @@ export const useAddTask = () => {
 // task.series: 회차가 속한 원본 행 / task.isVirtual: 아직 DB에 없는 회차
 
 const CONTENT_FIELDS = [
+  "kind",
   "title",
   "description",
   "due_time",
+  "end_time",
   "priority",
   "category_id",
 ];
@@ -315,17 +326,42 @@ const saveTask = async ({ task, updates, scope = "this" }) => {
   return saveFollowing(task, series, fields, rule);
 };
 
+const SLOT_FIELDS = ["due_date", "due_time", "end_time"];
+const isSlotOnly = (updates) =>
+  Object.keys(updates).every((k) => SLOT_FIELDS.includes(k));
+
 export const useSaveTask = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: saveTask,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-      toast().success("할일이 수정되었습니다");
+    // 날짜/시간만 바꾸는 이동·크기 조절은 즉시 반영 (드래그 후 깜빡임 방지)
+    onMutate: async ({ task, updates, scope = "this" }) => {
+      if (!isSlotOnly(updates) || scope !== "this") return;
+      await qc.cancelQueries({ queryKey: queryKeys.tasks.all });
+      const prev = qc.getQueryData(queryKeys.tasks.all);
+      if (task.isVirtual) {
+        // eslint-disable-next-line no-unused-vars
+        const { series, isVirtual, ...row } = task;
+        qc.setQueryData(queryKeys.tasks.all, (old) => [
+          ...(old || []),
+          { ...row, ...updates, id: `temp-${task.id}` },
+        ]);
+      } else {
+        qc.setQueryData(queryKeys.tasks.all, (old) =>
+          old?.map((t) => (t.id === task.id ? { ...t, ...updates } : t)),
+        );
+      }
+      return { prev };
     },
-    onError: () => {
+    onSuccess: (_data, { task, updates }) => {
       qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-      toast().error("할일 수정에 실패했습니다");
+      // 드래그 이동/크기 조절은 화면에 바로 보이므로 알림 생략
+      if (!isSlotOnly(updates)) toast().success(`${noun(task)}이 수정되었습니다`);
+    },
+    onError: (_err, { task }, ctx) => {
+      if (ctx?.prev) qc.setQueryData(queryKeys.tasks.all, ctx.prev);
+      qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
+      toast().error(`${noun(task)} 수정에 실패했습니다`);
     },
   });
 };
@@ -439,13 +475,13 @@ export const useDeleteTask = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: deleteTask,
-    onSuccess: () => {
+    onSuccess: (_data, { task }) => {
       qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-      toast().success("할일이 삭제되었습니다");
+      toast().success(`${noun(task)}이 삭제되었습니다`);
     },
-    onError: () => {
+    onError: (_err, { task }) => {
       qc.invalidateQueries({ queryKey: queryKeys.tasks.all });
-      toast().error("할일 삭제에 실패했습니다");
+      toast().error(`${noun(task)} 삭제에 실패했습니다`);
     },
   });
 };
