@@ -9,6 +9,7 @@ import {
   Landmark,
   Tag,
   CalendarRange,
+  CalendarClock,
   ListTodo,
   Wand2,
   Sun,
@@ -23,7 +24,7 @@ import BottomSheet from "../components/BottomSheet";
 const TABS = [
   { path: "/", icon: LayoutDashboard, label: "대시보드" },
   { path: "/transactions", icon: Receipt, label: "거래" },
-  { path: "/tasks", icon: ListTodo, label: "할일" },
+  { path: "/tasks", icon: CalendarClock, label: "플래너" },
   { path: "/statistics", icon: BarChart3, label: "통계" },
 ];
 

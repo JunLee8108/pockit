@@ -191,6 +191,8 @@ $$ language plpgsql;
 | `category_id` | uuid | — | `task_categories(id)` FK (on delete set null) |
 | `completed_at` | timestamptz | — | 완료 시각 |
 | `sort_order` | int | 0 | 정렬 순서 |
+| `kind` | text | 'task' | task(할일, 완료 체크) \| event(일정, 시간 없으면 종일) |
+| `end_time` | time | — | 종료 시각 (시작 시각 이후). 할일에 있으면 플래너 시간 블록 |
 | `recurrence_rule` | text | — | 반복 규칙 (RFC 5545 RRULE, DTSTART 제외). 있으면 반복 원본 행 |
 | `recurrence_exdates` | date[] | '{}' | 반복 원본: 삭제된 회차 날짜 |
 | `recurring_task_id` | uuid | — | 예외 행: 원본 `tasks(id)` FK (on delete cascade) |
@@ -201,6 +203,11 @@ $$ language plpgsql;
 **RLS**: 본인만 CRUD
 **인덱스**: `user_id`, `due_date`, `status`, `category_id`, `recurring_task_id`
 **유니크 인덱스**: `(recurring_task_id, original_date)` — 회차당 예외 행 1건
+
+**플래너 (할일 + 일정)**
+- 한 테이블에서 `kind`로 구분 — 반복/카테고리/캘린더 로직 공용
+- 할일함 목록에는 할일만, 오늘/주간/월간 플래너에는 둘 다 표시
+- 시간 미정 할일을 시간축으로 끌어 놓으면 `due_time`/`end_time`이 채워져 시간 블록이 됨
 
 **반복 할일 (구글 캘린더 방식)**
 - 원본 행은 화면에 표시하지 않고, `due_date`(시작일) + `recurrence_rule`로 회차를 클라이언트에서 계산 (`src/utils/recurrence.js`)

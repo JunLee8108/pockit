@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { Plus, List, Calendar as CalendarIcon } from "lucide-react";
+import { Plus } from "lucide-react";
 import {
   useTasks,
   useToggleTask,
@@ -14,9 +14,30 @@ import TaskList from "./TaskList";
 import TaskForm from "./TaskForm";
 import TaskCalendar from "./TaskCalendar";
 import WeekCalendar from "./WeekCalendar";
+import DayPlanner from "./DayPlanner";
+import WeekPlanner from "./WeekPlanner";
 import QuickAdd from "./QuickAdd";
 import useViewport from "../../hooks/useViewport";
-import { SCOPE_CHOICES } from "../../utils/recurrence";
+import { scopeChoices } from "../../utils/recurrence";
+import { todayStr } from "../../utils/planner";
+
+const VIEWS = [
+  { value: "day", label: "오늘" },
+  { value: "week", label: "주간" },
+  { value: "month", label: "월간" },
+  { value: "list", label: "할일함" },
+];
+
+const VIEW_KEY = "pockit:planner-view";
+
+const loadView = () => {
+  try {
+    const v = localStorage.getItem(VIEW_KEY);
+    return VIEWS.some((x) => x.value === v) ? v : "day";
+  } catch {
+    return "day";
+  }
+};
 
 const TABS = [
   { value: "today", label: "오늘" },
@@ -25,20 +46,15 @@ const TABS = [
   { value: "done", label: "완료" },
 ];
 
-const todayStr = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
-
 const Tasks = () => {
   const viewport = useViewport();
   const isMobile = viewport === "mobile";
-  const [view, setView] = useState("list"); // list | calendar
+  const [view, setViewState] = useState(loadView); // day | week | month | list
+  const [plannerDate, setPlannerDate] = useState(todayStr);
   const [scope, setScope] = useState("today");
   const [formOpen, setFormOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
-  const [defaultDate, setDefaultDate] = useState(null);
-  const [defaultTitle, setDefaultTitle] = useState("");
+  const [formDefaults, setFormDefaults] = useState({});
   const [openCardId, setOpenCardId] = useState(null);
   const confirm = useConfirm();
 
@@ -51,6 +67,20 @@ const Tasks = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categories]);
+
+  const setView = (v) => {
+    setViewState(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch {
+      // 저장 실패는 무시 (시크릿 모드 등)
+    }
+  };
+
+  const openDay = (date) => {
+    setPlannerDate(date);
+    setView("day");
+  };
 
   const toggle = useToggleTask();
   const deleteTask = useDeleteTask();
@@ -80,26 +110,26 @@ const Tasks = () => {
     return counts;
   }, [items]);
 
-  const handleAdd = (date = null, title = "") => {
+  // defaults: { date, title, kind, time, endTime }
+  const handleAdd = (defaults = {}) => {
     setEditTarget(null);
-    setDefaultDate(date);
-    setDefaultTitle(title || "");
+    setFormDefaults(defaults);
     setFormOpen(true);
   };
 
   const handleEdit = useCallback((task) => {
     setEditTarget(task);
-    setDefaultDate(null);
-    setDefaultTitle("");
+    setFormDefaults({});
     setFormOpen(true);
   }, []);
 
   const handleDelete = useCallback(
     async (task) => {
+      const noun = task.kind === "event" ? "일정" : "할일";
       if (task.series) {
         const scope = await confirm({
-          title: "반복 할일 삭제",
-          choices: SCOPE_CHOICES,
+          title: `반복 ${noun} 삭제`,
+          choices: scopeChoices(task.kind),
           confirmText: "삭제",
           variant: "danger",
         });
@@ -107,8 +137,8 @@ const Tasks = () => {
         return;
       }
       const ok = await confirm({
-        title: "할일 삭제",
-        message: `"${task.title}" 할일을 삭제하시겠습니까?`,
+        title: `${noun} 삭제`,
+        message: `"${task.title}" ${noun}을 삭제하시겠습니까?`,
         confirmText: "삭제",
         variant: "danger",
       });
@@ -125,51 +155,88 @@ const Tasks = () => {
   );
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-text">할일</h2>
-        <div className="flex items-center gap-2">
-          {/* View toggle */}
-          <div className="flex bg-light rounded-lg p-0.5">
-            <button
-              onClick={() => setView("list")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[12px] font-medium cursor-pointer border-none transition-colors ${
-                view === "list"
-                  ? "bg-surface text-text shadow-sm"
-                  : "bg-transparent text-sub"
-              }`}
-              aria-label="목록 보기"
-            >
-              <List size={14} />
-              목록
-            </button>
-            <button
-              onClick={() => setView("calendar")}
-              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[12px] font-medium cursor-pointer border-none transition-colors ${
-                view === "calendar"
-                  ? "bg-surface text-text shadow-sm"
-                  : "bg-transparent text-sub"
-              }`}
-              aria-label="캘린더 보기"
-            >
-              <CalendarIcon size={14} />
-              캘린더
-            </button>
-          </div>
-          <button
-            onClick={() => handleAdd()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-mint text-white rounded-lg text-sm font-medium cursor-pointer border-none hover:bg-mint-hover transition-colors"
-          >
-            <Plus size={16} />
-            추가
-          </button>
-        </div>
+        <h2 className="text-xl font-semibold text-text">플래너</h2>
+        <button
+          onClick={() =>
+            handleAdd(view === "day" || view === "week" ? { date: plannerDate } : {})
+          }
+          className="flex items-center gap-1.5 px-4 py-2 bg-mint text-white rounded-lg text-sm font-medium cursor-pointer border-none hover:bg-mint-hover transition-colors"
+        >
+          <Plus size={16} />
+          추가
+        </button>
       </div>
+
+      {/* View tabs */}
+      <div className="flex bg-light rounded-lg p-0.5">
+        {VIEWS.map((v) => (
+          <button
+            key={v.value}
+            onClick={() => setView(v.value)}
+            className={`flex-1 py-2 rounded-md text-[13px] font-medium cursor-pointer border-none transition-colors ${
+              view === v.value
+                ? "bg-surface text-text shadow-sm"
+                : "bg-transparent text-sub hover:text-text"
+            }`}
+          >
+            {v.label}
+            {v.value === "list" && counts.today > 0 && (
+              <span className="ml-1 text-[11px] text-sub">{counts.today}</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {view === "day" && (
+        <DayPlanner
+          tasks={rawData}
+          listItems={items}
+          date={plannerDate}
+          onDateChange={setPlannerDate}
+          onAdd={handleAdd}
+          onEdit={handleEdit}
+          onToggle={handleToggle}
+          isMobile={isMobile}
+        />
+      )}
+
+      {view === "week" &&
+        (isMobile ? (
+          <WeekCalendar
+            tasks={rawData}
+            onAddForDate={(date) => handleAdd({ date })}
+            onToggle={handleToggle}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        ) : (
+          <WeekPlanner
+            tasks={rawData}
+            date={plannerDate}
+            onDateChange={setPlannerDate}
+            onOpenDay={openDay}
+            onAdd={handleAdd}
+            onEdit={handleEdit}
+            onToggle={handleToggle}
+          />
+        ))}
+
+      {view === "month" && (
+        <TaskCalendar
+          tasks={rawData}
+          onAddForDate={(date) => handleAdd({ date })}
+          onToggle={handleToggle}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
       {view === "list" && (
         <>
-          <QuickAdd onOpenFull={(t) => handleAdd(null, t)} />
+          <QuickAdd onOpenFull={(title) => handleAdd({ title })} />
 
           {/* Tabs */}
           <div className="flex gap-1 bg-light rounded-lg p-1 overflow-x-auto">
@@ -232,36 +299,16 @@ const Tasks = () => {
         </>
       )}
 
-      {view === "calendar" &&
-        (isMobile ? (
-          <WeekCalendar
-            tasks={rawData}
-            onAddForDate={handleAdd}
-            onToggle={handleToggle}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ) : (
-          <TaskCalendar
-            tasks={rawData}
-            onAddForDate={handleAdd}
-            onToggle={handleToggle}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-        ))}
-
       <TaskForm
         open={formOpen}
         onClose={() => {
           setFormOpen(false);
           setEditTarget(null);
-          setDefaultDate(null);
-          setDefaultTitle("");
+          setFormDefaults({});
         }}
         editTask={editTarget}
-        defaultDate={defaultDate}
-        defaultTitle={defaultTitle}
+        defaults={formDefaults}
+        onDelete={handleDelete}
       />
     </div>
   );

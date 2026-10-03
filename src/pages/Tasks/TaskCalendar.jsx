@@ -2,6 +2,7 @@ import { useMemo, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X, Repeat } from "lucide-react";
 import { useSaveTask } from "../../hooks/useTasks";
 import { groupByDate } from "../../utils/recurrence";
+import { isEvent, itemColor } from "../../utils/planner";
 import { getReadableTextColor } from "../../utils/colorContrast";
 import BottomSheet from "../../components/BottomSheet";
 import TaskItem from "./TaskItem";
@@ -16,21 +17,12 @@ const todayStr = () => {
   return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate());
 };
 
-const PRIORITY_DEFAULT_COLOR = {
-  low: "#94a3b8",
-  normal: "#7dd3fc",
-  high: "#ef4444",
-};
-
-const barColor = (task) =>
-  task.category?.color || PRIORITY_DEFAULT_COLOR[task.priority] || "#7dd3fc";
-
 const VISIBLE_PER_CELL = 3;
 
 const TaskBar = ({ task, onClick, onDragStart, onDragEnd }) => {
   const isDone = task.status === "done";
-  const color = barColor(task);
-  const textColor = getReadableTextColor(color);
+  const event = isEvent(task);
+  const color = itemColor(task);
 
   return (
     <button
@@ -44,11 +36,13 @@ const TaskBar = ({ task, onClick, onDragStart, onDragEnd }) => {
       }}
       className={`w-full text-left px-1.5 py-0.5 rounded text-[11px] font-medium leading-tight truncate cursor-pointer border-none transition-opacity hover:opacity-90 ${
         isDone ? "opacity-50 line-through" : ""
-      }`}
-      style={{
-        backgroundColor: color,
-        color: textColor,
-      }}
+      } ${event ? "" : "text-text"}`}
+      // 일정: 색 채움 / 할일: 연한 배경 + 왼쪽 색 막대
+      style={
+        event
+          ? { backgroundColor: color, color: getReadableTextColor(color) }
+          : { backgroundColor: `${color}26`, borderLeft: `3px solid ${color}` }
+      }
       title={task.title}
     >
       {task.recurring_task_id && (
