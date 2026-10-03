@@ -1,5 +1,6 @@
-import { Pencil, Trash2, Check, Clock } from "lucide-react";
+import { Pencil, Trash2, Check, Clock, Repeat } from "lucide-react";
 import CategoryIcon from "../../components/CategoryIcon";
+import { describeRule } from "../../utils/recurrence";
 
 const PRIORITY_DOT = {
   low: "#94a3b8",
@@ -43,6 +44,9 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete }) => {
   const today = todayStr();
   const overdue = !isDone && task.due_date && task.due_date < today;
   const dueLabel = formatDueDate(task.due_date, task.due_time);
+  const repeatLabel = task.series
+    ? describeRule(task.series.recurrence_rule, task.series.due_date)
+    : null;
 
   return (
     <div
@@ -79,7 +83,7 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {(dueLabel || task.category || task.description) && (
+        {(dueLabel || repeatLabel || task.category || task.description) && (
           <div className="mt-1.5 flex items-center flex-wrap gap-x-2 gap-y-1 text-[12px] text-sub">
             {dueLabel && (
               <span
@@ -87,6 +91,12 @@ const TaskItem = ({ task, onToggle, onEdit, onDelete }) => {
               >
                 <Clock size={11} />
                 {dueLabel}
+              </span>
+            )}
+            {repeatLabel && (
+              <span className="inline-flex items-center gap-1">
+                <Repeat size={11} />
+                {repeatLabel}
               </span>
             )}
             {task.category && (

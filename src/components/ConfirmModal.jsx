@@ -10,8 +10,18 @@ const VARIANT_STYLES = {
 };
 
 const ConfirmModal = () => {
-  const { open, title, message, confirmText, cancelText, variant, close } =
-    useConfirmStore();
+  const {
+    open,
+    title,
+    message,
+    confirmText,
+    cancelText,
+    variant,
+    choices,
+    choice,
+    setChoice,
+    close,
+  } = useConfirmStore();
 
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -60,6 +70,27 @@ const ConfirmModal = () => {
           <p className="text-[14px] text-sub leading-relaxed whitespace-pre-line mb-6">
             {message}
           </p>
+        )}
+
+        {/* Choices */}
+        {choices && (
+          <div className="flex flex-col gap-1 mb-6">
+            {choices.map((c) => (
+              <label
+                key={c.value}
+                className="flex items-center gap-3 px-1 py-2 text-[14px] text-text cursor-pointer"
+              >
+                <input
+                  type="radio"
+                  name="confirm-choice"
+                  checked={choice === c.value}
+                  onChange={() => setChoice(c.value)}
+                  className="w-4 h-4 accent-mint cursor-pointer"
+                />
+                {c.label}
+              </label>
+            ))}
+          </div>
         )}
 
         {/* Buttons */}

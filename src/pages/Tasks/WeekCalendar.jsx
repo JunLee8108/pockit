@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import TaskItem from "./TaskItem";
+import { groupByDate } from "../../utils/recurrence";
 
 const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
@@ -46,15 +47,11 @@ const WeekCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
     });
   }, [weekStart]);
 
-  const tasksByDate = useMemo(() => {
-    const map = new Map();
-    for (const t of tasks) {
-      if (!t.due_date) continue;
-      if (!map.has(t.due_date)) map.set(t.due_date, []);
-      map.get(t.due_date).push(t);
-    }
-    return map;
-  }, [tasks]);
+  // 이번 주 범위 내 반복 회차 포함
+  const tasksByDate = useMemo(
+    () => groupByDate(tasks, days[0].date, days[6].date),
+    [tasks, days],
+  );
 
   const today = todayStr();
   const weekEnd = new Date(weekStart);
