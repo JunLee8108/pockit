@@ -1,6 +1,6 @@
 -- ============================================================
--- 적용 완료: Supabase 프로젝트 Pockit (2026-10-03)
--- 실행: Supabase SQL Editor 에서 그대로 실행
+-- 할일 반복(recurring) 기능 (2026-10-03)
+-- 적용 완료: Supabase 프로젝트 Pockit
 --
 -- 구글 캘린더 방식:
 --   원본(master) 행  : recurrence_rule(RRULE, DTSTART 제외) + due_date(시작일)
