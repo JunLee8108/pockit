@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import TaskItem from "./TaskItem";
 import { groupByDate } from "../../utils/recurrence";
+import { WEEKDAY_HEADERS, weekdayTextClass } from "../../utils/planner";
 
-const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
 const ymd = (year, month, day) =>
   `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -13,11 +13,10 @@ const todayStr = () => {
   return ymd(d.getFullYear(), d.getMonth() + 1, d.getDate());
 };
 
-// 주의 시작(월요일) 날짜 객체 반환
+// 주의 시작(일요일) 날짜 객체 반환
 const startOfWeek = (date) => {
   const d = new Date(date);
-  const dow = (d.getDay() + 6) % 7; // Mon=0..Sun=6
-  d.setDate(d.getDate() - dow);
+  d.setDate(d.getDate() - d.getDay());
   d.setHours(0, 0, 0, 0);
   return d;
 };
@@ -42,7 +41,7 @@ const WeekCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
       return {
         date: ymd(d.getFullYear(), d.getMonth() + 1, d.getDate()),
         day: d.getDate(),
-        weekday: WEEKDAYS[i],
+        weekday: WEEKDAY_HEADERS[i],
       };
     });
   }, [weekStart]);
@@ -125,11 +124,7 @@ const WeekCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
                     : "border-transparent bg-transparent hover:bg-light"
                 }`}
               >
-                <span
-                  className={`text-[10px] font-medium ${
-                    i === 5 ? "text-sky" : i === 6 ? "text-coral" : "text-sub"
-                  }`}
-                >
+                <span className={`text-[10px] font-medium ${weekdayTextClass(i)}`}>
                   {d.weekday}
                 </span>
                 <span

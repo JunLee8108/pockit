@@ -139,7 +139,12 @@ export const endPlannerDrag = () => {
 
 // ── 날짜 ──
 
-const DOW = ["일", "월", "화", "수", "목", "금", "토"];
+// 캘린더 요일 순서: 일요일 시작
+export const WEEKDAY_HEADERS = ["일", "월", "화", "수", "목", "금", "토"];
+
+// 요일 열 글자색 (0=일, 6=토)
+export const weekdayTextClass = (i) =>
+  i === 0 ? "text-coral" : i === 6 ? "text-sky" : "text-sub";
 
 export const todayStr = () => {
   const d = new Date();
@@ -151,16 +156,16 @@ const parse = (date) => {
   return new Date(y, m - 1, d);
 };
 
-export const dayOfWeek = (date) => DOW[parse(date).getDay()];
+export const dayOfWeek = (date) => WEEKDAY_HEADERS[parse(date).getDay()];
 
 export const formatDayLabel = (date) => {
   const [, m, d] = date.split("-").map(Number);
   return `${m}월 ${d}일 ${dayOfWeek(date)}요일`;
 };
 
-// 월요일 시작 주의 첫날
+// 일요일 시작 주의 첫날
 export const weekStartOf = (date) => {
   const d = parse(date);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  d.setDate(d.getDate() - d.getDay());
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };

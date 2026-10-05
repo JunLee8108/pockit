@@ -2,12 +2,16 @@ import { useMemo, useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X, Repeat } from "lucide-react";
 import { useSaveTask } from "../../hooks/useTasks";
 import { groupByDate } from "../../utils/recurrence";
-import { isEvent, itemColor } from "../../utils/planner";
+import {
+  isEvent,
+  itemColor,
+  WEEKDAY_HEADERS,
+  weekdayTextClass,
+} from "../../utils/planner";
 import { getReadableTextColor } from "../../utils/colorContrast";
 import BottomSheet from "../../components/BottomSheet";
 import TaskItem from "./TaskItem";
 
-const WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"];
 
 const ymd = (year, month, day) =>
   `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
@@ -68,8 +72,8 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
   // 6주(42칸) 그리드 — 이전/다음 달 날짜 포함
   const cells = useMemo(() => {
     const firstOfMonth = new Date(year, month - 1, 1);
-    // JS getDay: Sun=0..Sat=6 → 월요일 시작 인덱스로 변환
-    const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mon=0..Sun=6
+    // 일요일 시작 (JS getDay: Sun=0..Sat=6)
+    const firstWeekday = firstOfMonth.getDay();
     // 그리드 첫 칸의 실제 날짜
     const gridStart = new Date(year, month - 1, 1 - firstWeekday);
 
@@ -199,12 +203,10 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
       <div className="dash-card bg-surface shadow-sm rounded-2xl overflow-hidden border border-border">
         {/* Weekday header */}
         <div className="grid grid-cols-7 border-b border-border">
-          {WEEKDAYS.map((w, i) => (
+          {WEEKDAY_HEADERS.map((w, i) => (
             <div
               key={w}
-              className={`text-center text-[11px] font-medium py-2 ${
-                i === 5 ? "text-sky" : i === 6 ? "text-coral" : "text-sub"
-              }`}
+              className={`text-center text-[11px] font-medium py-2 ${weekdayTextClass(i)}`}
             >
               {w}
             </div>
@@ -249,9 +251,9 @@ const TaskCalendar = ({ tasks, onAddForDate, onToggle, onEdit, onDelete }) => {
                       className={`text-[11px] font-medium px-1 ${
                         !cell.isCurrentMonth
                           ? "text-sub/50"
-                          : weekday === 5
+                          : weekday === 6
                             ? "text-sky"
-                            : weekday === 6
+                            : weekday === 0
                               ? "text-coral"
                               : "text-text"
                       }`}

@@ -10,6 +10,7 @@ import {
   todayStr,
   dayOfWeek,
   weekStartOf,
+  weekdayTextClass,
   plannerDrag,
   startPlannerDrag,
   endPlannerDrag,
@@ -166,11 +167,7 @@ const WeekPlanner = ({ tasks, date, onDateChange, onOpenDay, onAdd, onEdit, onTo
                 onClick={() => onOpenDay(d)}
                 className="flex-1 min-w-0 flex flex-col items-center gap-0.5 py-2 border-l border-border bg-transparent cursor-pointer hover:bg-light"
               >
-                <span
-                  className={`text-[11px] font-medium ${
-                    i === 5 ? "text-sky" : i === 6 ? "text-coral" : "text-sub"
-                  }`}
-                >
+                <span className={`text-[11px] font-medium ${weekdayTextClass(i)}`}>
                   {dayOfWeek(d)}
                 </span>
                 <span
